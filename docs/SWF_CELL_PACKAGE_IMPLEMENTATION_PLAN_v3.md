@@ -877,3 +877,66 @@ The audit of the four public repositories does not expose the full authoritative
 >
 > **Status:** contradiction — corrected. The transport remains a new, undecided layer
 > (`docs/SCOPE-ACCOUNTING.md`), and no implementation may assume a mount-v2 path.
+---
+
+## 13. The shell family's operating discipline (added 2026-11-02)
+
+`secure-shell/docs/FIRST-TEN-HOURS.md` and `secure-shell/docs/PLAN.md` are the authority for *how* work
+is sequenced in this repository (D-6). Four rules change the blocks below; none changes a block's
+subject. The plan body and the errata above are unchanged, because an addition is not a correction.
+
+### 13.1 A unit with no ledger entry did not happen
+
+Every block ends with a `ledger/ledger.jsonl` row naming the command, its exit status, the check count
+and a digest — not a paragraph saying it was done. `exit_test` and `evidence` are the fields that hold
+them, and a row whose `evidence` names no runnable command is incomplete.
+
+### 13.2 The checkpoint's seven fields
+
+Before a block starts: the goal sentence **quoted** from this plan, the one artifact, the last gate's
+answer in its three-way words, the drift signal, the refused list for the next block, the next artifact,
+and the ledger id just written. The rows already carry five (`goal`, `artifact`, `drift_signal`,
+`refused_next`, `next_artifact`); the quoted sentence and the gate's answer are carried inside `goal`
+and `exit_test` so no row needs a new key.
+
+### 13.3 The gate answers three ways, and only `refused` fails
+
+`held` — checked and true. `absent` — the subject does not exist yet, named with what was looked for; it
+is a state, not a pass and not a failure. `refused` — checked and false. `tools/port_gate.py`'s `PASS` /
+`NOT-ENFORCED` / `FAIL` map onto these exactly, and this plan uses the shell's words from here. The four
+`NOT-ENFORCED` rows are `absent`, and none of them may be read as `held`.
+
+### 13.4 Gates this repository does not have yet
+
+| Gate | Refuses | Owner block |
+|---|---|---|
+| `squash` | a commit over 40 files or 4,000 insertions | H1 |
+| `step-without-exit` | a plan step with no exit test | H2 |
+| `lost-object` | a dangling commit or blob left by an amend or a reset, named | H1 |
+| `witness-cannot-see` | a `test` row whose claim cannot be seen by the surface it cites | H9 |
+| `unshipped-artifact` | a dirty tracked file under a path a workflow publishes | H10 |
+
+Each is `absent` today and is named here rather than omitted, which is the difference between a gate
+that has not been written and one that has silently passed.
+
+### 13.5 The digest framing is the family's, not this plan's to invent
+
+`planet-core/src/hash.rs` frames a digest as `domain || schema (LE u16) || len (LE u64) || bytes`, and
+`planet-package/src/frame.rs` keeps the schema inside the payload preimage. For `V4PKG001` (§2.1) that
+means: the length is in the preimage, so a truncated payload cannot collide with a longer one; an older
+frame is refused **by name** (`frame-schema` with `found` and `supported`), never converted; and `kind`
+is the closed set `decl`/`code`, where a `code` frame packs and is refused `frame-kind-reserved` at
+mount.
+
+### 13.6 Order inside the blocks, where the family learned it the hard way
+
+The token baseline is frozen **before** the first render (the family's H7 before H9), because a token
+written after a render records whatever that render happened to be. The end-to-end window is witnessed
+**before** the window that reads code (the family's S4 before S5), because the second needs a working
+stream underneath it.
+
+### 13.7 What stays refused for the whole port
+
+A browser or Node result reported as a client witness; a second display, window format, or palette; a
+second package magic anywhere; MongoDB or a game-server-only host; a star or grade printed before the
+cell that carries it exists; and a step with no exit test.
