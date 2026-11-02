@@ -116,13 +116,6 @@ NOT_ENFORCED = (
         "note": "Commit-to-ticket-to-ledger references are checked; human review is not.",
     },
     {
-        "check": "ledger_commit_hash_binding",
-        "patch": "PATCH-0001",
-        "owner": "repository owner",
-        "blockedBy": "ledger entries reference tickets, not commit hashes",
-        "note": "A ledger entry cannot be bound to a hash it is committed alongside.",
-    },
-    {
         "check": "client_witness",
         "patch": "PATCH-0005",
         "owner": "shell/test harness",
@@ -995,6 +988,123 @@ def check_selftest_record(root: Path) -> list[str]:
     return []
 
 
+LEDGER_PATH = "ledger/ledger.jsonl"
+
+
+def run_git(root: Path, *args: str) -> tuple[bool, str]:
+    """Run git without raising: a check must report, not crash, on bad history."""
+    completed = subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, text=True
+    )
+    return completed.returncode == 0, completed.stdout
+
+
+def check_ledger_binding(root: Path) -> list[str]:
+    """Each ledger entry resolves to the one commit that carries its unit."""
+    ledger_path = root / LEDGER_PATH
+    if not ledger_path.is_file():
+        return [f"{LEDGER_PATH} is missing"]
+
+    entries: list[dict] = []
+    for number, line in enumerate(read_text(ledger_path).splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            return [f"{LEDGER_PATH}:{number}: not valid JSON, so no commit can carry it"]
+        if isinstance(record, dict):
+            entries.append(record)
+    if not entries:
+        return [f"{LEDGER_PATH}: no entries to bind"]
+
+    ok, _ = run_git(root, "rev-parse", "--git-dir")
+    if not ok:
+        return ["git history is unavailable, so no entry can be bound to a commit"]
+
+    ok, ledger_log = run_git(
+        root, "log", "--reverse", "--format=commit %H", "-p", "--unified=0", "--", LEDGER_PATH
+    )
+    if not ok:
+        return [f"git history for {LEDGER_PATH} could not be read"]
+
+    introduced: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in ledger_log.splitlines():
+        if line.startswith("commit "):
+            current = line.split()[1]
+            continue
+        if current is None or not line.startswith("+") or line.startswith("+++"):
+            continue
+        try:
+            added = json.loads(line[1:])
+        except json.JSONDecodeError:
+            continue
+        identifier = added.get("id") if isinstance(added, dict) else None
+        if isinstance(identifier, str):
+            introduced.setdefault(identifier, []).append(current)
+
+    ticket_trees: dict[str, set[str]] = {}
+
+    def ledger_number(identifier: str) -> int:
+        match = re.search(r"(\d+)$", identifier)
+        return int(match.group(1)) if match else -1
+
+    bound = [identifier for identifier in introduced if identifier in {str(e.get("id")) for e in entries}]
+    bound_max = max((ledger_number(identifier) for identifier in bound), default=-1)
+
+    problems: list[str] = []
+    for entry in entries:
+        identifier = str(entry.get("id", ""))
+        ticket = str(entry.get("ticket", ""))
+        carriers = introduced.get(identifier, [])
+
+        if not carriers:
+            if ledger_number(identifier) > bound_max:
+                continue  # the newest entry: the commit that adds it closes the binding
+            problems.append(
+                f"{identifier}: no commit in history introduces this entry, so nothing carries it"
+            )
+            continue
+        if len(carriers) > 1:
+            problems.append(
+                f"{identifier}: introduced by {len(carriers)} commits; the binding must be unique"
+            )
+            continue
+
+        carrier = carriers[0]
+        if ticket:
+            if carrier not in ticket_trees:
+                ok, listing = run_git(root, "ls-tree", "-r", "--name-only", carrier, "tickets/")
+                ticket_trees[carrier] = set(listing.splitlines()) if ok else set()
+            if not any(
+                path.startswith(f"tickets/{ticket}-") for path in ticket_trees[carrier]
+            ):
+                problems.append(
+                    f"{identifier}: the commit that introduces it does not contain a {ticket} "
+                    "ticket, so it does not carry this unit"
+                )
+
+        claimed = entry.get("unit_commit")
+        if isinstance(claimed, str) and claimed:
+            ok, _ = run_git(root, "cat-file", "-e", f"{claimed}^{{commit}}")
+            if not ok:
+                problems.append(f"{identifier}: names a commit that does not exist")
+                continue
+            ok, _ = run_git(root, "merge-base", "--is-ancestor", claimed, "HEAD")
+            if not ok:
+                problems.append(
+                    f"{identifier}: names a commit that is not an ancestor of HEAD"
+                )
+                continue
+            if claimed != carrier:
+                problems.append(
+                    f"{identifier}: names a commit that does not carry it; history puts this "
+                    "entry in a different commit"
+                )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1012,6 +1122,7 @@ CHECKS = (
     ("cell_stream", check_cell_stream, "PATCH-0005"),
     ("ruling_index", check_ruling_index, "PATCH-0001, PATCH-0002"),
     ("selftest_record", check_selftest_record, "PATCH-0001"),
+    ("ledger_binding", check_ledger_binding, "PATCH-0001"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1402,6 +1513,33 @@ def mutate_record_volatile_field(root: Path) -> None:
     path.write_text(serialise_record(record), encoding="utf-8")
 
 
+def mutate_ledger_binding_fabricated(root: Path) -> None:
+    path = root / LEDGER_PATH
+    records = [json.loads(line) for line in read_text(path).splitlines() if line.strip()]
+    records[0]["unit_commit"] = "0" * 40
+    path.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+    )
+
+
+def mutate_ledger_binding_wrong_commit(root: Path) -> None:
+    note = root / "docs" / "drift-note.md"
+    note.write_text("a commit that carries no ledger entry\n", encoding="utf-8")
+    fixture_commit(root, "TICKET-0001 LEDGER-0001 a commit without a ledger line")
+    ok, listing = run_git(root, "rev-parse", "HEAD")
+    later_commit = listing.strip() if ok else ""
+    if not later_commit:
+        raise GateError("fixture: the later commit was not found")
+    path = root / LEDGER_PATH
+    records = [json.loads(line) for line in read_text(path).splitlines() if line.strip()]
+    if len(records) < 2:
+        raise GateError("fixture: fewer than two ledger entries")
+    records[1]["unit_commit"] = later_commit
+    path.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+    )
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1434,6 +1572,8 @@ SELFTEST_SCENARIOS = (
     ("ruling_index_wire_token_refused", mutate_ruling_index_wire_token, "ruling_index"),
     ("selftest_record_stale_refused", mutate_record_stale_fixture, "selftest_record"),
     ("selftest_record_volatile_field_refused", mutate_record_volatile_field, "selftest_record"),
+    ("ledger_binding_fabricated_refused", mutate_ledger_binding_fabricated, "ledger_binding"),
+    ("ledger_binding_wrong_commit_refused", mutate_ledger_binding_wrong_commit, "ledger_binding"),
 )
 
 
