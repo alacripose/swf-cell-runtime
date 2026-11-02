@@ -40,6 +40,6 @@ Two limits are named rather than hidden: the durable form is one tab-separated l
 
 ## Closing
 
-- Merged commit: <sha>
-- Shell gate state: unassigned
+- Merged commit: 498c923 on branch `ticket/TICKET-0027-ledger-landing`, unit 962ef9c
+- Shell gate state: unassigned - only the shell assigns held/absent/refused
 - Ledger entry: LEDGER-0031

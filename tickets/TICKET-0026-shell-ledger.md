@@ -56,6 +56,6 @@ reordered pair, durable round trip.
 
 ## Closing
 
-- Merged commit: <sha>
-- Shell gate state: unassigned
+- Merged commit: 2d20fbc on branch `ticket/TICKET-0026-shell-ledger`, unit 456f506
+- Shell gate state: unassigned - only the shell assigns held/absent/refused
 - Ledger entry: LEDGER-0030
