@@ -103,6 +103,11 @@ pub enum Refusal {
     SurfaceSchema {
         found: String,
     },
+    UnknownValue {
+        vocabulary: &'static str,
+        code: &'static str,
+        found: String,
+    },
     SurfaceWindows {
         found: usize,
     },
@@ -128,6 +133,7 @@ impl Refusal {
             Refusal::SurfaceNode { .. } => "surface-node",
             Refusal::SurfaceAction { .. } => "surface-action",
             Refusal::SurfaceSchema { .. } => "surface-schema",
+            Refusal::UnknownValue { code, .. } => code,
             Refusal::SurfaceWindows { .. } => "surface-windows",
         }
     }
@@ -184,6 +190,13 @@ impl Refusal {
             }
             Refusal::SurfaceSchema { found } => {
                 format!("payload is not a dl-enclave.surface/1 document: {found}")
+            }
+            Refusal::UnknownValue {
+                vocabulary,
+                found,
+                ..
+            } => {
+                format!("{vocabulary} {found:?} is not declared by the surface vocabulary")
             }
             Refusal::SurfaceWindows { found } => {
                 format!("surface declares {found} windows; a mount with none declares nothing")
