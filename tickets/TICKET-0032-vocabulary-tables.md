@@ -69,14 +69,14 @@ message names the refused value.
 
 ## Acceptance test
 
-`crates/planet-package/tests/vocabulary.rs` (12 tests): the counts and order are pinned per table;
+`crates/planet-package/tests/vocabulary.rs` (13 tests): the counts and order are pinned per table;
 every entry of every table is parsed in the column that carries it (lane, rule, theme role, chrome,
 moves, node kind, both role tables as a node role, capability as `requires`); seven out-of-vocabulary
 values are refused with their seven codes; the refusal names the value; multi-token `chrome`/`moves`
 and `-` parse; `capability_rank` matches the ladder; an undeclared `requires` keeps
 `surface-requires`.
 
-`cargo test -p planet-package` — 45 existing tests plus 12, none removed or weakened.
+`cargo test -p planet-package` — 45 existing tests plus 13, none removed or weakened.
 
 `python tools/port_gate.py selftest` then `check` green, four `absent` rows still named.
 
