@@ -2,8 +2,8 @@
   "tool": "tools/port_gate.py selftest",
   "timestamp": "2026-11-02",
   "python": "3.13.14",
-  "scenarios": 8,
-  "passed": 8,
+  "scenarios": 10,
+  "passed": 10,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "2bfbcf1b: subject has no TICKET-NNNN reference",
-        "2bfbcf1b: subject has no LEDGER-NNNN reference"
+        "8e48819a: subject has no TICKET-NNNN reference",
+        "8e48819a: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -88,6 +88,28 @@
       ],
       "problems": [
         "ledger line 1: an agent may not assign the shell gate state 'held'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "erratum_removed_refused",
+      "expected_failure": "plan_errata",
+      "failing_checks": [
+        "plan_errata"
+      ],
+      "problems": [
+        "E-3: no '> **ERRATUM E-3' block in the plan"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "erratum_original_removed_refused",
+      "expected_failure": "plan_errata",
+      "failing_checks": [
+        "plan_errata"
+      ],
+      "problems": [
+        "E-1: the original wording was removed from the plan; it must stay visible beside the correction ('`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system')"
       ],
       "pass": true
     }

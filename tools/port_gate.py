@@ -58,6 +58,7 @@ GOVERNANCE_FILES = (
     "ledger/ledger.jsonl",
     "config/output-roots.json",
     "config/format-allowlist.json",
+    "config/plan-errata.json",
     "tools/pre-commit",
 )
 
@@ -475,6 +476,85 @@ def check_format_magics(root: Path) -> list[str]:
     return problems
 
 
+
+
+ERRATUM_HEADING = re.compile(r"^> \*\*ERRATUM (E-\d+)\b", re.M)
+
+
+def split_errata(text: str) -> tuple[dict[str, str], str]:
+    """Return each erratum blockquote and the document with those blocks removed."""
+    blocks: dict[str, str] = {}
+    spans: list[tuple[int, int]] = []
+    matches = list(ERRATUM_HEADING.finditer(text))
+    for index, match in enumerate(matches):
+        start = match.start()
+        stop = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        kept: list[str] = []
+        consumed = 0
+        for line in text[start:stop].splitlines(keepends=True):
+            if not line.startswith(">"):
+                break
+            kept.append(line)
+            consumed += len(line)
+        blocks[match.group(1)] = "".join(kept)
+        spans.append((start, start + consumed))
+    without = text
+    for start, stop in reversed(spans):
+        without = without[:start] + without[stop:]
+    return blocks, without
+
+
+def check_plan_errata(root: Path) -> list[str]:
+    """Each erratum keeps its block, its quote, its citations, and the original it supersedes."""
+    manifest_path = root / "config" / "plan-errata.json"
+    plan_path = root / "docs" / "SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md"
+    if not manifest_path.is_file():
+        return ["config/plan-errata.json is missing"]
+    if not plan_path.is_file():
+        return ["the plan document is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/plan-errata.json is not valid JSON: {exc}"]
+    errata = manifest.get("errata")
+    if not isinstance(errata, list) or not errata:
+        return ["config/plan-errata.json declares no errata"]
+
+    text = read_text(plan_path)
+    blocks, without = split_errata(text)
+    head = text[:4000]
+    problems: list[str] = []
+    for entry in errata:
+        if not isinstance(entry, dict):
+            problems.append("an errata entry is not an object")
+            continue
+        erratum = entry.get("id")
+        if not isinstance(erratum, str):
+            problems.append("an errata entry has no id")
+            continue
+        block = blocks.get(erratum)
+        if block is None:
+            problems.append(f"{erratum}: no '> **ERRATUM {erratum}' block in the plan")
+            continue
+        for label in ("**Superseded", "**Measured:**", "**Status:**"):
+            if label not in block:
+                problems.append(f"{erratum}: the block is missing its {label!r} part")
+        for citation in entry.get("citations", []):
+            if citation not in block:
+                problems.append(f"{erratum}: no longer cites {citation!r}")
+        for phrase in entry.get("superseded", []):
+            if phrase not in block:
+                problems.append(f"{erratum}: no longer quotes {phrase!r}")
+            if phrase not in without:
+                problems.append(
+                    f"{erratum}: the original wording was removed from the plan; it must "
+                    f"stay visible beside the correction ({phrase!r})"
+                )
+        if erratum not in head:
+            problems.append(f"{erratum}: not listed in the errata index at the top of the plan")
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -485,8 +565,8 @@ CHECKS = (
     ("commit_refs", check_commit_refs, "PATCH-0001, PATCH-0002"),
     ("baseline_blocks", check_baseline_blocks, "PATCH-0001"),
     ("scope_accounting", check_scope_accounting, "PATCH-0001"),
+    ("plan_errata", check_plan_errata, "PATCH-0002"),
 )
-
 
 # --------------------------------------------------------------------------- commands
 
@@ -657,6 +737,27 @@ def mutate_agent_gate_state(root: Path) -> None:
     )
 
 
+def mutate_missing_erratum(root: Path) -> None:
+    path = root / "docs" / "SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md"
+    chunks = read_text(path).split("\n\n")
+    kept = [chunk for chunk in chunks if not chunk.lstrip().startswith("> **ERRATUM E-3")]
+    if len(kept) == len(chunks):
+        raise GateError("fixture: the E-3 block was not found before mutation")
+    path.write_text("\n\n".join(kept), encoding="utf-8")
+
+
+def mutate_erratum_original_removed(root: Path) -> None:
+    path = root / "docs" / "SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md"
+    phrase = (
+        "`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell "
+        "declarations/records within the package system"
+    )
+    text = read_text(path)
+    if phrase not in text:
+        raise GateError("fixture: the superseded wording was not found before mutation")
+    path.write_text(text.replace(phrase, "", 1), encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -666,6 +767,8 @@ SELFTEST_SCENARIOS = (
     ("unticketed_commit_refused", mutate_commit_without_ticket, "commit_refs"),
     ("block_without_exit_test_refused", mutate_block_without_exit_test, "baseline_blocks"),
     ("agent_gate_state_refused", mutate_agent_gate_state, "ledger_valid"),
+    ("erratum_removed_refused", mutate_missing_erratum, "plan_errata"),
+    ("erratum_original_removed_refused", mutate_erratum_original_removed, "plan_errata"),
 )
 
 

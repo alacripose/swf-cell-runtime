@@ -1,0 +1,64 @@
+{
+  "note": "Guards the plan's errata. Each entry must keep its blockquote, its quote of the superseded wording, its citations, and the original wording in the plan body. Citations name files and symbols in source trees outside this repository, so this check guards the record rather than those trees.",
+  "plan": "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
+  "errata": [
+    {
+      "id": "E-1",
+      "superseded": [
+        "`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system"
+      ],
+      "citations": [
+        "crates/planet-package/src/rows.rs",
+        "Kind::ALL",
+        "KINDS_ARE_TOTAL",
+        "crates/voxel-package/src/cells.rs",
+        "DECLARATION_HEADER",
+        "crates/voxel-package/src/cellframe.rs",
+        "read_artifacts",
+        "crates/planet-package/src/shell.rs",
+        "ShellDeclaration::parse"
+      ]
+    },
+    {
+      "id": "E-2",
+      "superseded": [
+        "`surface.mount/2` is the transport/receipt boundary, not a second game package."
+      ],
+      "citations": [
+        "crates/planet-shell/src/mount.rs",
+        "Mount::watch",
+        "FrameKind::Code",
+        "crates/planet-shell/src/main.rs",
+        "present_package"
+      ]
+    },
+    {
+      "id": "E-3",
+      "superseded": [
+        "the cell-program/code-kind reader status",
+        "is reserved until a reader exists"
+      ],
+      "citations": [
+        "crates/planet-package/src/frame.rs",
+        "src/bin/package.rs",
+        "crates/planet-shell/src/mount.rs",
+        "crates/planet-mcp/src/surface.rs"
+      ]
+    },
+    {
+      "id": "E-4",
+      "superseded": [
+        "the existing artifact/asset reference mechanism",
+        "referenced through the package system's existing asset-reference mechanism"
+      ],
+      "citations": [
+        "crates/planet-package/src/rows.rs",
+        "Kind::Bands",
+        "Kind::Materials",
+        "src/bin/package.rs",
+        "MAGIC_ARTIFACTS",
+        "artifacts_in"
+      ]
+    }
+  ]
+}

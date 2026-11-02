@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Plan errata guard (block, quote, citations, index entry) | present | `tools/port_gate.py` `plan_errata` over `config/plan-errata.json` |
 | Pre-commit hook and CI workflow running the gate | present |
 | Branch + PR review enforcement (remote repository, review records) | not-implemented — no remote is configured in this checkout |
 | Commit-hash binding in ledger entries | not-implemented |
