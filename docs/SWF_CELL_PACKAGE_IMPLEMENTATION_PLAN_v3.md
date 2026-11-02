@@ -6,6 +6,8 @@
 
 **Revision:** v3 — trust-boundary and maximal-contract correction.
 
+**Errata (2026-11-02):** four claims in §3.1 and §12 are superseded by measured source — **E-1** `shploingus.cells/1` and `shploingus.cellframe/1` ownership, **E-2** the `surface.mount/2` transport, **E-3** the code-kind reader status, **E-4** the asset-reference mechanism. Each erratum keeps the original wording visible beside the correction and cites the file that settles it. Full ownership record: `docs/PACKAGE-OWNERSHIP.md`; evidence: `LEDGER-0008`. Open decisions are marked undecided, not answered.
+
 **Status:** Architecture proposal based on a read-only audit of the four named repositories. No repository was modified, built, or executed for this audit. The actual SWF has not been supplied to this architecture audit, so its ActionScript version, tag inventory, game-specific APIs, and unsupported dependencies remain to be measured by the shell after the user supplies it. Those measurements will remain shell-private and will not be exposed to an implementation agent.
 
 ## 0. Normative trust boundary and maximal-system convention
@@ -252,6 +254,24 @@ The expected responsibilities are:
 | Surface/runtime | One Rust client | Mounts and executes the cells; there is no parallel Flash surface or addon surface |
 
 `surface.mount/2` is the transport/receipt boundary, not a second game package. `V4PKG001` is the package frame. `shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system. Detailed source-derived provenance is held outside agent-visible package manifests; secure cells receive only opaque artifact identities and digests. The implementation must not add another package magic, another window declaration format, or a new `secure-shell.*` game payload format.
+
+> **ERRATUM E-1 — supersedes the paragraph above (measured 2026-11-02).**
+>
+> **Superseded wording, kept visible:** *"`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system."* The same assumption appears in the `Cell declaration` and `Cell frames` table rows above.
+>
+> **Measured:** the grammars exist, but not in the package system this section means. `planet-package` declares four row kinds — `row`, `bands`, `materials`, `shell` — and no cell or cellframe kind (`crates/planet-package/src/rows.rs`: `Kind::ALL`, `Kind::COUNT = 4`, `KINDS_ARE_TOTAL`); its `lib.rs` exposes only `error`, `frame`, `rows`, `shell`. The grammars are owned by `voxel-package` in `shploingus-clean`: `crates/voxel-package/src/cells.rs` (`DECLARATION_HEADER = "shploingus.cells/1"`, `CellVersion { Elements = 0, Holo = 1 }`) and `crates/voxel-package/src/cellframe.rs` (`HEADER = "shploingus.cellframe/1"`, `Frame::parse`, `read`, `read_artifacts`). They belong to a different frame family — `SHPKG002`/`SHPKG003` over a `shploingus.recipe/3` document (`crates/voxel-package/src/recipe.rs`: `MAGIC`, `MAGIC_ARTIFACTS`, `HEADER`) — not to `V4PKG001`.
+>
+> **What the port uses instead:** the declaration surface of its own family is the `.decl` grammar in `crates/planet-package/src/shell.rs` (`ShellDeclaration::parse`, `PANELS`), which the builder and the mount both call.
+>
+> **Status:** contradiction — corrected. Whether the port grows a family-A cell raster at all is an **open decision**, not settled here (`docs/SCOPE-ACCOUNTING.md`: "Family-A cell raster representation: blocked"; `docs/PACKAGE-OWNERSHIP.md` §6). Adopting the other family's grammar is refused by PATCH-0005.
+
+> **ERRATUM E-2 — supersedes the first sentence above and the `Stream/mount` row of the table (measured 2026-11-02).**
+>
+> **Superseded wording, kept visible:** *"`surface.mount/2` is the transport/receipt boundary, not a second game package."* and the table's *"Stream/mount | Existing `surface.mount/2` path"*.
+>
+> **Measured:** no `surface.mount`, `mount/2`, mount-v2 or receipt type exists in the authoritative tree; a search of `crates/` in `planet-shploingus` for `surface.mount`, `mount/2`, `mount_v2` and `MountReceipt` returns nothing. Adoption is a watched file: `crates/planet-shell/src/mount.rs` `Mount::watch` takes the newest `*.pkg` by `(mtime, name)`, deduplicates by frame digest, reads it whole with `Package::read`, refuses the code kind (`if package.kind == FrameKind::Code`), and parses the first `Kind::Shell` row through `ShellDeclaration::parse`. `crates/planet-shell/src/main.rs` then presents the adopted package at the host door (`present_package`); that admission plus the ledger row is the receipt.
+>
+> **Status:** contradiction — corrected. There is no mount-v2 byte/digest/receipt contract to conform to, so §12 item 5 has no object. A transport beyond the watched file would be a new layer with its own decision, and it remains **blocked** (`docs/SCOPE-ACCOUNTING.md`: "Streaming transport beyond the watched file"). The `surface.mount/2` string survives only in openlock and dl-enclave declarations.
 
 ### 3.2 One package family for base game and addons
 
@@ -817,5 +837,27 @@ Before writing an adapter, package parser, or code-kind reader, an implementatio
 5. the mount-v2 byte/digest/receipt contract.
 
 The audit of the four public repositories does not expose the full authoritative `planet-package` Rust source. The secure-shell audit identifies it in the broader workspace, but that source must be read directly in the target environment before the agent writes a parser, schema, or bytecode grammar. If it cannot be located, the shell records the package layer as `absent` and implementation stops at the design evidence; the agent does not recreate it from memory. The shell-held SWF inventory is not made available as a substitute.
+
+> **ERRATUM E-3 — supersedes §12 item 4's premise and §3.3's "until a reader exists" (measured 2026-11-02).**
+>
+> **Superseded premise, kept visible:** item 4 asks for *"the cell-program/code-kind reader status"* as an open unknown, and §3.3 states the code kind "is reserved until a reader exists" and that "until that reader and executor exist, the shell records the code-kind path as `absent` or `refused`".
+>
+> **Measured:** the **frame reader for code already exists.** `FrameKind` declares `Code = 2` and `from_u16` maps it, `Package::decode` accepts both kinds, and `package build --code` writes one (`crates/planet-package/src/frame.rs`, `src/bin/package.rs`). What does not exist is an **executor**: nothing in the tree interprets a code frame's payload as behaviour, the shell refuses a code frame on the adoption path (`crates/planet-shell/src/mount.rs`, `if package.kind == FrameKind::Code` — refused, declaration in force untouched), and the door will still present one (`crates/planet-mcp/src/surface.rs`, the `FrameKind::Code` case).
+>
+> **Consequence:** the missing piece is the executor, not the reader. §3.3's rule — no script parity until an executor exists — stands unchanged.
+>
+> **Status:** contradiction — corrected on the reader's existence. The executor's shape, instruction budgets and capability set are an **open decision** (H5, **blocked**; `docs/PORT-BASELINE.md` H5). Nothing here authorises one.
+
+> **ERRATUM E-4 — supersedes §12 item 3 and §4.4's "existing asset-reference mechanism" (measured 2026-11-02).**
+>
+> **Superseded wording, kept visible:** *"the existing artifact/asset reference mechanism"* (item 3) and §4.4's *"referenced through the package system's existing asset-reference mechanism"*.
+>
+> **Measured:** the port's family has no asset-reference mechanism to reuse. Media travel as canonical bytes inside a single row field: `Kind::Bands` and `Kind::Materials` are `Family::Value` kinds with exactly one field each (`crates/planet-package/src/rows.rs`), and `package build --bands <path>` / `--materials <path>` read a file's bytes straight into that field (`src/bin/package.rs`). A media type with no kind has nowhere to go. The nearest artifact table is in the other family — `SHPKG003` adds one (`crates/voxel-package/src/recipe.rs`: `MAGIC_ARTIFACTS`, `artifacts_in`) — which is precisely the second format this plan forbids adopting.
+>
+> **Consequence:** §4.4's own escape clause — "if the package owner does not expose an asset-reference mechanism for a required media type, that is a named format gap to resolve before implementation" — now has its answer: this **is** that gap. Adding a `Kind` is a format-owner act (a row in `rows.rs` plus a line in the format document), never an import detail.
+>
+> **Status:** contradiction — corrected in that no mechanism exists. Which kind(s) carry media is an **open decision** for the format owner, recorded as blocked in `docs/SCOPE-ACCOUNTING.md`.
+
+**Errata status note.** §12's closing condition — read the authoritative crate directly before writing a parser — was satisfied at H2 (TICKET-0004, TICKET-0005): `planet-package`, `planet-core`, `voxel-package` and the Java `PackageFrame` were read, and `docs/PACKAGE-OWNERSHIP.md` records the ownership and the compatibility measurements. Its fallback sentence ("the shell records the package layer as `absent`") is therefore not in force: the layer is `present`, and the paragraph below is retained as the condition that was met, not as a pending instruction.
 
 **Final architecture rule:** the SWF is compiled into the cell package; the cell package is mounted into the one surface; the one cell runtime executes both the base game's behavior and streamed addon behavior. Openlock contributes the proven delivery transaction mechanics, secure-shell contributes the stream/receipt/evidence discipline, the civ-bots prototype contributes strict framed-package and state-continuity examples, and ala-cities contributes the Rust window/GPU foundation. None of those projects licenses a second runtime or a second content format.

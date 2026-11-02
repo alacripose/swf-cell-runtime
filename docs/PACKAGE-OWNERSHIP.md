@@ -191,7 +191,7 @@ run   <col> <row> <ink>  <text>
 
 ## 5. Corrections
 
-Four to the plan, and one to this repository's own record.
+Four to the plan, and one to this repository's own record. They are recorded as explicit errata **E-1–E-4** in `docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md` §3.1 and §12, with the superseded wording left visible beside each correction.
 
 1. **`shploingus.cells/1` is not family A's declaration format.** It is owned by
    `voxel-package/cells.rs` in family B. The plan's claim that it is an artifact "within the package
