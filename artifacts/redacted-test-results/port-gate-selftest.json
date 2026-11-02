@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:1b62217ce87b56ac27d2e0453713f9191e047693628b9def90129e3ad946d9b7",
+    "identity": "sha256:b98c50a7c938b6db01e8a3e22451bd666889a135b99ae98a3d30fb5aab145358",
     "inputs": 18
   },
   "python": "3.13.14",
-  "scenarios": 96,
-  "passed": 96,
+  "scenarios": 115,
+  "passed": 115,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -1036,6 +1036,217 @@
       "expected_failure": null,
       "failing_checks": [],
       "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "near_baselines_present",
+      "expected_failure": "baselines_present",
+      "failing_checks": [
+        "baselines_present"
+      ],
+      "problems": [
+        "expected 6 baseline patches, found 7: PATCH-0001-version-control.md, PATCH-0002-ticket-and-review-discipline.md, PATCH-0003-source-and-build-artifact-boundary.md, PATCH-0004-project-local-artifacts.md, PATCH-0005-one-cell-surface-and-format.md, PATCH-0006-abstract-mcp-cua-axis.md, PATCH-0007-a-seventh-baseline.md"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_governance_files",
+      "expected_failure": "governance_files",
+      "failing_checks": [
+        "governance_files"
+      ],
+      "problems": [
+        "missing tickets/TEMPLATE.md"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_source_exclusion",
+      "expected_failure": "source_exclusion",
+      "failing_checks": [
+        "source_exclusion"
+      ],
+      "problems": [
+        "source movie is tracked in the index: docs/FOOTAGE.SWF"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_output_roots",
+      "expected_failure": "output_roots",
+      "failing_checks": [
+        "output_roots"
+      ],
+      "problems": [
+        "../near-output_roots-evil/scratch/: output path escapes the project root"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_format_magics",
+      "expected_failure": "format_magics",
+      "failing_checks": [
+        "format_magics"
+      ],
+      "problems": [
+        "src/format_v2.rs: unowned package magic 'V4PKG002' (second format)"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_ledger_valid",
+      "expected_failure": "ledger_valid",
+      "failing_checks": [
+        "ledger_valid"
+      ],
+      "problems": [
+        "ledger line 25: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_commit_refs",
+      "expected_failure": "commit_refs",
+      "failing_checks": [
+        "commit_refs"
+      ],
+      "problems": [
+        "<fixture-commit>: subject has no TICKET-NNNN reference"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_baseline_blocks",
+      "expected_failure": "baseline_blocks",
+      "failing_checks": [
+        "baseline_blocks"
+      ],
+      "problems": [
+        "H5: missing Exit test:"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_scope_accounting",
+      "expected_failure": "scope_accounting",
+      "failing_checks": [
+        "scope_accounting"
+      ],
+      "problems": [
+        "H3: no status row in SCOPE-ACCOUNTING.md"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_plan_errata",
+      "expected_failure": "plan_errata",
+      "failing_checks": [
+        "plan_errata"
+      ],
+      "problems": [
+        "E-1: no longer cites 'crates/planet-package/src/rows.rs'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_cell_schema",
+      "expected_failure": "cell_schema",
+      "failing_checks": [
+        "cell_schema"
+      ],
+      "problems": [
+        "I-2: the schema proposal does not account for this invariant"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_cell_program",
+      "expected_failure": "cell_program",
+      "failing_checks": [
+        "cell_program",
+        "ruling_index"
+      ],
+      "problems": [
+        "P-1: missing its 'Owner' part"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_cell_media",
+      "expected_failure": "cell_media",
+      "failing_checks": [
+        "cell_media",
+        "ruling_index"
+      ],
+      "problems": [
+        "M-4: no '## M-4' section in the decision document"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_cell_stream",
+      "expected_failure": "cell_stream",
+      "failing_checks": [
+        "cell_stream"
+      ],
+      "problems": [
+        "the decision document never says it is a 'proposal'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_ruling_index",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "docs\\RULING-INDEX.md:19: Q-3 cites 'docs/CELL-MEDIA-DECISION.md', but the source is 'docs/CELL-SCHEMA.md'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_selftest_record",
+      "expected_failure": "selftest_record",
+      "failing_checks": [
+        "selftest_record"
+      ],
+      "problems": [
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record cannot be rebuilt from its own results, so it carries something a second run would change; the only permitted inputs are the results and the fixture identity"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_ledger_binding",
+      "expected_failure": "ledger_binding",
+      "failing_checks": [
+        "ledger_binding"
+      ],
+      "problems": [
+        "LEDGER-0001: names a commit that does not carry it; history puts this entry in a different commit"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_mcp_surface",
+      "expected_failure": "mcp_surface",
+      "failing_checks": [
+        "mcp_surface"
+      ],
+      "problems": [
+        "mcp/surface.json: exposes 'schema.describe.all', which PATCH-0006 does not permit (permitted: schema.describe, secure_cell.get, test.list_declared, test.result.get, test.run_declared, ticket.submit)"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_duplicate_reader",
+      "expected_failure": "duplicate_reader",
+      "failing_checks": [
+        "duplicate_reader"
+      ],
+      "problems": [
+        "crates/planet-package-evil/src/frame.rs: parses the package frame outside the planet-package reader named in the ownership record"
+      ],
       "pass": true
     }
   ],

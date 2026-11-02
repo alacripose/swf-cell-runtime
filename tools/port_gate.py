@@ -2065,6 +2065,263 @@ DECOY = (
 )
 
 
+def near_extra_baseline(root: Path) -> None:
+    (root / "patches" / "baselines" / "PATCH-0007-a-seventh-baseline.md").write_text(
+        "# PATCH-0007\n\n## Required rule\n\n## Mechanical evidence\n", encoding="utf-8"
+    )
+    write_fixture_record(root)
+
+
+def near_governance_template_directory(root: Path) -> None:
+    path = root / "tickets" / "TEMPLATE.md"
+    path.unlink()
+    path.mkdir()
+    write_fixture_record(root)
+
+
+def near_movie_uppercase_suffix(root: Path) -> None:
+    movie = root / "docs" / "FOOTAGE.SWF"
+    movie.parent.mkdir(parents=True, exist_ok=True)
+    movie.write_text("synthetic placeholder, not a movie\n", encoding="utf-8")
+    fixture_commit(
+        root,
+        "TICKET-0001 LEDGER-0001 force-add an uppercase movie",
+        force_add=("docs/FOOTAGE.SWF",),
+    )
+    write_fixture_record(root)
+
+
+def near_output_sibling_prefix(root: Path) -> None:
+    path = root / "config" / "output-roots.json"
+    config = json.loads(read_text(path))
+    config["outputRoots"].append(
+        {
+            "path": f"../{root.name}-evil/scratch/",
+            "class": "redacted",
+            "agentAccess": "read",
+        }
+    )
+    path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_magic_schema_bump(root: Path) -> None:
+    path = root / "src" / "format_v2.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const MAGIC: &[u8] = b"V4PKG002";\n', encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_ledger_status_whitespace(root: Path) -> None:
+    path = root / LEDGER_PATH
+    entry = {
+        "id": "LEDGER-0024",
+        "timestamp": "2026-11-02",
+        "block": "H1",
+        "ticket": "TICKET-0001",
+        "artifact": "fixture",
+        "exit_test": "fixture",
+        "evidence": "none",
+        "status": "present ",
+        "shell_gate_state": "unassigned",
+    }
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry) + "\n")
+    write_fixture_record(root)
+
+
+def near_commit_short_ticket(root: Path) -> None:
+    (root / "docs" / "drift-note.md").write_text("a note\n", encoding="utf-8")
+    fixture_commit(root, "TICKET-001 LEDGER-0001 a short reference")
+    write_fixture_record(root)
+
+
+def near_block_lowercase_field(root: Path) -> None:
+    path = root / "docs" / "PORT-BASELINE.md"
+    text = read_text(path)
+    body = section_after(text, r"^### H5\b.*$") or ""
+    broken = body.replace("- Exit test:", "- exit test:", 1)
+    if broken == body:
+        raise GateError("fixture: the H5 exit test was not found")
+    path.write_text(text.replace(body, broken, 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_scope_status_suffix(root: Path) -> None:
+    path = root / "docs" / "SCOPE-ACCOUNTING.md"
+    text = read_text(path)
+    pattern = re.compile(r"^(\|\s*H3\s*\|\s*)(present|not-implemented|blocked)(\s*\|)", re.M)
+    if not pattern.search(text):
+        raise GateError("fixture: the H3 status row was not found")
+    path.write_text(pattern.sub(r"\1present (unverified)\3", text, count=1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_erratum_citation_moved(root: Path) -> None:
+    manifest = json.loads(read_text(root / "config" / "plan-errata.json"))
+    citation = str(manifest["errata"][0]["citations"][0])
+    path = root / "docs" / "SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md"
+    text = read_text(path)
+    if citation not in text:
+        raise GateError("fixture: the first citation was not found")
+    path.write_text(text.replace(citation, "", 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_schema_invariant_unaccounted(root: Path) -> None:
+    path = root / "docs" / "CELL-SCHEMA.md"
+    text = read_text(path)
+    pattern = re.compile(r"\bI-2\b")
+    if not pattern.search(text):
+        raise GateError("fixture: the I-2 invariant was never referenced in the schema")
+    path.write_text(pattern.sub("", text), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_program_label_punctuation(root: Path) -> None:
+    path = root / "docs" / "CELL-PROGRAM-DECISION.md"
+    text = read_text(path)
+    if "**Owner:**" not in text:
+        raise GateError("fixture: the owner label was not found")
+    path.write_text(text.replace("**Owner:**", "**Owner** :", 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_media_heading_depth(root: Path) -> None:
+    path = root / "docs" / "CELL-MEDIA-DECISION.md"
+    text = read_text(path)
+    if "## M-4 —" not in text:
+        raise GateError("fixture: the M-4 heading was not found")
+    path.write_text(text.replace("## M-4 —", "#### M-4 —"), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_stream_marker_altered(root: Path) -> None:
+    manifest = json.loads(read_text(root / "config" / "cell-stream.json"))
+    marker = str(manifest.get("proposalMarker", ""))
+    altered = marker.replace("proposal", "proposed")
+    path = root / "docs" / "CELL-TRANSPORT-DECISION.md"
+    text = read_text(path)
+    if altered == marker or marker not in text:
+        raise GateError("fixture: the proposal marker could not be altered")
+    path.write_text(text.replace(marker, altered), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_ruling_index_wrong_source(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    out: list[str] = []
+    hit = False
+    for line in read_text(path).splitlines():
+        if line.strip().startswith("| Q-3 |") and not hit:
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) >= 5:
+                sibling = (
+                    "docs/CELL-MEDIA-DECISION.md"
+                    if cells[4] != "docs/CELL-MEDIA-DECISION.md"
+                    else "docs/CELL-PROGRAM-DECISION.md"
+                )
+                line = line.replace(cells[4], sibling)
+                hit = True
+        out.append(line)
+    if not hit:
+        raise GateError("fixture: the Q-3 row was not found")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    write_fixture_record(root)
+
+
+def near_record_input_count(root: Path) -> None:
+    path = root / RECORD_PATH
+    record = json.loads(read_text(path))
+    fixture = record["fixture"]
+    fixture["inputs"] = int(fixture.get("inputs", 0)) + 1
+    path.write_text(serialise_record(record), encoding="utf-8")
+
+
+def near_ledger_binding_abbreviated(root: Path) -> None:
+    ok, head = run_git(root, "rev-parse", "HEAD")
+    if not ok or not head.strip():
+        raise GateError("fixture: HEAD could not be read")
+    path = root / LEDGER_PATH
+    records = [json.loads(line) for line in read_text(path).splitlines() if line.strip()]
+    records[0]["unit_commit"] = head.strip()[:8]
+    path.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+    )
+    write_fixture_record(root)
+
+
+def near_mcp_prefix_operation(root: Path) -> None:
+    path = root / "mcp" / "surface.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {"operations": ["schema.describe", "schema.describe.all"]}, indent=2
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    write_fixture_record(root)
+
+
+def near_reader_sibling_crate(root: Path) -> None:
+    path = root / "crates" / "planet-package-evil" / "src" / "frame.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const MAGIC: &[u8] = b"V4PKG001";\n', encoding="utf-8")
+    git(root, "add", "-A")
+    write_fixture_record(root)
+
+
+# The smallest real violation of each check's rule, shaped so a wrong comparison accepts it: an
+# extra baseline a count of six would not notice, a directory where a file is required, uppercase
+# extensions, a sibling path sharing the root's prefix, a schema bump, a status with trailing
+# whitespace, a three-digit ticket, a lowercased field label, a status with a suffix, a moved
+# citation, an unaccounted invariant, a misplaced colon, a wrong heading depth, an altered marker,
+# a sibling source column, a miscounted input, an abbreviated commit, a permitted-prefix operation
+# and a sibling crate name. Every entry is a genuine violation that must be refused.
+NEAR_MISS = (
+    ("baselines_present", near_extra_baseline, "baseline patches, found 7"),
+    ("governance_files", near_governance_template_directory, "missing tickets/TEMPLATE.md"),
+    ("source_exclusion", near_movie_uppercase_suffix, "source movie is tracked in the index"),
+    ("output_roots", near_output_sibling_prefix, "output path escapes the project root"),
+    (
+        "format_magics",
+        near_magic_schema_bump,
+        "unowned package magic 'V4PKG002' (second format)",
+    ),
+    ("ledger_valid", near_ledger_status_whitespace, "status 'present ' is not one of"),
+    ("commit_refs", near_commit_short_ticket, "subject has no TICKET-NNNN reference"),
+    ("baseline_blocks", near_block_lowercase_field, "H5: missing Exit test:"),
+    (
+        "scope_accounting",
+        near_scope_status_suffix,
+        "H3: no status row in SCOPE-ACCOUNTING.md",
+    ),
+    ("plan_errata", near_erratum_citation_moved, "no longer cites"),
+    (
+        "cell_schema",
+        near_schema_invariant_unaccounted,
+        "I-2: the schema proposal does not account for this invariant",
+    ),
+    ("cell_program", near_program_label_punctuation, "P-1: missing its 'Owner' part"),
+    ("cell_media", near_media_heading_depth, "M-4: no '## M-4' section"),
+    ("cell_stream", near_stream_marker_altered, "the decision document never says it is a"),
+    ("ruling_index", near_ruling_index_wrong_source, "but the source is"),
+    (
+        "selftest_record",
+        near_record_input_count,
+        "cannot be rebuilt from its own results",
+    ),
+    ("ledger_binding", near_ledger_binding_abbreviated, "names a commit that does not carry it"),
+    ("mcp_surface", near_mcp_prefix_operation, "exposes 'schema.describe.all'"),
+    (
+        "duplicate_reader",
+        near_reader_sibling_crate,
+        "parses the package frame outside the planet-package reader",
+    ),
+)
+
+
 def command_selftest(project_root: Path) -> int:
     work = project_root / "target" / "port-gate-selftest"
     remove_tree(work)
@@ -2117,10 +2374,14 @@ def command_selftest(project_root: Path) -> int:
         covered = {check for check, _mutate, _message in SWEEP}
         quiet = {check for check, _mutate in SILENCE}
         decoys = {check for check, _mutate in DECOY}
+        near = {check for check, _mutate, _message in NEAR_MISS}
         unproven = [
             name
             for name, _function, _patch in CHECKS
-            if name not in covered or name not in quiet or name not in decoys
+            if name not in covered
+            or name not in quiet
+            or name not in decoys
+            or name not in near
         ]
         records.append(
             {
@@ -2128,7 +2389,8 @@ def command_selftest(project_root: Path) -> int:
                 "expected_failure": None,
                 "failing_checks": [],
                 "problems": [
-                    f"no violation, silence and decoy set proves {name} decides anything"
+                    f"no violation, silence, decoy and near-miss set proves {name} inspects its "
+                    "own rule"
                     for name in unproven
                 ],
                 "pass": not unproven,
@@ -2137,7 +2399,7 @@ def command_selftest(project_root: Path) -> int:
         print(
             f"  {'PASS' if not unproven else 'FAIL'} sweep_covers_every_check"
             f"{'':<15} {len(SWEEP)} violations, {len(SILENCE)} silences, "
-            f"{len(DECOY)} decoys, {len(CHECKS)} checks"
+            f"{len(DECOY)} decoys, {len(NEAR_MISS)} near misses, {len(CHECKS)} checks"
         )
         if unproven:
             failures.append(f"sweep_covers_every_check: unproven {unproven}")
@@ -2271,6 +2533,50 @@ def command_selftest(project_root: Path) -> int:
             print(
                 f"  {'PASS' if ok else 'FAIL'} decoy_{check:<28} symptom present, rule intact, "
                 f"{'silent' if ok else 'refused'}"
+            )
+            for problem in problems[:3]:
+                print(f"       - {problem}")
+
+        for check, mutate, expected in NEAR_MISS:
+            fixture = work / f"near-{check}"
+            problems: list[str] = []
+            failed: set[str] = set()
+            ok = False
+            try:
+                build_fixture(project_root, fixture)
+                mutate(fixture)
+                results = run_checks(fixture)
+                failed = {name for name, _patch, errs in results if errs}
+                own = [p for name, _patch, errs in results if name == check for p in errs]
+                fired = [p for p in own if expected in p]
+                elsewhere = [
+                    p
+                    for name, _patch, errs in results
+                    if name != check
+                    for p in errs
+                    if expected in p
+                ]
+                ok = bool(fired) and not elsewhere
+                problems = fired[:1] or own[:2] or [
+                    f"{check} accepted the near-miss, so its comparison is looser than its rule"
+                ]
+                if elsewhere:
+                    problems.append(f"the wording came from another check: {elsewhere[0]}")
+            except GateError as exc:
+                problems = [f"gate error: {exc}"]
+            if not ok:
+                failures.append(f"near_{check}: {problems[-1]}")
+            records.append(
+                {
+                    "scenario": f"near_{check}",
+                    "expected_failure": check,
+                    "failing_checks": sorted(failed),
+                    "problems": [normalise_problem(line) for line in problems[:6]],
+                    "pass": ok,
+                }
+            )
+            print(
+                f"  {'PASS' if ok else 'FAIL'} near_{check:<29} near-miss refused by {check}"
             )
             for problem in problems[:3]:
                 print(f"       - {problem}")
