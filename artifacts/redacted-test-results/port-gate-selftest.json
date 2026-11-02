@@ -2,8 +2,8 @@
   "tool": "tools/port_gate.py selftest",
   "timestamp": "2026-11-02",
   "python": "3.13.14",
-  "scenarios": 21,
-  "passed": 21,
+  "scenarios": 24,
+  "passed": 24,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "e31fe9c3: subject has no TICKET-NNNN reference",
-        "e31fe9c3: subject has no LEDGER-NNNN reference"
+        "d2d5a46d: subject has no TICKET-NNNN reference",
+        "d2d5a46d: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -231,6 +231,39 @@
       ],
       "problems": [
         "M-4: no '## M-4' section in the decision document"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_stream_owner_removed_refused",
+      "expected_failure": "cell_stream",
+      "failing_checks": [
+        "cell_stream"
+      ],
+      "problems": [
+        "T-1: missing its 'Owner' part"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_stream_wire_token_refused",
+      "expected_failure": "cell_stream",
+      "failing_checks": [
+        "cell_stream"
+      ],
+      "problems": [
+        "docs\\CELL-TRANSPORT-DECISION.md: port wire token 'Kind::' is not the port's to decide"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_stream_question_missing_refused",
+      "expected_failure": "cell_stream",
+      "failing_checks": [
+        "cell_stream"
+      ],
+      "problems": [
+        "T-4: no '## T-4' section in the decision document"
       ],
       "pass": true
     }

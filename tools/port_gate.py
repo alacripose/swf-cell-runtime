@@ -55,6 +55,7 @@ GOVERNANCE_FILES = (
     "docs/CELL-SCHEMA.md",
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
+    "docs/CELL-TRANSPORT-DECISION.md",
     "tickets/TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/ticket.md",
     ".github/pull_request_template.md",
@@ -64,6 +65,9 @@ GOVERNANCE_FILES = (
     "config/format-allowlist.json",
     "config/plan-errata.json",
     "config/cell-schema.json",
+    "config/cell-program.json",
+    "config/cell-media.json",
+    "config/cell-stream.json",
     "tools/pre-commit",
 )
 
@@ -761,6 +765,51 @@ def check_cell_media(root: Path) -> list[str]:
     return problems
 
 
+def check_cell_stream(root: Path) -> list[str]:
+    """The transport decision keeps its four parts and proposes no wire format."""
+    manifest_path = root / "config" / "cell-stream.json"
+    if not manifest_path.is_file():
+        return ["config/cell-stream.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/cell-stream.json is not valid JSON: {exc}"]
+
+    document_path = root / str(manifest.get("document", "docs/CELL-TRANSPORT-DECISION.md"))
+    if not document_path.is_file():
+        return [f"{document_path.relative_to(root)} is missing"]
+    rel = document_path.relative_to(root)
+    document = read_text(document_path)
+    problems: list[str] = []
+
+    sections = sections_by_heading(document, r"^#{2,3} (T-\d+)\b.*$")
+    for question in manifest.get("questions", []):
+        section = sections.get(question)
+        if section is None:
+            problems.append(f"{question}: no '## {question}' section in the decision document")
+            continue
+        for label in manifest.get("questionLabels", []):
+            if f"**{label}:**" not in section:
+                problems.append(f"{question}: missing its {label!r} part")
+
+    marker = manifest.get("proposalMarker")
+    if marker and marker.lower() not in document.lower():
+        problems.append(f"the decision document never says it is a {marker!r}")
+
+    tokens = [str(token) for token in manifest.get("forbiddenTokens", [])]
+    if tokens:
+        token_pattern = re.compile(
+            "|".join(
+                rf"\b{re.escape(token)}\b" if token.isalnum() else re.escape(token)
+                for token in tokens
+            )
+        )
+        found = token_pattern.search(document)
+        if found:
+            problems.append(f"{rel}: port wire token {found.group(0)!r} is not the port's to decide")
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -775,6 +824,7 @@ CHECKS = (
     ("cell_schema", check_cell_schema, "PATCH-0005"),
     ("cell_program", check_cell_program, "PATCH-0005"),
     ("cell_media", check_cell_media, "PATCH-0005"),
+    ("cell_stream", check_cell_stream, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -836,6 +886,7 @@ FIXTURE_PATHS = (
     "docs/CELL-SCHEMA.md",
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
+    "docs/CELL-TRANSPORT-DECISION.md",
     "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
     "patches",
     "tickets",
@@ -1058,6 +1109,30 @@ def mutate_cell_media_question_missing(root: Path) -> None:
     path.write_text(text.replace(phrase, "## Bounds —", 1), encoding="utf-8")
 
 
+def mutate_cell_stream_owner_removed(root: Path) -> None:
+    path = root / "docs" / "CELL-TRANSPORT-DECISION.md"
+    text = read_text(path)
+    phrase = "**Owner:**"
+    if phrase not in text:
+        raise GateError("fixture: the owner label was not found before mutation")
+    path.write_text(text.replace(phrase, "**Decided by:**", 1), encoding="utf-8")
+
+
+def mutate_cell_stream_wire_token(root: Path) -> None:
+    path = root / "docs" / "CELL-TRANSPORT-DECISION.md"
+    text = read_text(path)
+    path.write_text(text + "\nEach chunk is `Kind::Chunk`.\n", encoding="utf-8")
+
+
+def mutate_cell_stream_question_missing(root: Path) -> None:
+    path = root / "docs" / "CELL-TRANSPORT-DECISION.md"
+    text = read_text(path)
+    phrase = "## T-4 —"
+    if phrase not in text:
+        raise GateError("fixture: the T-4 heading was not found before mutation")
+    path.write_text(text.replace(phrase, "## Duplicate delivery —", 1), encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1080,6 +1155,9 @@ SELFTEST_SCENARIOS = (
     ("cell_media_owner_removed_refused", mutate_cell_media_owner_removed, "cell_media"),
     ("cell_media_wire_token_refused", mutate_cell_media_wire_token, "cell_media"),
     ("cell_media_question_missing_refused", mutate_cell_media_question_missing, "cell_media"),
+    ("cell_stream_owner_removed_refused", mutate_cell_stream_owner_removed, "cell_stream"),
+    ("cell_stream_wire_token_refused", mutate_cell_stream_wire_token, "cell_stream"),
+    ("cell_stream_question_missing_refused", mutate_cell_stream_question_missing, "cell_stream"),
 )
 
 

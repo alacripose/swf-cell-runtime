@@ -53,7 +53,7 @@ no client code yet.
 | Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
 | Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`); proposal in `docs/CELL-PROGRAM-DECISION.md`, awaiting the format owner's ruling |
 | Media kinds (bitmap, font, audio) | not-implemented | Ruled D-2: one kind per media type, one field each, each needing a format-document line; field contents proposed in `docs/CELL-MEDIA-DECISION.md`, awaiting the format owner's ruling |
-| Streamed transport | not-implemented | Ruled D-4: a new layer with its own byte/digest/receipt decisions; not "mount-v2", which does not exist in either family |
+| Streamed transport | not-implemented | Ruled D-4: a new layer with its own byte/digest/receipt decisions; not "mount-v2", which does not exist in either family; proposal covering eight questions in `docs/CELL-TRANSPORT-DECISION.md`, awaiting the format owner's ruling |
 
 ## Shell-only import layer (H4–H5, H7–H8) — owner: shell
 
@@ -79,7 +79,7 @@ no client code yet.
 | `cell_mount` (`Mount::watch` semantics: digest dedup, adopt-or-refuse-whole) | not-implemented | client crate needed |
 | `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | blocked | H5: proposal written (`docs/CELL-PROGRAM-DECISION.md`), awaiting the format owner's ruling |
 | `cell_runtime` (graph, timeline scheduler, event dispatch, state, save/recovery) | not-implemented | H4/H5 |
-| `cell_stream` (watched file + door admission; no second transport) | not-implemented | client crate needed |
+| `cell_stream` (watched file + door admission; no second transport) | not-implemented | client crate needed; proposal in `docs/CELL-TRANSPORT-DECISION.md` |
 | `render_wgpu` (batches, atlases, text, layers/depth/mask/filter, disposable caches) | not-implemented | H2 present; client crate needed |
 | `client` (`winit` lifecycle, input forwarding, resize, redraw, notices) | not-implemented | — |
 | Single surface identity, no second window/renderer/router/scheduler | present as a gate rule | enforcement is guard-only until code exists |
@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Streamed-transport guard (four-part questions, no wire tokens) | present | `tools/port_gate.py` `cell_stream` over `config/cell-stream.json` |
 | Cell-media guard (four-part questions, no wire tokens) | present | `tools/port_gate.py` `cell_media` over `config/cell-media.json` |
 | Cell-program guard (four-part questions, labelled budgets, no wire tokens, no budget framed as a program constraint) | present | `tools/port_gate.py` `cell_program` over `config/cell-program.json` |
 | Cell-schema guard (six invariants, four-part answers, no wire tokens, no raster target) | present | `tools/port_gate.py` `cell_schema` over `config/cell-schema.json` |
