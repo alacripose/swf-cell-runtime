@@ -123,6 +123,37 @@ pub fn role_accepts(role: &str) -> bool {
     Vocabulary::ThemeRole.accepts(role) || Vocabulary::TypeRole.accepts(role)
 }
 
+/// Which declared table a node role came from.
+///
+/// `dl-enclave` §2.5 says a node's role is "a theme role ... or a type role ..."; it declares no
+/// per-kind mapping, so none is invented here. The split is recorded rather than inferred later, and
+/// the two tables are proven disjoint in `tests/role_class.rs`, which makes the class total.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RoleClass {
+    Theme,
+    Type,
+}
+
+impl RoleClass {
+    pub fn name(self) -> &'static str {
+        match self {
+            RoleClass::Theme => "theme",
+            RoleClass::Type => "type",
+        }
+    }
+}
+
+/// Classify a role by the table that declares it, or `None` when neither does.
+pub fn classify_role(role: &str) -> Option<RoleClass> {
+    if Vocabulary::ThemeRole.accepts(role) {
+        Some(RoleClass::Theme)
+    } else if Vocabulary::TypeRole.accepts(role) {
+        Some(RoleClass::Type)
+    } else {
+        None
+    }
+}
+
 /// A chrome or moves column is a comma-separated list of declared tokens, or `-` for none.
 pub fn list_accepts(vocabulary: Vocabulary, field: &str) -> bool {
     field

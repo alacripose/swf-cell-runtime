@@ -11,7 +11,7 @@
 //! refusal names the value it refused.
 
 use crate::frame::Refusal;
-use crate::vocabulary::{self, Vocabulary};
+use crate::vocabulary::{self, RoleClass, Vocabulary};
 
 pub const SURFACE_SCHEMA: &str = "dl-enclave.surface/1";
 
@@ -52,6 +52,7 @@ pub struct Node {
     pub parent: Option<String>,
     pub kind: String,
     pub role: String,
+    pub role_class: RoleClass,
     pub value: String,
 }
 
@@ -153,15 +154,14 @@ fn declared_list(vocabulary: Vocabulary, text: &str) -> Result<String, Refusal> 
     }
 }
 
-fn declared_role(text: &str) -> Result<String, Refusal> {
-    if vocabulary::role_accepts(text) {
-        Ok(text.to_string())
-    } else {
-        Err(Refusal::UnknownValue {
+fn declared_role(text: &str) -> Result<(String, RoleClass), Refusal> {
+    match vocabulary::classify_role(text) {
+        Some(class) => Ok((text.to_string(), class)),
+        None => Err(Refusal::UnknownValue {
             vocabulary: "node role",
             code: "unknown-node-role",
             found: text.to_string(),
-        })
+        }),
     }
 }
 
@@ -296,11 +296,13 @@ impl Surface {
                         }
                         Some(fields[3].to_string())
                     };
+                    let (role, role_class) = declared_role(fields[5])?;
                     current.nodes.push(Node {
                         id: node_id,
                         parent,
                         kind: declared(Vocabulary::NodeKind, fields[4])?,
-                        role: declared_role(fields[5])?,
+                        role,
+                        role_class,
                         value: non_empty(&row, "value", fields[6])?,
                     });
                 }
