@@ -129,3 +129,18 @@ planet tree; no shell completion, mount or parity is claimed here, and `inputs/`
   rulings this repository had no code tree. **Superseded by D-6:** since TICKET-0026 it has one
   (`crates/planet-shell-ledger`), a ledger and no reader; the sentence above is corrected here, not
   deleted.
+
+## D-7 — The importer is agent work for this game, as a streaming proof (2026-11-02)
+
+The user overrode the off-agent importer rule (plan §4.2, AGENTS.md §1) for one purpose: convert
+`inputs/swf1.swf` far enough to send a real, source-derived package through the canonical mount, and
+verify it. Their words: "as proof of the package streaming, and I still verify".
+
+Consequences:
+
+- `crates/swf-import` reads the file's measured structure and emits a `V4PKG001` declaration frame.
+  It lowers no shape, timeline or script: those representations are still the format owner's to
+  declare, and inventing them here would be the kind→role mistake again.
+- The package proves the pipeline — digest, receipt, ledger entry, adoption — not gameplay. The user
+  is the witness; the agent reports measurements and refusals only.
+- The general rule for other files and other games is unchanged.

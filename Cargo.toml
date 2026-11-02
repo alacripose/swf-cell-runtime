@@ -1,6 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["crates/planet-client", "crates/planet-package", "crates/planet-shell-ledger"]
+members = ["crates/planet-client", "crates/planet-package", "crates/planet-shell-ledger",
+    "crates/swf-import",
+]
 
 [workspace.package]
 version = "0.1.0"

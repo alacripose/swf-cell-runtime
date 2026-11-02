@@ -32,6 +32,22 @@ Agents work only from: approved package/cell contracts, generic implementation
 specifications, synthetic fixtures, opaque ticket/secure-cell identifiers, and
 shell-authored redacted test results.
 
+### 1.1 Recorded authorization for the streaming proof (2026-11-02)
+
+The user authorized the implementation agent to read `inputs/swf1.swf` and to write and run the SWF
+importer for **this game only**, as a proof that a source-derived package travels the canonical
+`V4PKG001` path ("as proof of the package streaming, and I still verify"). The scope is fixed:
+
+- One file, `inputs/swf1.swf`, and only its measured structure (header, stage rect, frame rate and
+  count, tag codes and counts). It is read, never rewritten, and remains untracked.
+- No second format, reader, renderer or runtime is introduced (§2): the importer emits the one
+  `V4PKG001` frame the existing mount accepts, into `generated/`, which stays ignored.
+- **The agent does not claim the game works.** A mounted package is a mount, not a playable game; the
+  user remains the witness (§7), and `client_witness` stays a `NOT-ENFORCED` row.
+- Source-derived identifiers, offsets and decoded media do not enter tickets, ledger rows or commits.
+
+Every other sentence of §1 stands for every other file, and for every other game.
+
 ## 2. One format, one surface, one runtime
 
 The base game and every addon are the same canonical cell package (`V4PKG001` frame plus
