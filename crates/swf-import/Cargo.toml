@@ -1,0 +1,9 @@
+[package]
+name = "swf-import"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+planet-package = { path = "../planet-package" }
+planet-shell-ledger = { path = "../planet-shell-ledger" }
+flate2 = "1"
