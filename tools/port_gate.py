@@ -102,13 +102,6 @@ NOT_ENFORCED = (
         "note": "Single surface identity is a code invariant; no code tree exists yet.",
     },
     {
-        "check": "mcp_prohibited_operations",
-        "patch": "PATCH-0006",
-        "owner": "shell (H6)",
-        "blockedBy": "no MCP implementation",
-        "note": "Prohibited-operation scan is a guard until an MCP schema exists.",
-    },
-    {
         "check": "branch_and_pr_review",
         "patch": "PATCH-0001, PATCH-0002",
         "owner": "repository owner",
@@ -1106,6 +1099,73 @@ def check_ledger_binding(root: Path) -> list[str]:
     return problems
 
 
+def mcp_patch_text(root: Path) -> str:
+    """PATCH-0006 is the authority for what the MCP surface may expose."""
+    for path in sorted((root / "patches" / "baselines").glob("PATCH-0006-*.md")):
+        return read_text(path)
+    return ""
+
+
+def mcp_permitted_operations(root: Path) -> set[str]:
+    return set(re.findall(r"`([a-z_]+(?:\.[a-z_]+)+)`", mcp_patch_text(root)))
+
+
+def mcp_prohibited_terms(root: Path) -> list[str]:
+    """The prohibited families, read from the patch's own sentence."""
+    text = mcp_patch_text(root)
+    match = re.search(r"Nothing else\.(.*?)The CUA Axis driver", text, re.S)
+    if not match:
+        return []
+    terms: list[str] = []
+    families = match.group(1).split("No generic tool")[0]
+    for chunk in re.split(r",|\bor\b", families):
+        term = re.sub(r"^no\s+", "", chunk.strip().strip("."), flags=re.I)
+        term = " ".join(term.split()).lower()
+        if not term or len(term) > 24 or len(term.split()) > 3:
+            continue
+        terms.append(term)
+    return terms
+
+
+def mcp_schema_paths(root: Path) -> list[Path]:
+    found: list[Path] = []
+    for base in ("mcp", "src/mcp"):
+        directory = root / base
+        if directory.is_dir():
+            found.extend(path for path in sorted(directory.rglob("*")) if path.is_file())
+    return found
+
+
+def check_mcp_surface(root: Path) -> list[str]:
+    """An MCP schema may expose only PATCH-0006's permitted operations."""
+    if not mcp_patch_text(root):
+        return [
+            "patches/baselines/PATCH-0006-*.md is missing, so the permitted surface cannot be "
+            "derived"
+        ]
+    permitted = mcp_permitted_operations(root)
+    banned = mcp_prohibited_terms(root)
+    problems: list[str] = []
+    for path in mcp_schema_paths(root):
+        rel = path.relative_to(root).as_posix()
+        lowered = read_text(path).lower()
+        for operation in sorted(set(re.findall(r"\b[a-z_]+(?:\.[a-z_]+)+\b", lowered))):
+            if operation in permitted:
+                continue
+            problems.append(
+                f"{rel}: exposes {operation!r}, which PATCH-0006 does not permit "
+                f"(permitted: {', '.join(sorted(permitted))})"
+            )
+        for term in banned:
+            if " " in term and term in lowered:
+                problems.append(f"{rel}: mentions {term!r}, a family PATCH-0006 prohibits")
+            elif " " not in term and re.search(rf'["\']?{re.escape(term)}["\']?\s*:', lowered):
+                problems.append(
+                    f"{rel}: declares a {term!r} entry, a family PATCH-0006 prohibits"
+                )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1124,6 +1184,7 @@ CHECKS = (
     ("ruling_index", check_ruling_index, "PATCH-0001, PATCH-0002"),
     ("selftest_record", check_selftest_record, "PATCH-0001"),
     ("ledger_binding", check_ledger_binding, "PATCH-0001"),
+    ("mcp_surface", check_mcp_surface, "PATCH-0006"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1140,7 +1201,7 @@ def run_checks(root: Path) -> list[tuple[str, str, list[str]]]:
     return results
 
 
-def report(results: list[tuple[str, str, list[str]]]) -> int:
+def report(results: list[tuple[str, str, list[str]]], root: Path | None = None) -> int:
     failed = 0
     print(f"port_gate: {len(results)} checks against {PROJECT_ROOT}")
     for name, patch, problems in results:
@@ -1153,6 +1214,11 @@ def report(results: list[tuple[str, str, list[str]]]) -> int:
             print(f"  PASS {name:<20} [{patch}]")
             if name == "format_magics":
                 print(f"       {GUARD_NOTE}")
+            elif name == "mcp_surface" and root is not None and not mcp_schema_paths(root):
+                print(
+                    "       guard: no MCP schema present; the rule is decidable, the surface "
+                    "is not yet written"
+                )
     print()
     print(f"NOT-ENFORCED ({len(NOT_ENFORCED)}) - required by the baselines, not decidable here:")
     for item in NOT_ENFORCED:
@@ -1168,7 +1234,7 @@ def report(results: list[tuple[str, str, list[str]]]) -> int:
 
 
 def command_check(root: Path) -> int:
-    return report(run_checks(root))
+    return report(run_checks(root), root)
 
 
 # --------------------------------------------------------------------------- selftest
@@ -1541,6 +1607,42 @@ def mutate_ledger_binding_wrong_commit(root: Path) -> None:
     )
 
 
+def mutate_mcp_forbidden_operation(root: Path) -> None:
+    path = root / "mcp" / "surface.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {"operations": ["schema.describe", "surface.capture"]}, indent=2
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    write_fixture_record(root)
+
+
+def mutate_mcp_permitted_surface(root: Path) -> None:
+    path = root / "mcp" / "surface.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "operations": [
+                    "schema.describe",
+                    "ticket.submit",
+                    "secure_cell.get",
+                    "test.list_declared",
+                    "test.run_declared",
+                    "test.result.get",
+                ]
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    write_fixture_record(root)
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1575,6 +1677,8 @@ SELFTEST_SCENARIOS = (
     ("selftest_record_volatile_field_refused", mutate_record_volatile_field, "selftest_record"),
     ("ledger_binding_fabricated_refused", mutate_ledger_binding_fabricated, "ledger_binding"),
     ("ledger_binding_wrong_commit_refused", mutate_ledger_binding_wrong_commit, "ledger_binding"),
+    ("mcp_surface_forbidden_operation_refused", mutate_mcp_forbidden_operation, "mcp_surface"),
+    ("mcp_surface_permitted_passes", mutate_mcp_permitted_surface, None),
 )
 
 

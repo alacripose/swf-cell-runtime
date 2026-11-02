@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| MCP surface guard (schema restricted to PATCH-0006's permitted operations; prohibited families refused) | present | `tools/port_gate.py` `mcp_surface` over `mcp/` and `src/mcp/` |
 | Ledger-to-commit binding (each entry resolves to one commit that adds it and its ticket) | present | `tools/port_gate.py` `ledger_binding` over git history |
 | Selftest-record guard (fixture identity matches, record reproducible from its own results) | present | `tools/port_gate.py` `selftest_record` over `artifacts/redacted-test-results/port-gate-selftest.json` |
 | Ruling-index guard (coverage, owner, disposition and source against each source; no wire tokens) | present | `tools/port_gate.py` `ruling_index` over `config/ruling-index.json` |

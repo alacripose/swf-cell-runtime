@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:651d2d0083174fece9eb0f724513b8f455338ade6e8e86fc83ad34a3247693b3",
+    "identity": "sha256:e4a0a0fef85e54e423bef97ae30d1b52c7bb7016c2cf83f64d69e9dd9ce8faa2",
     "inputs": 18
   },
   "python": "3.13.14",
-  "scenarios": 33,
-  "passed": 33,
+  "scenarios": 35,
+  "passed": 35,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -436,6 +436,24 @@
         "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies",
         "LEDGER-0002: names a commit that does not carry it; history puts this entry in a different commit"
       ],
+      "pass": true
+    },
+    {
+      "scenario": "mcp_surface_forbidden_operation_refused",
+      "expected_failure": "mcp_surface",
+      "failing_checks": [
+        "mcp_surface"
+      ],
+      "problems": [
+        "mcp/surface.json: exposes 'surface.capture', which PATCH-0006 does not permit (permitted: schema.describe, secure_cell.get, test.list_declared, test.result.get, test.run_declared, ticket.submit)"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "mcp_surface_permitted_passes",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
       "pass": true
     }
   ],
