@@ -59,6 +59,22 @@
         "MAGIC_ARTIFACTS",
         "artifacts_in"
       ]
+    },
+    {
+      "id": "E-5",
+      "superseded": [
+        "existing mount-v2 transport path",
+        "Use the existing mount-v2 stream/receipt path as the transport and mount boundary",
+        "Consumes the existing mount-v2 delivery path",
+        "Receive the exact package bytes through the existing mount-v2 stream path.",
+        "the mount-v2 byte/digest/receipt contract."
+      ],
+      "citations": [
+        "crates/planet-shell/src/mount.rs",
+        "Mount::watch",
+        "crates/planet-package/src/frame.rs",
+        "docs/DECISIONS-PORT.md"
+      ]
     }
   ]
 }

@@ -6,7 +6,7 @@
 
 **Revision:** v3 — trust-boundary and maximal-contract correction.
 
-**Errata (2026-11-02):** four claims in §3.1 and §12 are superseded by measured source — **E-1** `shploingus.cells/1` and `shploingus.cellframe/1` ownership, **E-2** the `surface.mount/2` transport, **E-3** the code-kind reader status, **E-4** the asset-reference mechanism. Each erratum keeps the original wording visible beside the correction and cites the file that settles it. Full ownership record: `docs/PACKAGE-OWNERSHIP.md`; evidence: `LEDGER-0008`. Open decisions are marked undecided, not answered.
+**Errata (2026-11-02):** four claims in §3.1 and §12 are superseded by measured source — **E-1** `shploingus.cells/1` and `shploingus.cellframe/1` ownership, **E-2** the `surface.mount/2` transport, **E-3** the code-kind reader status, **E-4** the asset-reference mechanism, **E-5** the remaining "existing mount-v2" references. Each erratum keeps the original wording visible beside the correction and cites the file that settles it. Full ownership record: `docs/PACKAGE-OWNERSHIP.md`; evidence: `LEDGER-0008`. Open decisions are marked undecided, not answered.
 
 **Rulings (2026-11-02):** the four decisions the errata named as open were put to the project owner and answered. **D-1** a cell is a *declared display unit over data*, not a character grid — the family-B `cellframe` 8 × 16 paper/ink raster is that family's renderer, standing where a map renderer or an XML renderer stands in other trees; **D-2** media travel as per-type kinds (bitmap, font, audio), one field each; **D-3** the reserved code kind executes a bounded deterministic cell-program instruction set; **D-4** the port gains a streamed transport as a new layer with its own decisions, explicitly not "mount-v2", which does not exist. Where an erratum's *Status* line still calls one of these open, this block supersedes the status; each erratum's correction of fact stands unchanged. Rulings are decisions, not implementations. Full record: `docs/DECISIONS-PORT.md`; ledger entry `LEDGER-0009`.
 
@@ -863,3 +863,17 @@ The audit of the four public repositories does not expose the full authoritative
 **Errata status note.** §12's closing condition — read the authoritative crate directly before writing a parser — was satisfied at H2 (TICKET-0004, TICKET-0005): `planet-package`, `planet-core`, `voxel-package` and the Java `PackageFrame` were read, and `docs/PACKAGE-OWNERSHIP.md` records the ownership and the compatibility measurements. Its fallback sentence ("the shell records the package layer as `absent`") is therefore not in force: the layer is `present`, and the paragraph below is retained as the condition that was met, not as a pending instruction.
 
 **Final architecture rule:** the SWF is compiled into the cell package; the cell package is mounted into the one surface; the one cell runtime executes both the base game's behavior and streamed addon behavior. Openlock contributes the proven delivery transaction mechanics, secure-shell contributes the stream/receipt/evidence discipline, the civ-bots prototype contributes strict framed-package and state-continuity examples, and ala-cities contributes the Rust window/GPU foundation. None of those projects licenses a second runtime or a second content format.
+
+> **ERRATUM E-5 — supersedes the remaining "existing mount-v2" references (measured 2026-11-02).**
+>
+> **Superseded:** "existing mount-v2 transport path"; "Use the existing mount-v2 stream/receipt path as the transport and mount boundary"; "Consumes the existing mount-v2 delivery path"; "Receive the exact package bytes through the existing mount-v2 stream path."; "the mount-v2 byte/digest/receipt contract."
+>
+> **Measured:** no mount-v2 byte/digest/receipt contract exists in the authoritative tree.
+> `crates/planet-shell/src/mount.rs` adopts a watched file (`Mount::watch`), and
+> `crates/planet-package/src/frame.rs` carries the frame digest. `docs/DECISIONS-PORT.md` D-4
+> therefore rules the streamed transport a new layer, explicitly not mount-v2; E-2 corrected §3.1,
+> and the sentences quoted above in §1, §2.5, §5.1, §6.2 and §12 instruct the opposite. They are
+> superseded by D-4 and E-2, and the original wording stays visible above.
+>
+> **Status:** contradiction — corrected. The transport remains a new, undecided layer
+> (`docs/SCOPE-ACCOUNTING.md`), and no implementation may assume a mount-v2 path.
