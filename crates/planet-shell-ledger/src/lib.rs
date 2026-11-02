@@ -308,6 +308,7 @@ impl Entry {
 }
 
 /// A chain held in memory, read from and rendered to the durable line form.
+#[derive(Clone)]
 pub struct Ledger {
     entries: Vec<Entry>,
 }
