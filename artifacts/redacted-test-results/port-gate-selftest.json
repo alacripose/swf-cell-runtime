@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:9cbd048e7a5807e6f09e43dbd9f80cdc9babe30bd3513803a28c78c9239bcccc",
-    "inputs": 18
+    "identity": "sha256:d214edcb26863d716521c33bf735dabca21aed04dce402531d79f8d6458cc0c7",
+    "inputs": 19
   },
   "python": "3.13.14",
-  "scenarios": 115,
-  "passed": 115,
+  "scenarios": 119,
+  "passed": 119,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -718,6 +718,17 @@
       "pass": true
     },
     {
+      "scenario": "sweep_addon_parity",
+      "expected_failure": "addon_parity",
+      "failing_checks": [
+        "addon_parity"
+      ],
+      "problems": [
+        "docs\\CELL-ADDON-DECISION.md: the owner's statement is no longer recorded verbatim in the addon decision"
+      ],
+      "pass": true
+    },
+    {
       "scenario": "silent_baselines_present",
       "expected_failure": null,
       "failing_checks": [
@@ -906,6 +917,16 @@
       "pass": true
     },
     {
+      "scenario": "silent_addon_parity",
+      "expected_failure": null,
+      "failing_checks": [
+        "governance_files",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "decoy_baselines_present",
       "expected_failure": null,
       "failing_checks": [],
@@ -1039,6 +1060,13 @@
       "pass": true
     },
     {
+      "scenario": "decoy_addon_parity",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "near_baselines_present",
       "expected_failure": "baselines_present",
       "failing_checks": [
@@ -1100,7 +1128,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 26: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 27: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
@@ -1246,6 +1274,17 @@
       ],
       "problems": [
         "crates/planet-package-evil/src/frame.rs: parses the package frame outside the planet-package reader named in the ownership record"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_addon_parity",
+      "expected_failure": "addon_parity",
+      "failing_checks": [
+        "addon_parity"
+      ],
+      "problems": [
+        "docs\\CELL-ADDON-DECISION.md: the owner's statement is no longer recorded verbatim in the addon decision"
       ],
       "pass": true
     }

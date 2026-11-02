@@ -54,6 +54,7 @@ no client code yet.
 | Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`); proposal in `docs/CELL-PROGRAM-DECISION.md`, awaiting the format owner's ruling |
 | Media kinds (bitmap, font, audio) | not-implemented | Ruled D-2: one kind per media type, one field each, each needing a format-document line; field contents proposed in `docs/CELL-MEDIA-DECISION.md`, awaiting the format owner's ruling |
 | Streamed transport | not-implemented | Ruled D-4: a new layer with its own byte/digest/receipt decisions; not "mount-v2", which does not exist in either family; proposal covering eight questions in `docs/CELL-TRANSPORT-DECISION.md`, awaiting the format owner's ruling |
+| Shell inferred and delivered as a streamed packaged addon that parity checks itself | not-implemented | Ruled D-5: the shell's behaviour comes from inference over the other projects, delivery is a streamed packaged addon carrying canonical package bytes, and parity is the addon's own check; obligations C-1..C-3 and open questions A-1..A-4 in `docs/CELL-ADDON-DECISION.md`. No shell, handle or parity check exists in this tree |
 
 ## Shell-only import layer (H4–H5, H7–H8) — owner: shell
 

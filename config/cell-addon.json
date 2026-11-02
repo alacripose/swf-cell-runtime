@@ -1,0 +1,70 @@
+{
+  "note": "Guards the owner's addon statement: it stays recorded verbatim, each commitment and each cited evidence entry stays stated, every question keeps its recommendation, rejected alternative, falsifier and owner, and no parity or shell completion is claimed.",
+  "document": "docs/CELL-ADDON-DECISION.md",
+  "statement": "the shell is inferred from the other projects, delivered as a streamed packaged addon that parity checks itself",
+  "proposalMarker": "proposal",
+  "commitments": [
+    {
+      "id": "C-1",
+      "text": "the shell's behaviour is evidence to be inferred from the other projects"
+    },
+    {
+      "id": "C-2",
+      "text": "delivery is a streamed packaged addon, carrying canonical package bytes"
+    },
+    {
+      "id": "C-3",
+      "text": "the addon parity checks itself, before any consumer sees it"
+    }
+  ],
+  "sources": [
+    {
+      "id": "E-1",
+      "cites": "openlock/README.md",
+      "claim": "a UI shell that mounts as a normal addon and declares its windows from a package"
+    },
+    {
+      "id": "E-2",
+      "cites": "openlock/examples/motd-addon/README.md",
+      "claim": "one package frame declares a window; no second manifest, no separate window format"
+    },
+    {
+      "id": "E-3",
+      "cites": "openlock/README.md",
+      "claim": "an addon is the same package family, digest checked before use"
+    },
+    {
+      "id": "E-4",
+      "cites": "openlock/docs/DELIVERY.md",
+      "claim": "the delivery record separates evidence from claims"
+    },
+    {
+      "id": "E-5",
+      "cites": "openlock/.scratch/parity-current.json",
+      "claim": "a parity checkpoint that records a shell state per cell, with a commit and a witness"
+    },
+    {
+      "id": "E-6",
+      "cites": "ala_civ_bots_prototype/AGENTS.md",
+      "claim": "the consumer refuses on parity"
+    },
+    {
+      "id": "E-7",
+      "cites": "secure-shell/README.md",
+      "claim": "a shell with a package stream and a ledger in which an unshown change has not landed"
+    },
+    {
+      "id": "E-8",
+      "cites": "dl-enclave/README.md",
+      "claim": "a shell shipped as its own installable image, with the client and MCP surface as separate artifacts, and no implementation claimed"
+    }
+  ],
+  "questions": ["A-1", "A-2", "A-3", "A-4"],
+  "questionLabels": ["Recommendation", "Rejected", "Falsifier", "Owner"],
+  "forbiddenClaims": [
+    "parity is verified",
+    "parity has been verified",
+    "the shell is implemented",
+    "the addon is implemented"
+  ]
+}

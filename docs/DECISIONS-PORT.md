@@ -76,6 +76,24 @@ family, a second mount store, or a second content schema. It moves canonical pac
 not define them. Today the measured route remains `Mount::watch` over a directory plus the package-door
 admission, and the ledger row that admission leaves.
 
+## D-5 — the shell is inferred, delivered as a streamed packaged addon that parity checks itself
+
+**Ruling, recorded verbatim from the project owner:** "the shell is inferred from the other projects, delivered as a streamed packaged addon that parity checks itself".
+
+**Settles:** where the shell's behaviour comes from (inference over the other projects' committed
+statements, not an authored specification here), how it is delivered (a streamed packaged addon
+carrying canonical package bytes, over the transport D-4 established), and that parity is the
+addon's own check rather than a reviewer's assertion.
+
+**Does not settle:** what evidence an inference may rest on, whether an addon is a separate artifact
+from the base package, what parity compares, or who may treat a parity report as a gate state. Those
+are A-1 to A-4 in `docs/CELL-ADDON-DECISION.md`, each with a recommendation, a rejected alternative, a
+falsifier and an owner.
+
+**Consequence, and the lines that must not be crossed:** no second format for addons, no side channel
+beside the stream, no parity format invented here, and no parity or shell completion claimed by this
+repository. The shell's gate states remain the shell's to assign, and `inputs/` stays unread.
+
 ---
 
 ## What these rulings do not do

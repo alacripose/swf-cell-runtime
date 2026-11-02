@@ -53,6 +53,7 @@ GOVERNANCE_FILES = (
     "docs/SCOPE-ACCOUNTING.md",
     "docs/CELL-MODEL.md",
     "docs/CELL-SCHEMA.md",
+    "docs/CELL-ADDON-DECISION.md",
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
     "docs/CELL-TRANSPORT-DECISION.md",
@@ -69,6 +70,7 @@ GOVERNANCE_FILES = (
     "config/cell-program.json",
     "config/cell-media.json",
     "config/cell-stream.json",
+    "config/cell-addon.json",
     "config/ruling-index.json",
     "tools/pre-commit",
 )
@@ -1265,6 +1267,69 @@ def check_duplicate_reader(root: Path) -> list[str]:
     return problems
 
 
+def check_addon_parity(root: Path) -> list[str]:
+    """The addon statement stays verbatim, its commitments stay stated, and no parity is claimed."""
+    manifest_path = root / "config" / "cell-addon.json"
+    if not manifest_path.is_file():
+        return ["config/cell-addon.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/cell-addon.json is not valid JSON: {exc}"]
+
+    document_path = root / str(manifest.get("document", "docs/CELL-ADDON-DECISION.md"))
+    if not document_path.is_file():
+        return [f"{document_path.relative_to(root)} is missing"]
+    document = read_text(document_path)
+    rel = document_path.relative_to(root)
+    problems: list[str] = []
+
+    statement = manifest.get("statement")
+    if not isinstance(statement, str) or not statement:
+        problems.append("config/cell-addon.json records no statement to check")
+    elif statement not in document:
+        problems.append(
+            f"{rel}: the owner's statement is no longer recorded verbatim in the addon decision"
+        )
+
+    sections = sections_by_heading(document, r"^#{2,3} (A-\d+)\b.*$")
+    for question in manifest.get("questions", []):
+        section = sections.get(question)
+        if section is None:
+            problems.append(f"{question}: no '## {question}' section in the addon decision")
+            continue
+        for label in manifest.get("questionLabels", []):
+            if f"**{label}:**" not in section:
+                problems.append(f"{question}: missing its {label!r} part")
+
+    for commitment in manifest.get("commitments", []):
+        identifier = commitment.get("id") if isinstance(commitment, dict) else None
+        text = commitment.get("text") if isinstance(commitment, dict) else None
+        if not isinstance(text, str) or text not in document:
+            problems.append(f"{identifier}: the decision no longer records {text!r}")
+
+    marker = manifest.get("proposalMarker")
+    if marker and str(marker).lower() not in document.lower():
+        problems.append(f"the addon decision never says it is a {marker!r}")
+
+    for source in manifest.get("sources", []):
+        identifier = source.get("id") if isinstance(source, dict) else None
+        claim = source.get("claim") if isinstance(source, dict) else None
+        cites = source.get("cites") if isinstance(source, dict) else None
+        if not isinstance(claim, str) or claim not in document:
+            problems.append(
+                f"{identifier}: the decision no longer records what {cites!r} shows"
+            )
+
+    lowered = document.lower()
+    for claim in manifest.get("forbiddenClaims", []):
+        if str(claim).lower() in lowered:
+            problems.append(
+                f"{rel}: claims {str(claim)!r}; the shell and its parity are not witnessed here"
+            )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1285,6 +1350,7 @@ CHECKS = (
     ("ledger_binding", check_ledger_binding, "PATCH-0001"),
     ("mcp_surface", check_mcp_surface, "PATCH-0006"),
     ("duplicate_reader", check_duplicate_reader, "PATCH-0005"),
+    ("addon_parity", check_addon_parity, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1359,6 +1425,7 @@ FIXTURE_PATHS = (
     "docs/SCOPE-ACCOUNTING.md",
     "docs/CELL-MODEL.md",
     "docs/CELL-SCHEMA.md",
+    "docs/CELL-ADDON-DECISION.md",
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
     "docs/CELL-TRANSPORT-DECISION.md",
@@ -1848,6 +1915,30 @@ SELFTEST_SCENARIOS = (
 )
 
 
+def mutate_addon_statement_altered(root: Path) -> None:
+    manifest = json.loads(read_text(root / "config" / "cell-addon.json"))
+    statement = str(manifest["statement"])
+    path = root / "docs" / "CELL-ADDON-DECISION.md"
+    text = read_text(path)
+    if statement not in text:
+        raise GateError("fixture: the recorded statement was not found before mutation")
+    altered = statement.replace("parity checks itself", "parity is checked by the consumer")
+    path.write_text(text.replace(statement, altered, 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def mutate_addon_statement_capitalised(root: Path) -> None:
+    manifest = json.loads(read_text(root / "config" / "cell-addon.json"))
+    statement = str(manifest["statement"])
+    path = root / "docs" / "CELL-ADDON-DECISION.md"
+    text = read_text(path)
+    if statement not in text:
+        raise GateError("fixture: the recorded statement was not found before mutation")
+    capitalised = statement[0].upper() + statement[1:]
+    path.write_text(text.replace(statement, capitalised, 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
 # One violating mutation per enforced check, with the wording that check alone must emit. Each
 # entry is run twice: enabled (the wording must come from this check and no other) and with the
 # check skipped (the wording must disappear). A check with no entry here fails the suite.
@@ -1899,6 +1990,7 @@ SWEEP = (
         mutate_duplicate_reader_second_parser,
         "parses the package frame outside the planet-package reader",
     ),
+    ("addon_parity", mutate_addon_statement_altered, "no longer recorded verbatim"),
 )
 
 
@@ -1924,6 +2016,7 @@ SILENCE = (
     ("ledger_binding", mutate_record_volatile_field),
     ("mcp_surface", mutate_duplicate_reader_second_parser),
     ("duplicate_reader", mutate_mcp_forbidden_operation),
+    ("addon_parity", mutate_governance_file_removed),
 )
 
 
@@ -2062,6 +2155,13 @@ DECOY = (
     ("ledger_binding", decoy_ledger_field("witness", "0" * 40)),
     ("mcp_surface", decoy_file("docs/mcp-notes.md", "surface.capture is not permitted.\n")),
     ("duplicate_reader", decoy_file("docs/reader-note.md", "The frame magic is V4PKG001.\n")),
+    (
+        "addon_parity",
+        decoy_appended(
+            "docs/CELL-ADDON-DECISION.md",
+            "\nWhether parity is checked by the consumer is A-3.\n",
+        ),
+    ),
 )
 
 
@@ -2319,6 +2419,7 @@ NEAR_MISS = (
         near_reader_sibling_crate,
         "parses the package frame outside the planet-package reader",
     ),
+    ("addon_parity", mutate_addon_statement_capitalised, "no longer recorded verbatim"),
 )
 
 
