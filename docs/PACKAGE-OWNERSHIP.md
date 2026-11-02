@@ -238,3 +238,19 @@ is or is not adopted.
 **Still blocked:** the family-A cell representation decision (§6), the code-kind executor (H5),
 the `shploingus.cells/1` version-0 path (refused by family B itself, so it stays refused here), and
 any streaming transport beyond the watched file.
+
+## 8. Rulings (2026-11-02)
+
+Section 6's bullet offering "a new family-A `Kind` carrying a cell raster with family B's semantics
+(ceilings, role not colour, window-bounded, empty refused, all problems reported), or no cell raster at
+all" is **superseded**, and the bullet stays above so the correction is readable rather than rewritten.
+
+The project owner ruled that a cell here is a **declared display unit over data**, not a character
+grid: in the measured trees a cell mechanism stands in place of a data renderer — a map renderer in
+`planet-shploingus`, an XML renderer in `openlock` — so the family-B 8 × 16 paper/ink raster is that
+family's renderer choice, not the concept. §3.1's own `Cell frames` row ("typed cell data, field
+bindings, shapers, projections, ordering, and dependencies") is the shape the ruling restores.
+
+Media (per-type kinds), the code executor (bounded deterministic cell program) and the streamed
+transport (a new layer, not "mount-v2") are ruled in the same record: `docs/DECISIONS-PORT.md`
+D-1–D-4. All four are decisions, not implementations, and none changes the ownership named above.

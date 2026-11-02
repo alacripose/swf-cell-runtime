@@ -42,7 +42,7 @@ Current position: **H1–H3 present; H4+ not started.**
 - Artifact: `docs/CELL-PROGRAM-DECISION.md` plus shell-private compiler/test artifacts.
 - Exit test: format-owner decision and generic code-kind implementation contract; the shell privately builds source-derived AVM1/AVM2 coverage and test vectors; agent work uses synthetic fixtures and generic schemas only.
 - Refuses: smuggling code into data rows; a second runtime; exposing source-derived vectors; claiming script parity before the reserved code lane has a reader.
-- Status: blocked — depends on H2 ownership and H4 inventory.
+- Status: blocked — the instruction set is ruled (**D-3**: bounded deterministic cell program), so the decision that held this block is answered; what remains is the compiler contract that needs H4's shell-private inventory plus an executor that does not exist. Implementation: `not-implemented`.
 
 ### H6 — ticket/secure-cell/test-only MCP pilot
 
