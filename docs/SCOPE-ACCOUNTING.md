@@ -17,7 +17,7 @@ no client code yet.
 | Block | Status | Note |
 |---|---|---|
 | H1 | present | Scaffold, six baseline patches, templates, ledger, first commits. |
-| H2 | present | Ownership named from `planet-package`/`planet-core`; three plan premises corrected. |
+| H2 | present | Both package families read; family A (`V4PKG001`) is the port's frame, family B (`SHPKG002/003`, `cells/1`, `cellframe/1`) is evidence and is not adopted. |
 | H3 | present | `tools/port_gate.py` enforces decidable invariants and proves refusals. |
 | H4 | blocked | Shell-only ingestion; no agent may run or read it. |
 | H5 | blocked | Code-kind executor undecided; depends on a format-owner decision. |
@@ -42,9 +42,14 @@ no client code yet.
 | Acceptor / mount (`Mount::watch`: newest by `(mtime, name)`, digest dedup, adopt-or-refuse-whole) | present | `planet-shell/src/mount.rs` |
 | Admission witness (package door `present_package`, ledger record) | present | `planet-shell/src/main.rs`; `planet-mcp/src/surface.rs` |
 | Media/asset carriage (canonical bytes in row fields; no separate archive) | present | `rows.rs` `Bands`/`Materials` |
-| `shploingus.cells/1` declaration grammar | blocked | No reader or owner in any tree; openlock-only (`ShellPackage.cs`, `gen_shell_data.py`) |
-| `shploingus.cellframe/1` frame grammar | blocked | No reader or writer anywhere; openlock header check only |
-| `surface.mount/2` transport | blocked | Absent from the authoritative tree; adoption is `Mount::watch` + door admission |
+| `shploingus.cells/1` declaration grammar | present | Family B: `voxel-package/src/cells.rs` (`DECLARATION_HEADER`, `CellVersion`) |
+| `shploingus.cellframe/1` frame grammar, reader and refusals | present | Family B: `voxel-package/src/cellframe.rs` (`HEADER`, `Frame::parse`, `read`, `read_artifacts`, ceilings, `RefusalSet`) |
+| Family B frame (`SHPKG002`/`SHPKG003`, `recipe/3`) | present | `voxel-package/src/recipe.rs` (`MAGIC`, `MAGIC_ARTIFACTS`, `HEADER`) |
+| Adopting family B as this port's format | blocked | PATCH-0005 forbids a second package family; format-owner decision required |
+| A2: `ala_civ_bots_prototype` Java frame reader | present | `PackageFrame.java`: byte-compatible frame, disjoint row kinds (`observation`/`decision`), payload-digest names, no callers and no frame tests |
+| Foreign package acceptance | present as a refusal | `UnknownRowKind` and `NameMismatch` refuse another tree's package instead of half-reading it |
+| Family-A cell raster representation | blocked | Format-owner decision: a new `Kind` with family B's semantics, or none |
+| `surface.mount/2` transport | blocked | Absent from both families; A adopts via `Mount::watch` + door admission, B reads folders/artifact maps |
 | Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
 | Reserved `Code` kind — executor | blocked | No executor exists; `planet-shell` refuses code frames on mount (`mount.rs:111`) |
 | New media/asset kind | blocked | Format-owner decision: a new `Kind` plus a format-document line |

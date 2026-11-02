@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "735ea8e3: subject has no TICKET-NNNN reference",
-        "735ea8e3: subject has no LEDGER-NNNN reference"
+        "2bfbcf1b: subject has no TICKET-NNNN reference",
+        "2bfbcf1b: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },

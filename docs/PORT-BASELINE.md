@@ -21,7 +21,7 @@ Current position: **H1–H3 present; H4+ not started.**
 - Artifact: `docs/PACKAGE-OWNERSHIP.md`.
 - Exit test: names the authoritative package crate, its exact frame and row readers/writers, the cell declaration and cellframe owner, the mount-v2 owner, the selected repository code paths, the rejected alternatives, and evidence that builder and acceptor share grammar.
 - Refuses: new magic, a new `secure-shell.*` game format, a second reader, or copying the Java reader as a competing Rust parser.
-- Status: present — `planet-package` and `planet-core` were read at the supplied checkouts, and `docs/PACKAGE-OWNERSHIP.md` names every owner from that source. Three plan premises were contradicted by the tree (`shploingus.cells`/`cellframe` ownership, `surface.mount/2`); all are recorded there as corrections rather than silently adopted.
+- Status: present — three implementations that claim this frame were read at the supplied checkouts: `planet-package` (authoritative), `shploingus-clean`'s `voxel-package` (the real owner of `shploingus.cells/1` and `shploingus.cellframe/1`), and `ala_civ_bots_prototype`'s Java `PackageFrame` (same frame bytes, disjoint row vocabulary, payload-digest names). Family A is the port's frame; family B and the Java port are evidence and are not adopted. `docs/PACKAGE-OWNERSHIP.md` records the ownership, the decision, four corrections to the plan, and one correction to this repository's own earlier claim that the cell grammars had no reader.
 
 ### H3 — drift gate and repository workflow
 
