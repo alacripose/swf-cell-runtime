@@ -2,8 +2,8 @@
   "tool": "tools/port_gate.py selftest",
   "timestamp": "2026-11-02",
   "python": "3.13.14",
-  "scenarios": 24,
-  "passed": 24,
+  "scenarios": 29,
+  "passed": 29,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "d2d5a46d: subject has no TICKET-NNNN reference",
-        "d2d5a46d: subject has no LEDGER-NNNN reference"
+        "c598a218: subject has no TICKET-NNNN reference",
+        "c598a218: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -161,10 +161,13 @@
       "scenario": "cell_program_owner_removed_refused",
       "expected_failure": "cell_program",
       "failing_checks": [
-        "cell_program"
+        "cell_program",
+        "ruling_index"
       ],
       "problems": [
-        "P-1: missing its 'Owner' part"
+        "P-1: missing its 'Owner' part",
+        "P-1 in docs/CELL-PROGRAM-DECISION.md has no owner line to index",
+        "P-1: the index carries a question no source carries"
       ],
       "pass": true
     },
@@ -205,10 +208,13 @@
       "scenario": "cell_media_owner_removed_refused",
       "expected_failure": "cell_media",
       "failing_checks": [
-        "cell_media"
+        "cell_media",
+        "ruling_index"
       ],
       "problems": [
-        "M-1: missing its 'Owner' part"
+        "M-1: missing its 'Owner' part",
+        "M-1 in docs/CELL-MEDIA-DECISION.md has no owner line to index",
+        "M-1: the index carries a question no source carries"
       ],
       "pass": true
     },
@@ -227,10 +233,12 @@
       "scenario": "cell_media_question_missing_refused",
       "expected_failure": "cell_media",
       "failing_checks": [
-        "cell_media"
+        "cell_media",
+        "ruling_index"
       ],
       "problems": [
-        "M-4: no '## M-4' section in the decision document"
+        "M-4: no '## M-4' section in the decision document",
+        "M-4: the index carries a question no source carries"
       ],
       "pass": true
     },
@@ -238,10 +246,13 @@
       "scenario": "cell_stream_owner_removed_refused",
       "expected_failure": "cell_stream",
       "failing_checks": [
-        "cell_stream"
+        "cell_stream",
+        "ruling_index"
       ],
       "problems": [
-        "T-1: missing its 'Owner' part"
+        "T-1: missing its 'Owner' part",
+        "T-1 in docs/CELL-TRANSPORT-DECISION.md has no owner line to index",
+        "T-1: the index carries a question no source carries"
       ],
       "pass": true
     },
@@ -260,10 +271,67 @@
       "scenario": "cell_stream_question_missing_refused",
       "expected_failure": "cell_stream",
       "failing_checks": [
-        "cell_stream"
+        "cell_stream",
+        "ruling_index"
       ],
       "problems": [
-        "T-4: no '## T-4' section in the decision document"
+        "T-4: no '## T-4' section in the decision document",
+        "T-4: the index carries a question no source carries"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "ruling_index_owner_removed_refused",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "docs\\RULING-INDEX.md:22: Q-6 owner '' does not match the source's 'project owner.'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "ruling_index_id_dropped_refused",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "P-3: a source carries this question and the index omits it"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "ruling_index_extra_id_refused",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "Q-9: the index carries a question no source carries"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "ruling_index_recommendation_as_ruled_refused",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "docs\\RULING-INDEX.md:23: P-1 is shown as 'ruled'; a question may only be presented as one of ['recommended, awaiting ruling', 'tabled \u2014 owner choice']"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "ruling_index_wire_token_refused",
+      "expected_failure": "ruling_index",
+      "failing_checks": [
+        "ruling_index"
+      ],
+      "problems": [
+        "docs\\RULING-INDEX.md: port wire token 'Kind::' is not the port's to decide"
       ],
       "pass": true
     }

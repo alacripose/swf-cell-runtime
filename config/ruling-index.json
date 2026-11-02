@@ -1,0 +1,17 @@
+{
+  "note": "Guards the ruling index against drift: every question id a source carries must appear once in the index with that source's owner, that source's disposition and that source's file; no id may appear that no source carries; a question may not be shown as anything other than open; and no port wire token may appear in the index.",
+  "index": "docs/RULING-INDEX.md",
+  "sources": [
+    "docs/CELL-MODEL.md",
+    "docs/CELL-SCHEMA.md",
+    "docs/CELL-PROGRAM-DECISION.md",
+    "docs/CELL-MEDIA-DECISION.md",
+    "docs/CELL-TRANSPORT-DECISION.md"
+  ],
+  "dispositions": {
+    "recommended": "recommended, awaiting ruling",
+    "tabled": "tabled — owner choice"
+  },
+  "tabledMarker": "none is derivable",
+  "forbiddenTokens": ["Kind::", "opcode", "op code", "u16", "u32", "u64"]
+}

@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Ruling-index guard (coverage, owner, disposition and source against each source; no wire tokens) | present | `tools/port_gate.py` `ruling_index` over `config/ruling-index.json` |
 | Streamed-transport guard (four-part questions, no wire tokens) | present | `tools/port_gate.py` `cell_stream` over `config/cell-stream.json` |
 | Cell-media guard (four-part questions, no wire tokens) | present | `tools/port_gate.py` `cell_media` over `config/cell-media.json` |
 | Cell-program guard (four-part questions, labelled budgets, no wire tokens, no budget framed as a program constraint) | present | `tools/port_gate.py` `cell_program` over `config/cell-program.json` |

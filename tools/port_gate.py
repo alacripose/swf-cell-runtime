@@ -56,6 +56,7 @@ GOVERNANCE_FILES = (
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
     "docs/CELL-TRANSPORT-DECISION.md",
+    "docs/RULING-INDEX.md",
     "tickets/TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/ticket.md",
     ".github/pull_request_template.md",
@@ -68,6 +69,7 @@ GOVERNANCE_FILES = (
     "config/cell-program.json",
     "config/cell-media.json",
     "config/cell-stream.json",
+    "config/ruling-index.json",
     "tools/pre-commit",
 )
 
@@ -810,6 +812,108 @@ def check_cell_stream(root: Path) -> list[str]:
     return problems
 
 
+def check_ruling_index(root: Path) -> list[str]:
+    """The index covers every source question once, with that source's owner and disposition."""
+    manifest_path = root / "config" / "ruling-index.json"
+    if not manifest_path.is_file():
+        return ["config/ruling-index.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/ruling-index.json is not valid JSON: {exc}"]
+
+    index_path = root / str(manifest.get("index", "docs/RULING-INDEX.md"))
+    if not index_path.is_file():
+        return [f"{index_path.relative_to(root)} is missing"]
+    rel = index_path.relative_to(root)
+    index = read_text(index_path)
+    problems: list[str] = []
+
+    dispositions = manifest.get("dispositions", {})
+    marker = str(manifest.get("tabledMarker", "none is derivable"))
+
+    def normalise(value: str) -> str:
+        return " ".join(value.split()).rstrip(".").strip().lower()
+
+    expected: dict[str, tuple[str, str, str]] = {}
+    for source in manifest.get("sources", []):
+        source_path = root / str(source)
+        if not source_path.is_file():
+            problems.append(f"the index names a source that is missing: {source}")
+            continue
+        sections = sections_by_heading(read_text(source_path), r"^#{2,3} ([QPMT]-\d+)\b.*$")
+        for question, section in sections.items():
+            owner_match = re.search(r"^\*\*Owner:\*\*\s*(.+)$", section, re.M)
+            owner = owner_match.group(1).strip() if owner_match else ""
+            if not owner:
+                problems.append(f"{question} in {source} has no owner line to index")
+                continue
+            kind = "tabled" if marker in section else "recommended"
+            expected[question] = (owner, dispositions.get(kind, kind), str(source))
+
+    rows: dict[str, tuple[str, str, str, int]] = {}
+    for number, line in enumerate(index.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if not cells or not re.fullmatch(r"[QPMT]-\d+", cells[0]):
+            continue
+        question = cells[0]
+        if len(cells) < 5:
+            problems.append(
+                f"{rel}:{number}: {question} needs id, subject, disposition, owner and source"
+            )
+            continue
+        if question in rows:
+            problems.append(f"{rel}:{number}: {question} is indexed more than once")
+            continue
+        rows[question] = (cells[2], cells[3], cells[4], number)
+
+    for question in sorted(expected):
+        source_owner, source_disposition, source_file = expected[question]
+        if question not in rows:
+            problems.append(f"{question}: a source carries this question and the index omits it")
+            continue
+        disposition, owner, listed_source, number = rows[question]
+        if normalise(source_owner) not in normalise(owner):
+            problems.append(
+                f"{rel}:{number}: {question} owner {owner!r} does not match the source's "
+                f"{source_owner!r}"
+            )
+        if disposition not in dispositions.values():
+            problems.append(
+                f"{rel}:{number}: {question} is shown as {disposition!r}; a question may only be "
+                f"presented as one of {sorted(dispositions.values())}"
+            )
+        elif disposition != source_disposition:
+            problems.append(
+                f"{rel}:{number}: {question} disposition {disposition!r} contradicts the source's "
+                f"{source_disposition!r}"
+            )
+        if listed_source != source_file:
+            problems.append(
+                f"{rel}:{number}: {question} cites {listed_source!r}, but the source is "
+                f"{source_file!r}"
+            )
+
+    for question in sorted(set(rows) - set(expected)):
+        problems.append(f"{question}: the index carries a question no source carries")
+
+    tokens = [str(token) for token in manifest.get("forbiddenTokens", [])]
+    if tokens:
+        token_pattern = re.compile(
+            "|".join(
+                rf"\b{re.escape(token)}\b" if token.isalnum() else re.escape(token)
+                for token in tokens
+            )
+        )
+        found = token_pattern.search(index)
+        if found:
+            problems.append(f"{rel}: port wire token {found.group(0)!r} is not the port's to decide")
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -825,6 +929,7 @@ CHECKS = (
     ("cell_program", check_cell_program, "PATCH-0005"),
     ("cell_media", check_cell_media, "PATCH-0005"),
     ("cell_stream", check_cell_stream, "PATCH-0005"),
+    ("ruling_index", check_ruling_index, "PATCH-0001, PATCH-0002"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -887,6 +992,7 @@ FIXTURE_PATHS = (
     "docs/CELL-MEDIA-DECISION.md",
     "docs/CELL-PROGRAM-DECISION.md",
     "docs/CELL-TRANSPORT-DECISION.md",
+    "docs/RULING-INDEX.md",
     "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
     "patches",
     "tickets",
@@ -1133,6 +1239,64 @@ def mutate_cell_stream_question_missing(root: Path) -> None:
     path.write_text(text.replace(phrase, "## Duplicate delivery —", 1), encoding="utf-8")
 
 
+def mutate_ruling_index_owner_removed(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    lines = read_text(path).splitlines()
+    out = []
+    hit = False
+    for line in lines:
+        if line.strip().startswith("| Q-6 |"):
+            out.append(line.replace("project owner", ""))
+            hit = True
+        else:
+            out.append(line)
+    if not hit:
+        raise GateError("fixture: the Q-6 row was not found before mutation")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def mutate_ruling_index_id_dropped(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    lines = read_text(path).splitlines()
+    out = [line for line in lines if not line.strip().startswith("| P-3 |")]
+    if len(out) == len(lines):
+        raise GateError("fixture: the P-3 row was not found before mutation")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def mutate_ruling_index_extra_id(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    text = read_text(path)
+    path.write_text(
+        text
+        + "\n| Q-9 | an invented question | recommended, awaiting ruling | format owner | "
+        "docs/CELL-SCHEMA.md |\n",
+        encoding="utf-8",
+    )
+
+
+def mutate_ruling_index_recommendation_as_ruled(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    lines = read_text(path).splitlines()
+    out = []
+    hit = False
+    for line in lines:
+        if line.strip().startswith("| P-1 |"):
+            out.append(line.replace("recommended, awaiting ruling", "ruled"))
+            hit = True
+        else:
+            out.append(line)
+    if not hit:
+        raise GateError("fixture: the P-1 row was not found before mutation")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def mutate_ruling_index_wire_token(root: Path) -> None:
+    path = root / "docs" / "RULING-INDEX.md"
+    text = read_text(path)
+    path.write_text(text + "\nThe index row is `Kind::Index` .\n", encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1158,6 +1322,11 @@ SELFTEST_SCENARIOS = (
     ("cell_stream_owner_removed_refused", mutate_cell_stream_owner_removed, "cell_stream"),
     ("cell_stream_wire_token_refused", mutate_cell_stream_wire_token, "cell_stream"),
     ("cell_stream_question_missing_refused", mutate_cell_stream_question_missing, "cell_stream"),
+    ("ruling_index_owner_removed_refused", mutate_ruling_index_owner_removed, "ruling_index"),
+    ("ruling_index_id_dropped_refused", mutate_ruling_index_id_dropped, "ruling_index"),
+    ("ruling_index_extra_id_refused", mutate_ruling_index_extra_id, "ruling_index"),
+    ("ruling_index_recommendation_as_ruled_refused", mutate_ruling_index_recommendation_as_ruled, "ruling_index"),
+    ("ruling_index_wire_token_refused", mutate_ruling_index_wire_token, "ruling_index"),
 )
 
 
