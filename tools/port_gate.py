@@ -1290,9 +1290,13 @@ CHECKS = (
 # --------------------------------------------------------------------------- commands
 
 
-def run_checks(root: Path) -> list[tuple[str, str, list[str]]]:
+def run_checks(
+    root: Path, skip: frozenset[str] = frozenset()
+) -> list[tuple[str, str, list[str]]]:
     results = []
     for name, function, patch in CHECKS:
+        if name in skip:
+            continue
         try:
             problems = function(root)
         except GateError as exc:
@@ -1780,6 +1784,28 @@ def mutate_duplicate_reader_second_owner(root: Path) -> None:
     write_fixture_record(root)
 
 
+def mutate_governance_file_removed(root: Path) -> None:
+    path = root / "tickets" / "TEMPLATE.md"
+    if not path.is_file():
+        raise GateError("fixture: tickets/TEMPLATE.md was not found before mutation")
+    path.unlink()
+
+
+def mutate_second_format_magic(root: Path) -> None:
+    path = root / "src" / "alt_format.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const MAGIC: &[u8] = b"SHPKG002";\n', encoding="utf-8")
+
+
+def mutate_scope_block_dropped(root: Path) -> None:
+    path = root / "docs" / "SCOPE-ACCOUNTING.md"
+    text = read_text(path)
+    pattern = re.compile(r"^(\|\s*H3\s*\|\s*)(present|not-implemented|blocked)(\s*\|)", re.M)
+    if not pattern.search(text):
+        raise GateError("fixture: the H3 status row was not found before mutation")
+    path.write_text(pattern.sub(r"\1done\3", text, count=1), encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1819,6 +1845,60 @@ SELFTEST_SCENARIOS = (
     ("duplicate_reader_second_parser_refused", mutate_duplicate_reader_second_parser, "duplicate_reader"),
     ("duplicate_reader_second_owner_refused", mutate_duplicate_reader_second_owner, "duplicate_reader"),
     ("duplicate_reader_permitted_parser_passes", mutate_duplicate_reader_permitted_parser, None),
+)
+
+
+# One violating mutation per enforced check, with the wording that check alone must emit. Each
+# entry is run twice: enabled (the wording must come from this check and no other) and with the
+# check skipped (the wording must disappear). A check with no entry here fails the suite.
+SWEEP = (
+    ("baselines_present", mutate_missing_baseline, "missing baseline patch PATCH-0004-*.md"),
+    ("governance_files", mutate_governance_file_removed, "missing tickets/TEMPLATE.md"),
+    ("source_exclusion", mutate_tracked_movie, "source movie is tracked in the index"),
+    ("output_roots", mutate_output_escape, "output path escapes the project root"),
+    (
+        "format_magics",
+        mutate_second_format_magic,
+        "unowned package magic 'SHPKG002' (second format)",
+    ),
+    ("ledger_valid", mutate_invalid_ledger, "missing exit_test"),
+    ("commit_refs", mutate_commit_without_ticket, "subject has no TICKET-NNNN reference"),
+    ("baseline_blocks", mutate_block_without_exit_test, "H7: missing Exit test:"),
+    (
+        "scope_accounting",
+        mutate_scope_block_dropped,
+        "H3: no status row in SCOPE-ACCOUNTING.md",
+    ),
+    (
+        "plan_errata",
+        mutate_erratum_original_removed,
+        "the original wording was removed from the plan",
+    ),
+    ("cell_schema", mutate_cell_question_unanswered, "Q-1: missing its 'Falsifier' part"),
+    (
+        "cell_program",
+        mutate_cell_program_budget_unlabelled,
+        "a budget is stated without a label",
+    ),
+    ("cell_media", mutate_cell_media_question_missing, "M-4: no '## M-4' section"),
+    ("cell_stream", mutate_cell_stream_question_missing, "T-4: no '## T-4' section"),
+    (
+        "ruling_index",
+        mutate_ruling_index_id_dropped,
+        "P-3: a source carries this question and the index omits it",
+    ),
+    (
+        "selftest_record",
+        mutate_record_volatile_field,
+        "the record cannot be rebuilt from its own results",
+    ),
+    ("ledger_binding", mutate_ledger_binding_fabricated, "names a commit that does not exist"),
+    ("mcp_surface", mutate_mcp_forbidden_operation, "exposes 'surface.capture'"),
+    (
+        "duplicate_reader",
+        mutate_duplicate_reader_second_parser,
+        "parses the package frame outside the planet-package reader",
+    ),
 )
 
 
@@ -1870,6 +1950,80 @@ def command_selftest(project_root: Path) -> int:
             if expected_failure is not None or not ok:
                 for problem in problems[:6]:
                     print(f"       - {problem}")
+
+        covered = {check for check, _mutate, _message in SWEEP}
+        unproven = [name for name, _function, _patch in CHECKS if name not in covered]
+        records.append(
+            {
+                "scenario": "sweep_covers_every_check",
+                "expected_failure": None,
+                "failing_checks": [],
+                "problems": [f"no sweep entry proves {name} can refuse" for name in unproven],
+                "pass": not unproven,
+            }
+        )
+        print(
+            f"  {'PASS' if not unproven else 'FAIL'} sweep_covers_every_check"
+            f"{'':<15} {len(SWEEP)} of {len(CHECKS)} checks have a violating mutation"
+        )
+        if unproven:
+            failures.append(f"sweep_covers_every_check: unproven {unproven}")
+
+        for check, mutate, expected in SWEEP:
+            fixture = work / f"sweep-{check}"
+            problems: list[str] = []
+            failed: set[str] = set()
+            ok = False
+            try:
+                build_fixture(project_root, fixture)
+                mutate(fixture)
+                enabled = run_checks(fixture)
+                failed = {name for name, _patch, errs in enabled if errs}
+                own = [p for name, _patch, errs in enabled if name == check for p in errs]
+                fired = [p for p in own if expected in p]
+                elsewhere = [
+                    p
+                    for name, _patch, errs in enabled
+                    if name != check
+                    for p in errs
+                    if expected in p
+                ]
+                disabled = run_checks(fixture, skip=frozenset({check}))
+                residual = [
+                    p for _name, _patch, errs in disabled for p in errs if expected in p
+                ]
+                ok = bool(fired) and not elsewhere and not residual
+                problems = fired[:1] or own[:2] or [f"{check} did not refuse the violation"]
+                if elsewhere:
+                    problems.append(
+                        f"the wording came from another check, so it proves nothing about "
+                        f"{check}: {elsewhere[0]}"
+                    )
+                if residual:
+                    problems.append(
+                        f"the wording survived with {check} disabled, so {check} does not own "
+                        f"it: {residual[0]}"
+                    )
+            except GateError as exc:
+                failed = {"gate_error"}
+                problems = [f"gate error: {exc}"]
+            if not ok:
+                failures.append(f"sweep_{check}: {problems[-1]}")
+            records.append(
+                {
+                    "scenario": f"sweep_{check}",
+                    "expected_failure": check,
+                    "failing_checks": sorted(failed),
+                    "problems": [normalise_problem(line) for line in problems[:6]],
+                    "pass": ok,
+                }
+            )
+            print(
+                f"  {'PASS' if ok else 'FAIL'} sweep_{check:<28} refused by {check}, silent "
+                "when disabled"
+            )
+            for problem in problems[:3]:
+                print(f"       - {problem}")
     finally:
         try:
             remove_tree(work)
