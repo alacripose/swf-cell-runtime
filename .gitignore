@@ -1,0 +1,26 @@
+# Shell-only source input (PATCH-0003). Never tracked, never agent-mounted.
+inputs/
+*.swf
+*.sfw
+
+# Shell-private stores and raw witness material (PATCH-0003, PATCH-0004).
+# Git exclusion is NOT the access boundary; the shell also isolates these from agents.
+shell-private/
+captures/
+
+# Generated canonical cell packages: runtime/shell output, reproducible, not versioned.
+generated/
+
+# Ordinary local build output.
+target/
+
+# Freebuff Desktop project marker.
+.freebuff/
+
+# OS / editor noise.
+Thumbs.db
+.DS_Store
+
+# NOTE: artifacts/, reports/ and logs/ are intentionally NOT ignored. Only redacted,
+# source-safe material may be written there, and it is versioned as reproducibility
+# evidence (see config/output-roots.json).

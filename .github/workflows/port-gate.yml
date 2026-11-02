@@ -1,0 +1,27 @@
+name: port-gate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Drift gate
+        run: python3 tools/port_gate.py check
+      - name: Gate self-test
+        run: python3 tools/port_gate.py selftest
+      - name: Upload redacted self-test record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: port-gate-selftest
+          path: artifacts/redacted-test-results/port-gate-selftest.json
+          if-no-files-found: ignore

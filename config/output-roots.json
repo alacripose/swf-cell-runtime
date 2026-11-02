@@ -1,0 +1,62 @@
+{
+  "policy": "Every write destination canonicalizes beneath the project root (PATCH-0004). Git exclusion is not the agent access boundary; shell-input and shell-private classes are also excluded from agent workspace mounts by the shell.",
+  "projectRoot": ".",
+  "outputRoots": [
+    {
+      "path": "inputs/",
+      "class": "shell-input",
+      "agentAccess": "none",
+      "gitIgnored": true,
+      "purpose": "Immutable supplied source input. Shell-only; agents must not read it."
+    },
+    {
+      "path": "shell-private/",
+      "class": "shell-private",
+      "agentAccess": "none",
+      "gitIgnored": true,
+      "purpose": "Source records, inventories, source maps, IR, provenance, oracle, baselines, raw traces."
+    },
+    {
+      "path": "captures/",
+      "class": "shell-private",
+      "agentAccess": "none",
+      "gitIgnored": true,
+      "purpose": "Screenshots, frame captures, video, CUA traces. Shell/test/user only."
+    },
+    {
+      "path": "generated/cell-packages/",
+      "class": "generated",
+      "agentAccess": "none",
+      "gitIgnored": true,
+      "purpose": "Canonical cell packages produced by the shell compiler."
+    },
+    {
+      "path": "artifacts/",
+      "class": "redacted",
+      "agentAccess": "read",
+      "gitIgnored": false,
+      "purpose": "Redacted, source-safe artifacts: secure-cell contracts, redacted test results."
+    },
+    {
+      "path": "reports/",
+      "class": "redacted",
+      "agentAccess": "read",
+      "gitIgnored": false,
+      "purpose": "Redacted, source-safe reports."
+    },
+    {
+      "path": "logs/",
+      "class": "redacted",
+      "agentAccess": "read",
+      "gitIgnored": false,
+      "purpose": "Redacted, source-safe logs only."
+    },
+    {
+      "path": "target/",
+      "class": "build",
+      "agentAccess": "read",
+      "gitIgnored": true,
+      "purpose": "Ordinary local build output and gate self-test scratch. No source payloads."
+    }
+  ]
+}
