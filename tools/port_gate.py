@@ -87,14 +87,6 @@ NOT_ENFORCED = (
         "agent mounts and process permissions is not verifiable here.",
     },
     {
-        "check": "duplicate_package_reader",
-        "patch": "PATCH-0005",
-        "owner": "format owner (H2 present)",
-        "blockedBy": "this repository has no code tree or crate manifest yet",
-        "note": "The authoritative reader is named in docs/PACKAGE-OWNERSHIP.md. A second "
-        "reader cannot be detected here until this repository has code to scan.",
-    },
-    {
         "check": "alternate_surface_or_runtime",
         "patch": "PATCH-0005",
         "owner": "implementation agent (H9)",
@@ -1166,6 +1158,113 @@ def check_mcp_surface(root: Path) -> list[str]:
     return problems
 
 
+def family_a_ownership(root: Path) -> list[tuple[str, str]]:
+    """The port's own layer table: layer and the single owner the record names."""
+    path = root / "docs" / "PACKAGE-OWNERSHIP.md"
+    if not path.is_file():
+        return []
+    text = read_text(path)
+    section = re.search(r"^## 2\..*?(?=^## 3\.)", text, re.S | re.M)
+    if not section:
+        return []
+    lines = section.group(0).splitlines()
+    start = next(
+        (
+            index + 1
+            for index, line in enumerate(lines)
+            if line.strip().lower().startswith("| layer | owner")
+        ),
+        None,
+    )
+    if start is None:
+        return []
+    rows: list[tuple[str, str]] = []
+    for line in lines[start:]:
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if rows:
+                break
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        layer = cells[0]
+        if not layer or set(layer) <= {"-", ":", " "}:
+            continue
+        owner_match = re.match(r"`([^`]+)`", cells[1])
+        owner = owner_match.group(1) if owner_match else cells[1]
+        rows.append((layer, owner))
+    return rows
+
+
+def package_reader_code_files(root: Path) -> list[str]:
+    """Tracked code that references the frame magic, so a second parser can be located."""
+    ok, listing = run_git(root, "ls-files")
+    if not ok:
+        return []
+    found: list[str] = []
+    for path in listing.splitlines():
+        if not (path.startswith("src/") or path.startswith("crates/")):
+            continue
+        try:
+            text = read_text(root / path)
+        except (OSError, UnicodeDecodeError):
+            continue
+        if "V4PKG001" in text:
+            found.append(path)
+    return found
+
+
+def check_duplicate_reader(root: Path) -> list[str]:
+    """One owner per layer, one reader, and no frame parser outside the named crate."""
+    rows = family_a_ownership(root)
+    if not rows:
+        return [
+            "docs/PACKAGE-OWNERSHIP.md names no family-A layer owner, so singularity of the reader "
+            "cannot be checked"
+        ]
+
+    problems: list[str] = []
+    seen: dict[str, str] = {}
+    for layer, owner in rows:
+        key = " ".join(layer.lower().split())
+        if key in seen:
+            problems.append(
+                f"layer {layer!r} is owned twice ({seen[key]!r} and {owner!r}); one layer has one "
+                "owner"
+            )
+        else:
+            seen[key] = owner
+
+    reader_layers = [
+        (layer, owner)
+        for layer, owner in rows
+        if any(word in layer.lower() for word in ("frame", "row", "payload", "declaration"))
+    ]
+    owners = sorted({owner for _layer, owner in reader_layers})
+    if len(owners) > 1:
+        problems.append(
+            f"the package reader is owned by {len(owners)} crates ({', '.join(owners)}); a second "
+            "owner is a second reader"
+        )
+
+    authoritative = next(
+        (owner for layer, owner in rows if "frame" in layer.lower()), ""
+    )
+    if not authoritative:
+        problems.append("no layer owns the package frame, so the reader is unnamed")
+
+    for path in package_reader_code_files(root):
+        if authoritative and not path.startswith(f"crates/{authoritative}/") and not path.startswith(
+            f"{authoritative}/"
+        ):
+            problems.append(
+                f"{path}: parses the package frame outside the {authoritative} reader named in "
+                "the ownership record"
+            )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1185,6 +1284,7 @@ CHECKS = (
     ("selftest_record", check_selftest_record, "PATCH-0001"),
     ("ledger_binding", check_ledger_binding, "PATCH-0001"),
     ("mcp_surface", check_mcp_surface, "PATCH-0006"),
+    ("duplicate_reader", check_duplicate_reader, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1219,6 +1319,12 @@ def report(results: list[tuple[str, str, list[str]]], root: Path | None = None) 
                     "       guard: no MCP schema present; the rule is decidable, the surface "
                     "is not yet written"
                 )
+            elif (
+                name == "duplicate_reader"
+                and root is not None
+                and not package_reader_code_files(root)
+            ):
+                print("       guard: no code tree present; a second reader cannot appear yet")
     print()
     print(f"NOT-ENFORCED ({len(NOT_ENFORCED)}) - required by the baselines, not decidable here:")
     for item in NOT_ENFORCED:
@@ -1643,6 +1749,37 @@ def mutate_mcp_permitted_surface(root: Path) -> None:
     write_fixture_record(root)
 
 
+def mutate_duplicate_reader_second_parser(root: Path) -> None:
+    path = root / "crates" / "other-reader" / "src" / "frame.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const MAGIC: &[u8] = b"V4PKG001";\n', encoding="utf-8")
+    git(root, "add", "-A")
+    write_fixture_record(root)
+
+
+def mutate_duplicate_reader_permitted_parser(root: Path) -> None:
+    path = root / "crates" / "planet-package" / "src" / "frame.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const MAGIC: &[u8] = b"V4PKG001";\n', encoding="utf-8")
+    git(root, "add", "-A")
+    write_fixture_record(root)
+
+
+def mutate_duplicate_reader_second_owner(root: Path) -> None:
+    path = root / "docs" / "PACKAGE-OWNERSHIP.md"
+    text = read_text(path)
+    row = (
+        "| Package frame | `planet-package` | `frame.rs`: `FRAME_MAGIC`, `FRAME_SCHEMA`, "
+        "`FrameKind`, `Package::{encode, decode, read, write}`, `frame_digest`, `file_name`, "
+        "`id_and_digest` |"
+    )
+    if row not in text:
+        raise GateError("fixture: the package-frame row was not found before mutation")
+    duplicate = "| Package frame | `planet-alt` | `frame.rs`: a second parser |"
+    path.write_text(text.replace(row, row + "\n" + duplicate, 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1679,6 +1816,9 @@ SELFTEST_SCENARIOS = (
     ("ledger_binding_wrong_commit_refused", mutate_ledger_binding_wrong_commit, "ledger_binding"),
     ("mcp_surface_forbidden_operation_refused", mutate_mcp_forbidden_operation, "mcp_surface"),
     ("mcp_surface_permitted_passes", mutate_mcp_permitted_surface, None),
+    ("duplicate_reader_second_parser_refused", mutate_duplicate_reader_second_parser, "duplicate_reader"),
+    ("duplicate_reader_second_owner_refused", mutate_duplicate_reader_second_owner, "duplicate_reader"),
+    ("duplicate_reader_permitted_parser_passes", mutate_duplicate_reader_permitted_parser, None),
 )
 
 

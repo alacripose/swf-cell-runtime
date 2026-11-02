@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:e4a0a0fef85e54e423bef97ae30d1b52c7bb7016c2cf83f64d69e9dd9ce8faa2",
+    "identity": "sha256:7e70eb689f77e61eb8a46276348581efcbd097ae47c7c34ebb21d2f965cb6f70",
     "inputs": 18
   },
   "python": "3.13.14",
-  "scenarios": 35,
-  "passed": 35,
+  "scenarios": 38,
+  "passed": 38,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -451,6 +451,36 @@
     },
     {
       "scenario": "mcp_surface_permitted_passes",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "duplicate_reader_second_parser_refused",
+      "expected_failure": "duplicate_reader",
+      "failing_checks": [
+        "duplicate_reader"
+      ],
+      "problems": [
+        "crates/other-reader/src/frame.rs: parses the package frame outside the planet-package reader named in the ownership record"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "duplicate_reader_second_owner_refused",
+      "expected_failure": "duplicate_reader",
+      "failing_checks": [
+        "duplicate_reader"
+      ],
+      "problems": [
+        "layer 'Package frame' is owned twice ('planet-package' and 'planet-alt'); one layer has one owner",
+        "the package reader is owned by 2 crates (planet-alt, planet-package); a second owner is a second reader"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "duplicate_reader_permitted_parser_passes",
       "expected_failure": null,
       "failing_checks": [],
       "problems": [],
