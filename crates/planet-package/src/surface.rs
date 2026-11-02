@@ -2,23 +2,16 @@
 //!
 //! The grammar is the one `dl-enclave/docs/PACKAGE-FORMAT.md` §2.5 owns: TSV, LF, one final newline,
 //! `#` comments, and no positional column beyond the key. This module parses the document into typed
-//! windows, nodes and actions and refuses, by name, anything the grammar does not define:
+//! windows, nodes and actions and refuses, by name, anything the grammar does not define.
 //!
-//! - an unknown row key (`surface-row`) or a blank row;
-//! - a row whose column count or value shape is wrong (`surface-field`, naming row and key);
-//! - a duplicated key (`surface-duplicate`, naming it);
-//! - a row in the wrong place (`surface-order`) — `requires` after a window, a window before the
-//!   `surface` row, or a parent that has not been declared;
-//! - an unknown `requires` value (`surface-requires`);
-//! - a node or action naming a window it is not grouped under (`surface-node`, `surface-action`);
-//! - a document that is not this schema (`surface-schema`) — an older or newer surface is refused by
-//!   name, never converted and never best-effort parsed.
-//!
-//! Not validated here, and named in the ticket rather than guessed: the lane, rule, node-kind,
-//! node-role and theme-role vocabularies, because this repository owns no declared table for them yet
-//! and inventing one would be a second vocabulary. Those fields must be non-empty.
+//! The vocabularies are not inline literals: `lane`, `rule`, `node kind`, `theme role`, `type role`,
+//! `chrome`, `moves` and `capability` come from [`crate::vocabulary`], which is the shell family's
+//! declared set (`secure-shell/tools/port/surface.mjs`). An undeclared value is refused with the
+//! family's own code — `unknown-lane`, `unknown-rule` — or the same shape for the rest, and the
+//! refusal names the value it refused.
 
 use crate::frame::Refusal;
+use crate::vocabulary::{self, Vocabulary};
 
 pub const SURFACE_SCHEMA: &str = "dl-enclave.surface/1";
 
@@ -38,7 +31,12 @@ impl Requirement {
         }
     }
 
+    /// The capability names are the declared table's, so `requires` cannot drift from it; the
+    /// refusal keeps its existing code `surface-requires`.
     pub fn parse(text: &str) -> Option<Requirement> {
+        if !Vocabulary::Capability.accepts(text) {
+            return None;
+        }
         match text {
             "observe" => Some(Requirement::Observe),
             "act" => Some(Requirement::Act),
@@ -111,11 +109,11 @@ fn boolean(row: &str, key: &str, text: &str) -> Result<bool, Refusal> {
     }
 }
 
-fn non_empty(key: &str, field: &str, text: &str) -> Result<String, Refusal> {
+fn non_empty(row: &str, key: &str, text: &str) -> Result<String, Refusal> {
     if text.is_empty() {
         return Err(Refusal::SurfaceField {
-            row: key.to_string(),
-            key: field.to_string(),
+            row: row.to_string(),
+            key: key.to_string(),
         });
     }
     Ok(text.to_string())
@@ -131,8 +129,44 @@ fn columns(row: &str, fields: &[&str], expected: usize) -> Result<(), Refusal> {
     Ok(())
 }
 
+fn declared(vocabulary: Vocabulary, text: &str) -> Result<String, Refusal> {
+    if vocabulary.accepts(text) {
+        Ok(text.to_string())
+    } else {
+        Err(Refusal::UnknownValue {
+            vocabulary: vocabulary.name(),
+            code: vocabulary.code(),
+            found: text.to_string(),
+        })
+    }
+}
+
+fn declared_list(vocabulary: Vocabulary, text: &str) -> Result<String, Refusal> {
+    if vocabulary::list_accepts(vocabulary, text) {
+        Ok(text.to_string())
+    } else {
+        Err(Refusal::UnknownValue {
+            vocabulary: vocabulary.name(),
+            code: vocabulary.code(),
+            found: text.to_string(),
+        })
+    }
+}
+
+fn declared_role(text: &str) -> Result<String, Refusal> {
+    if vocabulary::role_accepts(text) {
+        Ok(text.to_string())
+    } else {
+        Err(Refusal::UnknownValue {
+            vocabulary: "node role",
+            code: "unknown-node-role",
+            found: text.to_string(),
+        })
+    }
+}
+
 impl Surface {
-    /// Parse a surface document strictly. Every refusal names the row or key it is about.
+    /// Parse a surface document strictly. Every refusal names the row, key or value it is about.
     pub fn parse(payload: &[u8]) -> Result<Surface, Refusal> {
         if !payload.ends_with(b"\n") {
             return Err(Refusal::SurfaceSchema {
@@ -216,8 +250,8 @@ impl Surface {
                     windows.push(Window {
                         id: window_id,
                         title: non_empty(&row, "title", fields[2])?,
-                        lane: non_empty(&row, "lane", fields[3])?,
-                        rule: non_empty(&row, "rule", fields[4])?,
+                        lane: declared(Vocabulary::Lane, fields[3])?,
+                        rule: declared(Vocabulary::Rule, fields[4])?,
                         x: integer(&row, "x", fields[5])?,
                         y: integer(&row, "y", fields[6])?,
                         w,
@@ -226,9 +260,9 @@ impl Surface {
                         min_h: integer(&row, "min-h", fields[10])?,
                         pinnable: boolean(&row, "pinnable", fields[11])?,
                         pinned: boolean(&row, "pinned", fields[12])?,
-                        chrome: non_empty(&row, "chrome", fields[13])?,
-                        moves: non_empty(&row, "moves", fields[14])?,
-                        theme_role: non_empty(&row, "theme-role", fields[15])?,
+                        chrome: declared_list(Vocabulary::Chrome, fields[13])?,
+                        moves: declared_list(Vocabulary::Moves, fields[14])?,
+                        theme_role: declared(Vocabulary::ThemeRole, fields[15])?,
                         content: non_empty(&row, "content", fields[16])?,
                         nodes: Vec::new(),
                         actions: Vec::new(),
@@ -265,8 +299,8 @@ impl Surface {
                     current.nodes.push(Node {
                         id: node_id,
                         parent,
-                        kind: non_empty(&row, "kind", fields[4])?,
-                        role: non_empty(&row, "role", fields[5])?,
+                        kind: declared(Vocabulary::NodeKind, fields[4])?,
+                        role: declared_role(fields[5])?,
                         value: non_empty(&row, "value", fields[6])?,
                     });
                 }
