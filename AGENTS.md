@@ -7,6 +7,14 @@ sequence and its exit tests are in `docs/PORT-BASELINE.md`.
 Read this file before touching anything. It is not style guidance: every rule below is
 a hard gate (`patches/baselines/`), and `tools/port_gate.py` enforces the parts that are
 mechanically decidable today.
+## Build the maximal system now; trim API surface later
+
+Implement the full contract while the system is being built: every state, every refusal, every
+store and every path the design names. Do not pre-trim surfaces, options or commands to keep the
+first pass small, and do not leave a named state unimplemented because the common path does not
+reach it. Cutting API surface is a later, deliberate pass with its own ticket; it is not a reason
+to ship a thinner system now. When the full shape is in place, name what is missing rather than
+silently omitting it.
 
 ## 1. The source movie is not agent-readable
 
@@ -94,3 +102,42 @@ cp tools/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 Checks that cannot be decided yet are listed by the gate as `NOT-ENFORCED` with an owner
 and blocking dependency. They are never reported as passing.
+
+## 9. The checkpoint: a unit with no ledger entry did not happen
+
+Taken from `secure-shell/docs/FIRST-TEN-HOURS.md` (D-6: the shell family is the authority for how this
+work is run). A unit is not finished when the code runs. It is finished when a row in
+`ledger/ledger.jsonl` carries the command, its exit status, the check count and a digest, and that row
+is committed with the ticket that names it.
+
+Before each unit, write the seven fields, in this order: the goal sentence **quoted** from
+`docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md`, not paraphrased; the one artifact the unit changes;
+the last gate's answer in its three-way words; the drift signal observed; the refused list for the next
+unit; the next artifact; and the ledger entry id just written. A row that restates the goal from memory
+fails this rule even when the code behind it is right, because that restatement is the drift the rule
+was written for.
+
+## 10. The gate answers three ways: held, absent, refused
+
+`held` - checked and true. `absent` - the subject does not exist yet; it is named together with what was
+looked for, and it is neither a pass nor a failure. `refused` - checked and false, and the only answer
+that fails. `tools/port_gate.py`'s `PASS` / `NOT-ENFORCED` / `FAIL` are exactly these three, so a
+`NOT-ENFORCED` row is `absent` and may never be reported as passing.
+
+Two consequences, both refusals: a step with no exit test is refused before it starts, and a browser or
+Node result is never reported as a client witness (§7).
+
+## 11. Commits are units, not afternoons
+
+From the family's `squash` gate, measured against a root commit of 57 files: a commit over **40 files**
+or **4,000 insertions** is refused. Every commit cites its ticket and the ledger entry id it produces; a
+unit that does not fit that budget is two units, not one larger commit.
+
+## 12. The digest framing belongs to the format, not the caller
+
+The frame digest is `domain || schema (LE u16) || len (LE u64) || payload`, with the schema inside the
+preimage (`planet-core/src/hash.rs`, `planet-package/src/frame.rs`). A `V4PKG001` reader therefore keeps
+the length in the preimage so a truncated payload cannot collide with a longer one; refuses an older or
+newer frame **by name** (`frame-schema` with `found` and `supported`) instead of converting it; and
+treats `kind` as the closed set `decl`/`code`, where a `code` frame packs and is refused
+`frame-kind-reserved` at mount.
