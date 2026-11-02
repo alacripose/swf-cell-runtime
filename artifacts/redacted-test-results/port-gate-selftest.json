@@ -1,7 +1,7 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482",
+    "identity": "sha256:651d2d0083174fece9eb0f724513b8f455338ade6e8e86fc83ad34a3247693b3",
     "inputs": 18
   },
   "python": "3.13.14",
@@ -35,7 +35,7 @@
       ],
       "problems": [
         "../outside-scratch/: output path escapes the project root",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:60692c2329fe2bf6316b32c016ce0d42792f72f9c123367b1bc87edb08a7cb03'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -49,7 +49,7 @@
       "problems": [
         "missing baseline patch PATCH-0004-*.md",
         "expected 6 baseline patches, found 5: PATCH-0001-version-control.md, PATCH-0002-ticket-and-review-discipline.md, PATCH-0003-source-and-build-artifact-boundary.md, PATCH-0005-one-cell-surface-and-format.md, PATCH-0006-abstract-mcp-cua-axis.md",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:44f55dd01fab05bbaa9a5ca35b488164a27f47ab273319f36ffb8b57cbc668a3'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -62,7 +62,7 @@
       ],
       "problems": [
         "ledger line 1: missing exit_test",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:66ffdf0c3c81ccdd6f2f6f0acba84e94468e2dcced01a11e73af7851425d3351'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -87,7 +87,7 @@
       ],
       "problems": [
         "H7: missing Exit test:",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:9cc5489c5006e3ea0a3983a22fcca2e57fbb279317c6acb29277a8700989dcdf'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -100,7 +100,7 @@
       ],
       "problems": [
         "ledger line 1: an agent may not assign the shell gate state 'held'",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:8ab7a9bb0e127ed94ac67c54e138becd6eb3d606c8b7c0d03b3ce2ba1994d50f'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -113,7 +113,7 @@
       ],
       "problems": [
         "E-3: no '> **ERRATUM E-3' block in the plan",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:e2326df16604e089bb825e9989b5c836dd372bc8ec52fdeccde9b4ab252666ee'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -126,7 +126,7 @@
       ],
       "problems": [
         "E-1: the original wording was removed from the plan; it must stay visible beside the correction ('`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system')",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:68989f27f7fe508878cd18edbd8d529b50852b5677b386ef6247fe02119096a9'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -139,7 +139,7 @@
       ],
       "problems": [
         "I-2: the model no longer states the invariant 'Roles, not colours.'",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:6619a5951f786503a9f7326647751b60b7581983b02d12b6e29b1da1f937f6cb'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -152,7 +152,7 @@
       ],
       "problems": [
         "docs\\CELL-SCHEMA.md: port wire token 'Kind::' is not the port's to decide",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:a28fc8082f66dace44122027e7831319948e7923758adee5a51a35b22fe09045'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -165,7 +165,7 @@
       ],
       "problems": [
         "docs\\CELL-SCHEMA.md:145: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:d1f31718b14bdbc96182c3afd96f6175eb3c8f29a11dbb1a55c144404f8e8b82'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -178,7 +178,7 @@
       ],
       "problems": [
         "Q-1: missing its 'Falsifier' part",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:9dbac905d877855f2a1b8c68e3f8b66d8373d7ec85e7c495bbd5484301ff0b21'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -194,7 +194,7 @@
         "P-1: missing its 'Owner' part",
         "P-1 in docs/CELL-PROGRAM-DECISION.md has no owner line to index",
         "P-1: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:edaf4357a4e19e438a409d43ae31a2743d6fc8c4709eda2fa4ccdb40333b68d6'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -207,7 +207,7 @@
       ],
       "problems": [
         "docs\\CELL-PROGRAM-DECISION.md: port wire token 'Kind::' is not the port's to decide",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:aef99fe823b8b2b100ca167589c4539b462611416b3cad5e33e13e779487ea79'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -220,7 +220,7 @@
       ],
       "problems": [
         "docs\\CELL-PROGRAM-DECISION.md:137: a budget is stated without a label; every figure must be marked as one of ['[proposal]', '[class of limit]']",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:8260448d700a39f28fc48918fdf4e903b94026dab90d04e382d3eccb09216312'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -233,7 +233,7 @@
       ],
       "problems": [
         "docs\\CELL-PROGRAM-DECISION.md: a budget is framed as \"the imported program's limit\"; every figure here is a proposal about the class of limit, never a constraint of the imported program",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:bf21f58a0e7555490e5d26b4379d3f197fff1e37a4e73b9a1ecff68575accee8'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -249,7 +249,7 @@
         "M-1: missing its 'Owner' part",
         "M-1 in docs/CELL-MEDIA-DECISION.md has no owner line to index",
         "M-1: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:f2fae1ae3c2cbc57ff030a18fba147e4a5a7ce167ee70e72f5722434bdd8525a'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -262,7 +262,7 @@
       ],
       "problems": [
         "docs\\CELL-MEDIA-DECISION.md: port wire token 'Kind::' is not the port's to decide",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:3517b8481e39037312427df64c8c43b187e8ec48c8420f8a608c7255e77c8786'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -277,7 +277,7 @@
       "problems": [
         "M-4: no '## M-4' section in the decision document",
         "M-4: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:e61d38906e5c092b5076fd7ba8828ca48303f5f1b3f8fe502e5c427b5e3d0398'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -293,7 +293,7 @@
         "T-1: missing its 'Owner' part",
         "T-1 in docs/CELL-TRANSPORT-DECISION.md has no owner line to index",
         "T-1: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:499040b473d9132b9e8b731813f563939c4905b80d5a9ce94f25c26d4738982d'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -306,7 +306,7 @@
       ],
       "problems": [
         "docs\\CELL-TRANSPORT-DECISION.md: port wire token 'Kind::' is not the port's to decide",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:fb0a705d45a851b4513d24fc57b977e93fa5184f74a7982eec64fddb504a3978'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -321,7 +321,7 @@
       "problems": [
         "T-4: no '## T-4' section in the decision document",
         "T-4: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:458f6c18861a11df4e626febf9552bd05b0cc668dc0022bd4e69141481b5d86b'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -334,7 +334,7 @@
       ],
       "problems": [
         "docs\\RULING-INDEX.md:22: Q-6 owner '' does not match the source's 'project owner.'",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:890cf22f5c11c13e3041f7b5d0af8b38a394c4cf593a427674de6db1baa3c546'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -347,7 +347,7 @@
       ],
       "problems": [
         "P-3: a source carries this question and the index omits it",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:2020abb8fbc98cc17f06405c9034a7b195073c3f0ef7ab188f243c8f574cfbae'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -360,7 +360,7 @@
       ],
       "problems": [
         "Q-9: the index carries a question no source carries",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:cb6f5624d34e9c9f906f543795d5d97481f24afcecbf2db69dc43221d90281a3'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -373,7 +373,7 @@
       ],
       "problems": [
         "docs\\RULING-INDEX.md:23: P-1 is shown as 'ruled'; a question may only be presented as one of ['recommended, awaiting ruling', 'tabled \u2014 owner choice']",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:f5cee858b8c219cb48e770199c8fb22a522fe1689265d380c0873a9851eeb401'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -386,7 +386,7 @@
       ],
       "problems": [
         "docs\\RULING-INDEX.md: port wire token 'Kind::' is not the port's to decide",
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:8f4875d40cdaf9c4d96cbbc30dab4304507c2b7186bba40383207bc146e31cc4'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -397,7 +397,7 @@
         "selftest_record"
       ],
       "problems": [
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:35d633eb7ede5bcd5054da57079726adcfc6b65e4cc9ef1912cdd9c6dbb976e4'; re-run selftest so the evidence matches what it certifies"
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -420,7 +420,7 @@
         "selftest_record"
       ],
       "problems": [
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:5cc004c1fbb9cb76eae493a373412f6ebb060e63b82de0ea18299150f8900aed'; re-run selftest so the evidence matches what it certifies",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies",
         "LEDGER-0001: names a commit that does not exist"
       ],
       "pass": true
@@ -433,7 +433,7 @@
         "selftest_record"
       ],
       "problems": [
-        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:a2326c52d44895bcb2c9d0b500446ae250b8cbeca242ce582b54ca71a566a482', but this tree is 'sha256:68ef2edf47456fc3ff58918ad9d76d4858c8b55b95d9e7a8db08ad90fa33febb'; re-run selftest so the evidence matches what it certifies",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies",
         "LEDGER-0002: names a commit that does not carry it; history puts this entry in a different commit"
       ],
       "pass": true

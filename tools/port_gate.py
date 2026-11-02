@@ -911,8 +911,9 @@ RECORD_PATH = "artifacts/redacted-test-results/port-gate-selftest.json"
 
 
 def normalise_problem(problem: str) -> str:
-    """Replace a throwaway fixture commit hash so a rerun records the same words."""
-    return re.sub(r"\b[0-9a-f]{7,40}\b", "<fixture-commit>", problem)
+    """Replace throwaway fixture hashes and identities so a rerun records the same words."""
+    problem = re.sub(r"sha256:[0-9a-f]{64}", "<fixture-identity>", problem)
+    return re.sub(r"\b[0-9a-f]{7,64}\b", "<fixture-commit>", problem)
 
 
 def fixture_identity(root: Path) -> str:
