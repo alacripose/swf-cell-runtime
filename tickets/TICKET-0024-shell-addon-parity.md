@@ -12,8 +12,8 @@
 checks itself"
 
 This is a decision about the shell's provenance, delivery and verification. It is recorded, not
-implemented: the shell is shell-owned, `inputs/` is unreadable to agents, and no addon, parity check or
-shell exists in this tree.
+implemented: the shell is shell-owned, its source boundary is unreadable to agents, and no addon, parity check
+or shell exists in this tree.
 
 ## What this unit adds
 
