@@ -1,0 +1,7 @@
+[package]
+name = "planet-client"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+planet-package = { path = "../planet-package" }

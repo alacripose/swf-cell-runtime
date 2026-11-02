@@ -3,6 +3,13 @@
 version = 4
 
 [[package]]
+name = "planet-client"
+version = "0.1.0"
+dependencies = [
+ "planet-package",
+]
+
+[[package]]
 name = "planet-package"
 version = "0.1.0"
 dependencies = [

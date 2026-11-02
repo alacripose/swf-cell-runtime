@@ -76,8 +76,8 @@ no client code yet.
 
 | Item | Status | Blocking dependency |
 |---|---|---|
-| `package_owner` adapter (thin call into `planet-package`; owns no bytes) | not-implemented | client crate needed |
-| `cell_mount` (`Mount::watch` semantics: digest dedup, adopt-or-refuse-whole) | not-implemented | client crate needed |
+| `package_owner` adapter (thin call into `planet-package`; owns no bytes) | present | `planet-client/src/package_owner.rs` (TICKET-0034) |
+| `cell_mount` (`Mount::watch` semantics: digest dedup, adopt-or-refuse-whole) | present | `planet-client/src/cell_mount.rs` (TICKET-0034); the watched-directory half belongs to `cell_stream` |
 | `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | blocked | H5: proposal written (`docs/CELL-PROGRAM-DECISION.md`), awaiting the format owner's ruling |
 | `cell_runtime` (graph, timeline scheduler, event dispatch, state, save/recovery) | not-implemented | H4/H5 |
 | `cell_stream` (watched file + door admission; no second transport) | not-implemented | client crate needed; proposal in `docs/CELL-TRANSPORT-DECISION.md` |
