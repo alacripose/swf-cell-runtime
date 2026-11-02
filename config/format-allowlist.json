@@ -1,0 +1,9 @@
+{
+  "note": "Scan configuration for the drift gate. The scanned tree is code only; docs and this file are excluded so that prose about a format is never mistaken for an implementation of it.",
+  "scannedDirectories": ["src", "crates", "mcp", "client"],
+  "scannedExtensions": [".rs", ".py", ".ts", ".js", ".toml", ".json"],
+  "allowedPackageMagics": ["V4PKG001"],
+  "magicPattern": "[A-Z0-9]{2,10}PKG[0-9]{3}",
+  "forbiddenIdentifiers": ["shpkg", "openlock.addons"],
+  "forbiddenIdentifierNote": "Legacy alternate content formats. Their delivery mechanics may be ported; their payload format may not be introduced here."
+}

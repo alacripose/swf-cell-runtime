@@ -1,0 +1,7 @@
+#!/bin/sh
+# Pre-commit gate (PATCH-0003, PATCH-0004, PATCH-0001).
+# Install: cp tools/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+set -eu
+PY=python3
+command -v python3 >/dev/null 2>&1 || PY=python
+exec "$PY" tools/port_gate.py check
