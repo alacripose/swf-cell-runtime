@@ -77,10 +77,10 @@ NOT_ENFORCED = (
     {
         "check": "duplicate_package_reader",
         "patch": "PATCH-0005",
-        "owner": "format owner (H2)",
-        "blockedBy": "authoritative package crate absent from this checkout",
-        "note": "Cannot distinguish one reader from two until the authoritative crate and "
-        "a code tree exist.",
+        "owner": "format owner (H2 present)",
+        "blockedBy": "this repository has no code tree or crate manifest yet",
+        "note": "The authoritative reader is named in docs/PACKAGE-OWNERSHIP.md. A second "
+        "reader cannot be detected here until this repository has code to scan.",
     },
     {
         "check": "alternate_surface_or_runtime",
