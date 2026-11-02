@@ -1,0 +1,11 @@
+[package]
+name = "planet-package"
+description = "The canonical V4PKG001 frame and the mount receipt the shell records for it."
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+planet-shell-ledger = { path = "../planet-shell-ledger" }
+
+[dev-dependencies]
+planet-shell-ledger = { path = "../planet-shell-ledger" }
