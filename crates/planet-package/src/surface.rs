@@ -1,0 +1,311 @@
+//! `dl-enclave.surface/1`, parsed strictly.
+//!
+//! The grammar is the one `dl-enclave/docs/PACKAGE-FORMAT.md` §2.5 owns: TSV, LF, one final newline,
+//! `#` comments, and no positional column beyond the key. This module parses the document into typed
+//! windows, nodes and actions and refuses, by name, anything the grammar does not define:
+//!
+//! - an unknown row key (`surface-row`) or a blank row;
+//! - a row whose column count or value shape is wrong (`surface-field`, naming row and key);
+//! - a duplicated key (`surface-duplicate`, naming it);
+//! - a row in the wrong place (`surface-order`) — `requires` after a window, a window before the
+//!   `surface` row, or a parent that has not been declared;
+//! - an unknown `requires` value (`surface-requires`);
+//! - a node or action naming a window it is not grouped under (`surface-node`, `surface-action`);
+//! - a document that is not this schema (`surface-schema`) — an older or newer surface is refused by
+//!   name, never converted and never best-effort parsed.
+//!
+//! Not validated here, and named in the ticket rather than guessed: the lane, rule, node-kind,
+//! node-role and theme-role vocabularies, because this repository owns no declared table for them yet
+//! and inventing one would be a second vocabulary. Those fields must be non-empty.
+
+use crate::frame::Refusal;
+
+pub const SURFACE_SCHEMA: &str = "dl-enclave.surface/1";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Requirement {
+    Observe,
+    Act,
+    Admin,
+}
+
+impl Requirement {
+    pub fn name(self) -> &'static str {
+        match self {
+            Requirement::Observe => "observe",
+            Requirement::Act => "act",
+            Requirement::Admin => "admin",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Requirement> {
+        match text {
+            "observe" => Some(Requirement::Observe),
+            "act" => Some(Requirement::Act),
+            "admin" => Some(Requirement::Admin),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Node {
+    pub id: String,
+    pub parent: Option<String>,
+    pub kind: String,
+    pub role: String,
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Action {
+    pub verb: String,
+    pub tool: String,
+    pub target: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Window {
+    pub id: String,
+    pub title: String,
+    pub lane: String,
+    pub rule: String,
+    pub x: i64,
+    pub y: i64,
+    pub w: i64,
+    pub h: i64,
+    pub min_w: i64,
+    pub min_h: i64,
+    pub pinnable: bool,
+    pub pinned: bool,
+    pub chrome: String,
+    pub moves: String,
+    pub theme_role: String,
+    pub content: String,
+    pub nodes: Vec<Node>,
+    pub actions: Vec<Action>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Surface {
+    pub id: String,
+    pub requires: Option<Requirement>,
+    pub windows: Vec<Window>,
+}
+
+fn integer(row: &str, key: &str, text: &str) -> Result<i64, Refusal> {
+    text.parse::<i64>().map_err(|_| Refusal::SurfaceField {
+        row: row.to_string(),
+        key: key.to_string(),
+    })
+}
+
+fn boolean(row: &str, key: &str, text: &str) -> Result<bool, Refusal> {
+    match text {
+        "true" => Ok(true),
+        "false" => Ok(false),
+        _ => Err(Refusal::SurfaceField {
+            row: row.to_string(),
+            key: key.to_string(),
+        }),
+    }
+}
+
+fn non_empty(key: &str, field: &str, text: &str) -> Result<String, Refusal> {
+    if text.is_empty() {
+        return Err(Refusal::SurfaceField {
+            row: key.to_string(),
+            key: field.to_string(),
+        });
+    }
+    Ok(text.to_string())
+}
+
+fn columns(row: &str, fields: &[&str], expected: usize) -> Result<(), Refusal> {
+    if fields.len() != expected {
+        return Err(Refusal::SurfaceField {
+            row: row.to_string(),
+            key: "columns".to_string(),
+        });
+    }
+    Ok(())
+}
+
+impl Surface {
+    /// Parse a surface document strictly. Every refusal names the row or key it is about.
+    pub fn parse(payload: &[u8]) -> Result<Surface, Refusal> {
+        if !payload.ends_with(b"\n") {
+            return Err(Refusal::SurfaceSchema {
+                found: "no final newline".to_string(),
+            });
+        }
+        let text = std::str::from_utf8(payload).map_err(|_| Refusal::SurfaceSchema {
+            found: "not UTF-8".to_string(),
+        })?;
+        let mut lines = text.lines();
+        let header = lines.next().unwrap_or("");
+        if header != SURFACE_SCHEMA {
+            return Err(Refusal::SurfaceSchema {
+                found: header.to_string(),
+            });
+        }
+
+        let mut id: Option<String> = None;
+        let mut requires: Option<Requirement> = None;
+        let mut windows: Vec<Window> = Vec::new();
+
+        for line in lines {
+            if line.starts_with('#') {
+                continue;
+            }
+            if line.is_empty() {
+                return Err(Refusal::SurfaceRow {
+                    row: "<blank>".to_string(),
+                });
+            }
+            let fields: Vec<&str> = line.split('\t').collect();
+            let key = fields[0];
+            match key {
+                "surface" => {
+                    columns(key, &fields, 2)?;
+                    if id.is_some() {
+                        return Err(Refusal::SurfaceDuplicate {
+                            key: "surface".to_string(),
+                        });
+                    }
+                    id = Some(non_empty(key, "id", fields[1])?);
+                }
+                "requires" => {
+                    columns(key, &fields, 2)?;
+                    if requires.is_some() {
+                        return Err(Refusal::SurfaceDuplicate {
+                            key: "requires".to_string(),
+                        });
+                    }
+                    if !windows.is_empty() {
+                        return Err(Refusal::SurfaceOrder {
+                            row: "requires".to_string(),
+                        });
+                    }
+                    requires = Some(Requirement::parse(fields[1]).ok_or_else(|| {
+                        Refusal::SurfaceRequires {
+                            found: fields[1].to_string(),
+                        }
+                    })?);
+                }
+                "window" => {
+                    columns(key, &fields, 17)?;
+                    let window_id = non_empty(key, "id", fields[1])?;
+                    if id.is_none() {
+                        return Err(Refusal::SurfaceOrder {
+                            row: "window".to_string(),
+                        });
+                    }
+                    if windows.iter().any(|window| window.id == window_id) {
+                        return Err(Refusal::SurfaceDuplicate { key: window_id });
+                    }
+                    let row = format!("window {window_id}");
+                    let w = integer(&row, "w", fields[7])?;
+                    let h = integer(&row, "h", fields[8])?;
+                    if w < 1 || h < 1 {
+                        return Err(Refusal::SurfaceField {
+                            row,
+                            key: "extent".to_string(),
+                        });
+                    }
+                    windows.push(Window {
+                        id: window_id,
+                        title: non_empty(&row, "title", fields[2])?,
+                        lane: non_empty(&row, "lane", fields[3])?,
+                        rule: non_empty(&row, "rule", fields[4])?,
+                        x: integer(&row, "x", fields[5])?,
+                        y: integer(&row, "y", fields[6])?,
+                        w,
+                        h,
+                        min_w: integer(&row, "min-w", fields[9])?,
+                        min_h: integer(&row, "min-h", fields[10])?,
+                        pinnable: boolean(&row, "pinnable", fields[11])?,
+                        pinned: boolean(&row, "pinned", fields[12])?,
+                        chrome: non_empty(&row, "chrome", fields[13])?,
+                        moves: non_empty(&row, "moves", fields[14])?,
+                        theme_role: non_empty(&row, "theme-role", fields[15])?,
+                        content: non_empty(&row, "content", fields[16])?,
+                        nodes: Vec::new(),
+                        actions: Vec::new(),
+                    });
+                }
+                "node" => {
+                    columns(key, &fields, 7)?;
+                    let window_id = fields[1].to_string();
+                    let current = windows.last_mut().ok_or_else(|| Refusal::SurfaceOrder {
+                        row: "node".to_string(),
+                    })?;
+                    if current.id != window_id {
+                        return Err(Refusal::SurfaceNode {
+                            window: window_id,
+                            node: fields[2].to_string(),
+                        });
+                    }
+                    let row = format!("node {}", fields[2]);
+                    let node_id = non_empty(key, "id", fields[2])?;
+                    if current.nodes.iter().any(|node| node.id == node_id) {
+                        return Err(Refusal::SurfaceDuplicate { key: node_id });
+                    }
+                    let parent = if fields[3] == "-" {
+                        None
+                    } else {
+                        if !current.nodes.iter().any(|node| node.id == fields[3]) {
+                            return Err(Refusal::SurfaceNode {
+                                window: current.id.clone(),
+                                node: fields[2].to_string(),
+                            });
+                        }
+                        Some(fields[3].to_string())
+                    };
+                    current.nodes.push(Node {
+                        id: node_id,
+                        parent,
+                        kind: non_empty(&row, "kind", fields[4])?,
+                        role: non_empty(&row, "role", fields[5])?,
+                        value: non_empty(&row, "value", fields[6])?,
+                    });
+                }
+                "action" => {
+                    columns(key, &fields, 5)?;
+                    let window_id = fields[1].to_string();
+                    let current = windows.last_mut().ok_or_else(|| Refusal::SurfaceOrder {
+                        row: "action".to_string(),
+                    })?;
+                    if current.id != window_id {
+                        return Err(Refusal::SurfaceAction {
+                            window: window_id,
+                            verb: fields[2].to_string(),
+                        });
+                    }
+                    let row = format!("action {}", fields[2]);
+                    current.actions.push(Action {
+                        verb: non_empty(&row, "verb", fields[2])?,
+                        tool: non_empty(&row, "tool", fields[3])?,
+                        target: non_empty(&row, "target", fields[4])?,
+                    });
+                }
+                other => {
+                    return Err(Refusal::SurfaceRow {
+                        row: other.to_string(),
+                    })
+                }
+            }
+        }
+
+        match id {
+            Some(id) => Ok(Surface {
+                id,
+                requires,
+                windows,
+            }),
+            None => Err(Refusal::SurfaceSchema {
+                found: "no surface row".to_string(),
+            }),
+        }
+    }
+}
