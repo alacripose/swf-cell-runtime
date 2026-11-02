@@ -43,7 +43,7 @@ shell exists in this tree.
 
 ## What this deliberately does not do
 
-- It does not infer shell behaviour, read `inputs/`, invent a parity format, or claim parity.
+- It does not infer shell behaviour, read the source boundary, invent a parity format, or claim parity.
 - It does not demote a check or loosen a rule; the four `NOT-ENFORCED` rows are untouched.
 
 ## Review
