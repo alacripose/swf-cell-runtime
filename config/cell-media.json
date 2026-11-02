@@ -1,0 +1,8 @@
+{
+  "note": "Guards the media-kind decision: every question keeps its recommendation, rejected alternative, falsifier and owner, and no port wire token may appear in the document.",
+  "document": "docs/CELL-MEDIA-DECISION.md",
+  "proposalMarker": "proposal",
+  "questions": ["M-1", "M-2", "M-3", "M-4", "M-5"],
+  "questionLabels": ["Recommendation", "Rejected", "Falsifier", "Owner"],
+  "forbiddenTokens": ["Kind::", "opcode", "op code", "u16", "u32", "u64"]
+}

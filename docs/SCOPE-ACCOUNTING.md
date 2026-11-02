@@ -52,7 +52,7 @@ no client code yet.
 | `surface.mount/2` transport | blocked | Absent from both families; A adopts via `Mount::watch` + door admission, B reads folders/artifact maps |
 | Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
 | Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`); proposal in `docs/CELL-PROGRAM-DECISION.md`, awaiting the format owner's ruling |
-| Media kinds (bitmap, font, audio) | not-implemented | Ruled D-2: one kind per media type, one field each, each needing a format-document line |
+| Media kinds (bitmap, font, audio) | not-implemented | Ruled D-2: one kind per media type, one field each, each needing a format-document line; field contents proposed in `docs/CELL-MEDIA-DECISION.md`, awaiting the format owner's ruling |
 | Streamed transport | not-implemented | Ruled D-4: a new layer with its own byte/digest/receipt decisions; not "mount-v2", which does not exist in either family |
 
 ## Shell-only import layer (H4–H5, H7–H8) — owner: shell
@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Cell-media guard (four-part questions, no wire tokens) | present | `tools/port_gate.py` `cell_media` over `config/cell-media.json` |
 | Cell-program guard (four-part questions, labelled budgets, no wire tokens, no budget framed as a program constraint) | present | `tools/port_gate.py` `cell_program` over `config/cell-program.json` |
 | Cell-schema guard (six invariants, four-part answers, no wire tokens, no raster target) | present | `tools/port_gate.py` `cell_schema` over `config/cell-schema.json` |
 | Plan errata guard (block, quote, citations, index entry) | present | `tools/port_gate.py` `plan_errata` over `config/plan-errata.json` |
