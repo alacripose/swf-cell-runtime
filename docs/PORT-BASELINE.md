@@ -26,7 +26,7 @@ Current position: **H1–H3 present; H4+ not started.**
 ### H3 — drift gate and repository workflow
 
 - Artifact: `tools/port_gate.py`.
-- Exit test: mechanically detects tracked `.swf`/`.sfw`, outputs outside the project root, second package magics in code, unrecorded format tags, missing ticket/PR references in commit history, invalid ledger entries, missing baseline patches, blocks without exit tests, and plan errata whose superseded wording, citations, or index entry disappears; `selftest` proves each refusal.
+- Exit test: mechanically detects tracked `.swf`/`.sfw`, outputs outside the project root, second package magics in code, unrecorded format tags, missing ticket/PR references in commit history, invalid ledger entries, missing baseline patches, blocks without exit tests, and plan errata whose superseded wording, citations, or index entry disappears, and a schema proposal that drops a model invariant, smuggles a port wire token, or restates the family-B raster as the target; `selftest` proves each refusal.
 - Refuses: a prose-only plan that cannot reject drift; direct-to-main implementation; untracked work accumulating outside the queue.
 - Status: present (decidable checks enforced; remainder listed by the gate as `NOT-ENFORCED` with owner and blocking dependency).
 

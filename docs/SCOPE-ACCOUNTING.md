@@ -48,7 +48,7 @@ no client code yet.
 | Adopting family B as this port's format | blocked | PATCH-0005 forbids a second package family; format-owner decision required |
 | A2: `ala_civ_bots_prototype` Java frame reader | present | `PackageFrame.java`: byte-compatible frame, disjoint row kinds (`observation`/`decision`), payload-digest names, no callers and no frame tests |
 | Foreign package acceptance | present as a refusal | `UnknownRowKind` and `NameMismatch` refuse another tree's package instead of half-reading it |
-| Family-A cell model | not-implemented | Ruled D-1 and scoped in `docs/CELL-MODEL.md`: a declared display unit over data, not a grid raster; the schema (kind, fields, shapers, ceilings, binding syntax) remains undecided |
+| Family-A cell model | not-implemented | Ruled D-1 and scoped in `docs/CELL-MODEL.md`; a schema proposal with recommendations, rejected alternatives, falsifiers and named owners is in `docs/CELL-SCHEMA.md`, awaiting the format owner's ruling |
 | `surface.mount/2` transport | blocked | Absent from both families; A adopts via `Mount::watch` + door admission, B reads folders/artifact maps |
 | Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
 | Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`) |
@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Cell-schema guard (six invariants, four-part answers, no wire tokens, no raster target) | present | `tools/port_gate.py` `cell_schema` over `config/cell-schema.json` |
 | Plan errata guard (block, quote, citations, index entry) | present | `tools/port_gate.py` `plan_errata` over `config/plan-errata.json` |
 | Pre-commit hook and CI workflow running the gate | present |
 | Branch + PR review enforcement (remote repository, review records) | not-implemented — no remote is configured in this checkout |

@@ -2,8 +2,8 @@
   "tool": "tools/port_gate.py selftest",
   "timestamp": "2026-11-02",
   "python": "3.13.14",
-  "scenarios": 10,
-  "passed": 10,
+  "scenarios": 14,
+  "passed": 14,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "8e48819a: subject has no TICKET-NNNN reference",
-        "8e48819a: subject has no LEDGER-NNNN reference"
+        "b194dff6: subject has no TICKET-NNNN reference",
+        "b194dff6: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -110,6 +110,50 @@
       ],
       "problems": [
         "E-1: the original wording was removed from the plan; it must stay visible beside the correction ('`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system')"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_invariant_removed_refused",
+      "expected_failure": "cell_schema",
+      "failing_checks": [
+        "cell_schema"
+      ],
+      "problems": [
+        "I-2: the model no longer states the invariant 'Roles, not colours.'"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_wire_token_refused",
+      "expected_failure": "cell_schema",
+      "failing_checks": [
+        "cell_schema"
+      ],
+      "problems": [
+        "docs\\CELL-SCHEMA.md: port wire token 'Kind::' is not the port's to decide"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_raster_target_refused",
+      "expected_failure": "cell_schema",
+      "failing_checks": [
+        "cell_schema"
+      ],
+      "problems": [
+        "docs\\CELL-SCHEMA.md:145: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_question_unanswered_refused",
+      "expected_failure": "cell_schema",
+      "failing_checks": [
+        "cell_schema"
+      ],
+      "problems": [
+        "Q-1: missing its 'Falsifier' part"
       ],
       "pass": true
     }

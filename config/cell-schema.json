@@ -1,0 +1,19 @@
+{
+  "note": "Guards the cell model's invariants and the schema proposal's discipline. Invariant texts must stay in the model; every declared question must keep its recommendation, rejected alternative, falsifier and owner; no port wire token may appear in either document; the family-B raster may only be named in order to be rejected.",
+  "model": "docs/CELL-MODEL.md",
+  "schema": "docs/CELL-SCHEMA.md",
+  "proposalMarker": "proposal",
+  "invariants": [
+    { "id": "I-1", "text": "Bounded, not truncated." },
+    { "id": "I-2", "text": "Roles, not colours." },
+    { "id": "I-3", "text": "Addressed, never ambient." },
+    { "id": "I-4", "text": "Named by a reference." },
+    { "id": "I-5", "text": "One grammar, two callers." },
+    { "id": "I-6", "text": "Disposable projections." }
+  ],
+  "questions": ["Q-1", "Q-2", "Q-3", "Q-4", "Q-5", "Q-6"],
+  "questionLabels": ["Recommendation", "Rejected", "Falsifier", "Owner"],
+  "forbiddenTokens": ["Kind::", "opcode", "op code", "u16", "u32", "u64"],
+  "rasterPhrases": ["8 \u00d7 16", "8x16", "paper/ink"],
+  "rasterExemptions": ["reject", "refus", "superseded", "family b"]
+}

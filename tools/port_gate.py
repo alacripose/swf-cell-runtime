@@ -51,6 +51,8 @@ GOVERNANCE_FILES = (
     "docs/PORT-BASELINE.md",
     "docs/PACKAGE-OWNERSHIP.md",
     "docs/SCOPE-ACCOUNTING.md",
+    "docs/CELL-MODEL.md",
+    "docs/CELL-SCHEMA.md",
     "tickets/TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/ticket.md",
     ".github/pull_request_template.md",
@@ -59,6 +61,7 @@ GOVERNANCE_FILES = (
     "config/output-roots.json",
     "config/format-allowlist.json",
     "config/plan-errata.json",
+    "config/cell-schema.json",
     "tools/pre-commit",
 )
 
@@ -555,6 +558,97 @@ def check_plan_errata(root: Path) -> list[str]:
     return problems
 
 
+def sections_by_heading(text: str, pattern: str) -> dict[str, str]:
+    """Split a document into the bodies of headings whose first group names them."""
+    heading = re.compile(pattern, re.M)
+    matches = list(heading.finditer(text))
+    sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        start = match.start()
+        stop = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections[match.group(1)] = text[start:stop]
+    return sections
+
+
+def check_cell_schema(root: Path) -> list[str]:
+    """Invariants stay in the model, every schema question keeps its four parts, and no wire token."""
+    manifest_path = root / "config" / "cell-schema.json"
+    if not manifest_path.is_file():
+        return ["config/cell-schema.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/cell-schema.json is not valid JSON: {exc}"]
+
+    model_path = root / str(manifest.get("model", "docs/CELL-MODEL.md"))
+    schema_path = root / str(manifest.get("schema", "docs/CELL-SCHEMA.md"))
+    problems: list[str] = []
+    for path in (model_path, schema_path):
+        if not path.is_file():
+            problems.append(f"{path.relative_to(root)} is missing")
+    if problems:
+        return problems
+
+    model = read_text(model_path)
+    schema = read_text(schema_path)
+
+    for invariant in manifest.get("invariants", []):
+        identifier = invariant.get("id")
+        expected = invariant.get("text", "")
+        if not expected or expected not in model:
+            problems.append(
+                f"{identifier}: the model no longer states the invariant {expected!r}"
+            )
+        if identifier and identifier not in schema:
+            problems.append(
+                f"{identifier}: the schema proposal does not account for this invariant"
+            )
+
+    questions = sections_by_heading(schema, r"^#{2,3} (Q-\d+)\b.*$")
+    for question in manifest.get("questions", []):
+        section = questions.get(question)
+        if section is None:
+            problems.append(f"{question}: no '### {question}' section in the schema proposal")
+            continue
+        for label in manifest.get("questionLabels", []):
+            if f"**{label}:**" not in section:
+                problems.append(f"{question}: missing its {label!r} part")
+
+    marker = manifest.get("proposalMarker")
+    if marker and marker.lower() not in schema.lower():
+        problems.append(f"the schema document never says it is a {marker!r}")
+
+    tokens = [str(token) for token in manifest.get("forbiddenTokens", [])]
+    if tokens:
+        token_pattern = re.compile(
+            "|".join(
+                rf"\b{re.escape(token)}\b" if token.isalnum() else re.escape(token)
+                for token in tokens
+            )
+        )
+        for path, text in ((model_path, model), (schema_path, schema)):
+            found = token_pattern.search(text)
+            if found:
+                problems.append(
+                    f"{path.relative_to(root)}: port wire token {found.group(0)!r} is not the "
+                    "port's to decide"
+                )
+
+    phrases = [str(phrase).lower() for phrase in manifest.get("rasterPhrases", [])]
+    exemptions = [str(word).lower() for word in manifest.get("rasterExemptions", [])]
+    for path, text in ((model_path, model), (schema_path, schema)):
+        for number, line in enumerate(text.splitlines(), start=1):
+            lowered = line.lower()
+            if not any(phrase in lowered for phrase in phrases):
+                continue
+            if not any(word in lowered for word in exemptions):
+                problems.append(
+                    f"{path.relative_to(root)}:{number}: names the family-B raster without "
+                    f"rejecting it (expected one of {exemptions})"
+                )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -566,6 +660,7 @@ CHECKS = (
     ("baseline_blocks", check_baseline_blocks, "PATCH-0001"),
     ("scope_accounting", check_scope_accounting, "PATCH-0001"),
     ("plan_errata", check_plan_errata, "PATCH-0002"),
+    ("cell_schema", check_cell_schema, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -623,6 +718,8 @@ FIXTURE_PATHS = (
     "docs/PACKAGE-OWNERSHIP.md",
     "docs/PORT-BASELINE.md",
     "docs/SCOPE-ACCOUNTING.md",
+    "docs/CELL-MODEL.md",
+    "docs/CELL-SCHEMA.md",
     "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
     "patches",
     "tickets",
@@ -758,6 +855,38 @@ def mutate_erratum_original_removed(root: Path) -> None:
     path.write_text(text.replace(phrase, "", 1), encoding="utf-8")
 
 
+def mutate_cell_invariant_removed(root: Path) -> None:
+    path = root / "docs" / "CELL-MODEL.md"
+    text = read_text(path)
+    phrase = "**Roles, not colours.**"
+    if phrase not in text:
+        raise GateError("fixture: the invariant was not found before mutation")
+    path.write_text(text.replace(phrase, "**Roles.**", 1), encoding="utf-8")
+
+
+def mutate_cell_wire_token(root: Path) -> None:
+    path = root / "docs" / "CELL-SCHEMA.md"
+    text = read_text(path)
+    path.write_text(text + "\nThe row is declared as `Kind::Cell`.\n", encoding="utf-8")
+
+
+def mutate_cell_raster_target(root: Path) -> None:
+    path = root / "docs" / "CELL-SCHEMA.md"
+    text = read_text(path)
+    path.write_text(
+        text + "\nThe target layout is an 8 \u00d7 16 paper/ink grid.\n", encoding="utf-8"
+    )
+
+
+def mutate_cell_question_unanswered(root: Path) -> None:
+    path = root / "docs" / "CELL-SCHEMA.md"
+    text = read_text(path)
+    phrase = "**Falsifier:**"
+    if phrase not in text:
+        raise GateError("fixture: the falsifier label was not found before mutation")
+    path.write_text(text.replace(phrase, "**Note:**", 1), encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -769,6 +898,10 @@ SELFTEST_SCENARIOS = (
     ("agent_gate_state_refused", mutate_agent_gate_state, "ledger_valid"),
     ("erratum_removed_refused", mutate_missing_erratum, "plan_errata"),
     ("erratum_original_removed_refused", mutate_erratum_original_removed, "plan_errata"),
+    ("cell_invariant_removed_refused", mutate_cell_invariant_removed, "cell_schema"),
+    ("cell_wire_token_refused", mutate_cell_wire_token, "cell_schema"),
+    ("cell_raster_target_refused", mutate_cell_raster_target, "cell_schema"),
+    ("cell_question_unanswered_refused", mutate_cell_question_unanswered, "cell_schema"),
 )
 
 
