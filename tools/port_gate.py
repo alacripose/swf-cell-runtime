@@ -2322,10 +2322,31 @@ NEAR_MISS = (
 )
 
 
+def prepare_workspace(work: Path) -> None:
+    """Clear a leftover workspace, or stop with a named error instead of a traceback.
+
+    An interrupted run can leave the directory behind, and removal can fail while another
+    process holds a file inside it. Retry once, then report the path rather than letting
+    mkdir raise FileExistsError into the interpreter.
+    """
+    for _attempt in range(2):
+        if not work.exists():
+            break
+        remove_tree(work)
+    if work.exists():
+        raise GateError(
+            f"selftest workspace could not be cleared: {work}; another run may still hold a "
+            "file inside it. No record was written and no checks were run"
+        )
+    try:
+        work.mkdir(parents=True)
+    except OSError as exc:
+        raise GateError(f"selftest workspace could not be created: {work}: {exc}") from exc
+
+
 def command_selftest(project_root: Path) -> int:
     work = project_root / "target" / "port-gate-selftest"
-    remove_tree(work)
-    work.mkdir(parents=True)
+    prepare_workspace(work)
 
     failures: list[str] = []
     records: list[dict] = []
