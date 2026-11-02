@@ -1,0 +1,255 @@
+//! The `V4PKG001` frame.
+//!
+//! Layout: `magic (8) | schema (LE u16) | kind (LE u16) | len (LE u64) | payload digest (32) | payload`.
+//! The payload digest is `domain || schema (LE u16) || len (LE u64) || payload`, so the length is
+//! inside the preimage and a truncated payload cannot collide with a longer one. `kind` sits in the
+//! header and in the whole-frame digest, not in the payload preimage; that limit is named in
+//! `tickets/TICKET-0029-frame-mount.md` rather than hidden.
+
+use planet_shell_ledger::sha256;
+
+pub const MAGIC: &[u8; 8] = b"V4PKG001";
+pub const SCHEMA: u16 = 1;
+pub const DOMAIN: &[u8] = b"planet-package";
+pub const PAYLOAD_LIMIT: usize = 4 * 1024 * 1024;
+pub const HEADER: usize = 8 + 2 + 2 + 8 + 32;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Kind {
+    Decl = 1,
+    Code = 2,
+}
+
+impl Kind {
+    pub fn value(self) -> u16 {
+        self as u16
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Kind::Decl => "decl",
+            Kind::Code => "code",
+        }
+    }
+
+    pub fn parse(value: u16) -> Option<Kind> {
+        match value {
+            1 => Some(Kind::Decl),
+            2 => Some(Kind::Code),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Refusal {
+    FrameMagic {
+        found: String,
+    },
+    FrameSchema {
+        found: u16,
+        supported: u16,
+    },
+    FrameKind {
+        found: u16,
+    },
+    FrameTruncated {
+        needed: usize,
+        found: usize,
+    },
+    FrameLength {
+        declared: u64,
+        found: usize,
+    },
+    FrameDigest {
+        declared: String,
+        found: String,
+    },
+    PackagePayloadLimit {
+        limit: usize,
+        found: usize,
+    },
+    FrameKindReserved {
+        kind: &'static str,
+    },
+    MountSequence {
+        previous: u64,
+        found: u64,
+    },
+    SurfaceSchema {
+        found: String,
+    },
+    SurfaceWindows {
+        found: usize,
+    },
+}
+
+impl Refusal {
+    pub fn code(&self) -> &'static str {
+        match self {
+            Refusal::FrameMagic { .. } => "frame-magic",
+            Refusal::FrameSchema { .. } => "frame-schema",
+            Refusal::FrameKind { .. } => "frame-kind",
+            Refusal::FrameTruncated { .. } => "frame-truncated",
+            Refusal::FrameLength { .. } => "frame-length",
+            Refusal::FrameDigest { .. } => "frame-digest",
+            Refusal::PackagePayloadLimit { .. } => "package-payload-limit",
+            Refusal::FrameKindReserved { .. } => "frame-kind-reserved",
+            Refusal::MountSequence { .. } => "mount-sequence",
+            Refusal::SurfaceSchema { .. } => "surface-schema",
+            Refusal::SurfaceWindows { .. } => "surface-windows",
+        }
+    }
+
+    pub fn message(&self) -> String {
+        match self {
+            Refusal::FrameMagic { found } => {
+                format!("frame magic {found:?} is not V4PKG001")
+            }
+            Refusal::FrameSchema { found, supported } => {
+                format!("frame schema {found} is not supported ({supported}); an older frame is refused, not converted")
+            }
+            Refusal::FrameKind { found } => {
+                format!("frame kind {found} is not in the closed set decl(1)/code(2)")
+            }
+            Refusal::FrameTruncated { needed, found } => {
+                format!("frame needs {needed} bytes and has {found}")
+            }
+            Refusal::FrameLength { declared, found } => {
+                format!("frame declares {declared} payload bytes and carries {found}")
+            }
+            Refusal::FrameDigest { declared, found } => {
+                format!("frame digest {declared} is not the payload's {found}")
+            }
+            Refusal::PackagePayloadLimit { limit, found } => {
+                format!("payload {found} exceeds the {limit}-byte cap")
+            }
+            Refusal::FrameKindReserved { kind } => {
+                format!("kind {kind:?} is reserved; it packs and is refused at mount until a reader exists")
+            }
+            Refusal::MountSequence { previous, found } => {
+                format!("mount sequence {found} does not follow {previous}")
+            }
+            Refusal::SurfaceSchema { found } => {
+                format!("payload is not a dl-enclave.surface/1 document: {found}")
+            }
+            Refusal::SurfaceWindows { found } => {
+                format!("surface declares {found} windows; a mount with none declares nothing")
+            }
+        }
+    }
+}
+
+/// The payload digest: `domain || schema (LE u16) || len (LE u64) || payload`.
+pub fn payload_digest(schema: u16, payload: &[u8]) -> [u8; 32] {
+    let mut message = Vec::with_capacity(DOMAIN.len() + 10 + payload.len());
+    message.extend_from_slice(DOMAIN);
+    message.extend_from_slice(&schema.to_le_bytes());
+    message.extend_from_slice(&(payload.len() as u64).to_le_bytes());
+    message.extend_from_slice(payload);
+    sha256::sha256(&message)
+}
+
+/// The whole-frame digest, which is what a receipt names.
+pub fn frame_digest(bytes: &[u8]) -> [u8; 32] {
+    sha256::sha256(bytes)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Frame {
+    pub schema: u16,
+    pub kind: Kind,
+    pub payload: Vec<u8>,
+}
+
+impl Frame {
+    pub fn new(kind: Kind, payload: &[u8]) -> Result<Self, Refusal> {
+        if payload.len() > PAYLOAD_LIMIT {
+            return Err(Refusal::PackagePayloadLimit {
+                limit: PAYLOAD_LIMIT,
+                found: payload.len(),
+            });
+        }
+        Ok(Frame {
+            schema: SCHEMA,
+            kind,
+            payload: payload.to_vec(),
+        })
+    }
+
+    pub fn payload_digest_hex(&self) -> String {
+        sha256::hex(&payload_digest(self.schema, &self.payload))
+    }
+
+    pub fn frame_digest_hex(&self) -> String {
+        sha256::hex(&frame_digest(&self.encode()))
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(HEADER + self.payload.len());
+        bytes.extend_from_slice(MAGIC);
+        bytes.extend_from_slice(&self.schema.to_le_bytes());
+        bytes.extend_from_slice(&self.kind.value().to_le_bytes());
+        bytes.extend_from_slice(&(self.payload.len() as u64).to_le_bytes());
+        bytes.extend_from_slice(&payload_digest(self.schema, &self.payload));
+        bytes.extend_from_slice(&self.payload);
+        bytes
+    }
+
+    /// Read the schema before anything else, so an older frame is refused by name without its
+    /// payload being interpreted.
+    pub fn read_schema(bytes: &[u8]) -> Result<u16, Refusal> {
+        if bytes.len() < 10 {
+            return Err(Refusal::FrameTruncated {
+                needed: HEADER,
+                found: bytes.len(),
+            });
+        }
+        if &bytes[0..8] != MAGIC {
+            return Err(Refusal::FrameMagic {
+                found: String::from_utf8_lossy(&bytes[0..8]).into_owned(),
+            });
+        }
+        let schema = u16::from_le_bytes([bytes[8], bytes[9]]);
+        if schema != SCHEMA {
+            return Err(Refusal::FrameSchema {
+                found: schema,
+                supported: SCHEMA,
+            });
+        }
+        Ok(schema)
+    }
+
+    pub fn decode(bytes: &[u8]) -> Result<Self, Refusal> {
+        let schema = Frame::read_schema(bytes)?;
+        if bytes.len() < HEADER {
+            return Err(Refusal::FrameTruncated {
+                needed: HEADER,
+                found: bytes.len(),
+            });
+        }
+        let kind_value = u16::from_le_bytes([bytes[10], bytes[11]]);
+        let kind = Kind::parse(kind_value).ok_or(Refusal::FrameKind { found: kind_value })?;
+        let declared = u64::from_le_bytes(bytes[12..20].try_into().expect("eight bytes"));
+        let carried = &bytes[HEADER..];
+        if declared as usize != carried.len() {
+            return Err(Refusal::FrameLength {
+                declared,
+                found: carried.len(),
+            });
+        }
+        let declared_digest = &bytes[20..52];
+        let computed = payload_digest(schema, carried);
+        if declared_digest != computed {
+            return Err(Refusal::FrameDigest {
+                declared: sha256::hex(declared_digest),
+                found: sha256::hex(&computed),
+            });
+        }
+        Ok(Frame {
+            schema,
+            kind,
+            payload: carried.to_vec(),
+        })
+    }
+}

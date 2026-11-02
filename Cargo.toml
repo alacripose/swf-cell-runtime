@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/planet-shell-ledger"]
+members = ["crates/planet-package", "crates/planet-shell-ledger"]
 
 [workspace.package]
 version = "0.1.0"
