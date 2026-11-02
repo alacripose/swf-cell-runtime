@@ -96,6 +96,27 @@ repository. The shell's gate states remain the shell's to assign, and `inputs/` 
 
 ---
 
+## D-6 — the shell family is the authority; the planet tree is evidence
+
+**Ruling, recorded from the project owner:** "planet shploingus is not the authorative source", and the
+other shell projects were supplied as the sources for the shell.
+
+**Settles:** which committed statements the port's shell infers from — `secure-shell`
+(`docs/ARCHITECTURE.md`, `docs/LEDGER.md`), `dl-enclave` (`docs/PLAN.md`, D1–D17), `openlock`
+(`shell/alpha-shell/package.shspec`), and `ala_civ_bots_prototype` (`tools/parity_check.py`). The
+measurements D-1..D-5 and E-1..E-5 record about `planet-shploingus` stay visible as evidence of what a
+second copy of the reader does; none of them is authority for the shell's shape.
+
+**Does not settle:** which variant is canonical where the family disagrees — the transport questions
+(T-1..T-8) and the addon questions (A-1..A-4) remain open with their owners — and whether the port
+reuses the family's runtime verbs unchanged.
+
+**Consequence, and the lines that must not be crossed:** the port's first code is the commit boundary
+the family's ledger defines (`crates/planet-shell-ledger`, TICKET-0026), not a reader copied from the
+planet tree; no shell completion, mount or parity is claimed here, and `inputs/` stays unread.
+
+---
+
 ## What these rulings do not do
 
 - They do not implement anything. Every affected row in `docs/SCOPE-ACCOUNTING.md` reads
@@ -104,5 +125,7 @@ repository. The shell's gate states remain the shell's to assign, and `inputs/` 
   no agent may run or read it.
 - They do not weaken PATCH-0005: no second package family, no second reader, no second surface, and no
   grid adopted from family B because it happened to exist.
-- They do not authorise a parser. A format owner still writes the schema, and this repository still has
-  no code tree.
+- They do not authorise a parser. A format owner still writes the schema, and at the time of these
+  rulings this repository had no code tree. **Superseded by D-6:** since TICKET-0026 it has one
+  (`crates/planet-shell-ledger`), a ledger and no reader; the sentence above is corrected here, not
+  deleted.

@@ -1,0 +1,7 @@
+[package]
+name = "planet-shell-ledger"
+description = "The shell's commit boundary: a hash-chained, idempotent project ledger."
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
