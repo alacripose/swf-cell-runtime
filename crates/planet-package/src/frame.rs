@@ -76,6 +76,30 @@ pub enum Refusal {
         previous: u64,
         found: u64,
     },
+    SurfaceRow {
+        row: String,
+    },
+    SurfaceField {
+        row: String,
+        key: String,
+    },
+    SurfaceDuplicate {
+        key: String,
+    },
+    SurfaceOrder {
+        row: String,
+    },
+    SurfaceRequires {
+        found: String,
+    },
+    SurfaceNode {
+        window: String,
+        node: String,
+    },
+    SurfaceAction {
+        window: String,
+        verb: String,
+    },
     SurfaceSchema {
         found: String,
     },
@@ -96,6 +120,13 @@ impl Refusal {
             Refusal::PackagePayloadLimit { .. } => "package-payload-limit",
             Refusal::FrameKindReserved { .. } => "frame-kind-reserved",
             Refusal::MountSequence { .. } => "mount-sequence",
+            Refusal::SurfaceRow { .. } => "surface-row",
+            Refusal::SurfaceField { .. } => "surface-field",
+            Refusal::SurfaceDuplicate { .. } => "surface-duplicate",
+            Refusal::SurfaceOrder { .. } => "surface-order",
+            Refusal::SurfaceRequires { .. } => "surface-requires",
+            Refusal::SurfaceNode { .. } => "surface-node",
+            Refusal::SurfaceAction { .. } => "surface-action",
             Refusal::SurfaceSchema { .. } => "surface-schema",
             Refusal::SurfaceWindows { .. } => "surface-windows",
         }
@@ -129,6 +160,27 @@ impl Refusal {
             }
             Refusal::MountSequence { previous, found } => {
                 format!("mount sequence {found} does not follow {previous}")
+            }
+            Refusal::SurfaceRow { row } => {
+                format!("surface row {row:?} is not defined by dl-enclave.surface/1")
+            }
+            Refusal::SurfaceField { row, key } => {
+                format!("{row} carries no {key} the grammar defines, or a malformed one")
+            }
+            Refusal::SurfaceDuplicate { key } => {
+                format!("surface declares {key:?} twice; a key appears once")
+            }
+            Refusal::SurfaceOrder { row } => {
+                format!("surface row {row:?} is in the wrong place for the declared grouping")
+            }
+            Refusal::SurfaceRequires { found } => {
+                format!("requires {found:?} is not one of observe, act or admin")
+            }
+            Refusal::SurfaceNode { window, node } => {
+                format!("node {node} is not a declared node of window {window} before it is used")
+            }
+            Refusal::SurfaceAction { window, verb } => {
+                format!("action {verb} is not grouped under the declared window {window}")
             }
             Refusal::SurfaceSchema { found } => {
                 format!("payload is not a dl-enclave.surface/1 document: {found}")
