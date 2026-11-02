@@ -36,14 +36,22 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let counts = swf_import::tags::counts(&tags);
-    let frame = match swf_import::emit::package_frame(&id, &header, &counts, tags.len()) {
-        Ok(frame) => frame,
+    let inventory = match swf_import::content::survey(&header, &tags) {
+        Ok(inventory) => inventory,
         Err(refusal) => {
             eprintln!("refused {refusal}");
             return ExitCode::FAILURE;
         }
     };
+    let counts = swf_import::tags::counts(&tags);
+    let frame =
+        match swf_import::emit::package_frame(&id, &header, &counts, tags.len(), &inventory) {
+            Ok(frame) => frame,
+            Err(refusal) => {
+                eprintln!("refused {refusal}");
+                return ExitCode::FAILURE;
+            }
+        };
     if let Some(parent) = out.parent() {
         if let Err(error) = std::fs::create_dir_all(parent) {
             eprintln!("mkdir {}: {error}", parent.display());
@@ -83,9 +91,41 @@ fn main() -> ExitCode {
                 header.stage.height_px()
             );
             println!("frames {} at {} fps", header.frame_count, header.frame_rate);
+            println!("show_frames {}", inventory.show_frames);
             println!("tags {}", tags.len());
             for (code, count) in &counts {
                 println!("tag {code} {count}");
+            }
+            println!("shapes {}", inventory.shapes.len());
+            if let Some(bounds) = inventory.bounds() {
+                println!(
+                    "shape_bounds {}x{} px at ({},{})",
+                    bounds.width_px(),
+                    bounds.height_px(),
+                    bounds.x_min / 20,
+                    bounds.y_min / 20
+                );
+            }
+            let nested: usize = inventory.sprites.iter().map(|sprite| sprite.nested).sum();
+            println!("sprites {} nested {}", inventory.sprites.len(), nested);
+            for sprite in &inventory.sprites {
+                println!(
+                    "sprite id {} frames {} nested {} bytes {}",
+                    sprite.id, sprite.frames, sprite.nested, sprite.bytes
+                );
+            }
+            for kind in [
+                swf_import::content::MediaKind::Bitmap,
+                swf_import::content::MediaKind::Sound,
+                swf_import::content::MediaKind::Font,
+                swf_import::content::MediaKind::Text,
+            ] {
+                println!(
+                    "media_{} {} {} bytes",
+                    kind.name(),
+                    inventory.media_count(kind),
+                    inventory.media_bytes(kind)
+                );
             }
             println!("surface {}", receipt.surface);
             println!("windows {}", receipt.windows);

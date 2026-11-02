@@ -144,3 +144,12 @@ Consequences:
 - The package proves the pipeline — digest, receipt, ledger entry, adoption — not gameplay. The user
   is the witness; the agent reports measurements and refusals only.
 - The general rule for other files and other games is unchanged.
+
+### D-7a — The measurement deepens; the lowering stays with the format owner (2026-11-02)
+
+The plan's literal next step after a mountable package is to lower tag bodies into cells, media and
+programs. That requires the representations in `docs/CELL-SCHEMA.md` (Q-1…Q-6), media M-1…M-5 and the
+program question D-3 — all the format owner's. Rather than stall, the importer's content measurement
+was deepened inside §1.1: shape identifiers and bounds, sprite frame structure, and a media inventory
+by kind and byte size. No cell, media or program schema is introduced; `MediaKind` in
+`crates/swf-import/src/content.rs` is an importer-local inventory classification, not a package kind.
