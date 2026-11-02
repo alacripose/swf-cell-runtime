@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+
+use planet_shell_ledger::landing;
 use planet_shell_ledger::{Appended, Evidence, Kind, Ledger, Refusal, Request};
 
 fn evidence() -> Evidence {
@@ -160,4 +163,81 @@ fn a_reordered_pair_cannot_open_a_chain() {
     let swapped = format!("{}\n{}\n", lines[1], lines[0]);
     // The moved entry carries a hash in `prev`, so the chain no longer opens at genesis.
     assert_eq!(Ledger::read(&swapped).err(), Some(Refusal::NoGenesis));
+}
+
+fn scratch(name: &str) -> PathBuf {
+    // Inside the repository tree, beside the destination: never an OS temp directory.
+    let dir = PathBuf::from("target").join("ledger-land-tests").join(name);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+#[test]
+fn a_landed_chain_reloads_and_verifies() {
+    let dir = scratch("landed");
+    let path = dir.join("ledger.tsv");
+    let mut ledger = Ledger::new();
+    ledger.append(0, request("op-1", "crates/a")).unwrap();
+    ledger.append(1, request("op-2", "crates/b")).unwrap();
+    landing::land(&ledger, &path).unwrap();
+    assert!(path.exists());
+    assert!(
+        !landing::staging_path(&path).exists(),
+        "staging must not survive a landed write"
+    );
+    let reloaded = landing::load(&path).unwrap().unwrap();
+    assert_eq!(reloaded.entries(), ledger.entries());
+    reloaded.verify().unwrap();
+}
+
+#[test]
+fn a_missing_log_reads_as_an_empty_chain() {
+    let dir = scratch("missing");
+    let ledger = landing::load(&dir.join("absent.tsv")).unwrap().unwrap();
+    assert_eq!(ledger.head_seq(), 0);
+    assert!(ledger.entries().is_empty());
+}
+
+#[test]
+fn an_edited_file_refuses_on_load() {
+    let dir = scratch("edited");
+    let path = dir.join("ledger.tsv");
+    let mut ledger = Ledger::new();
+    ledger.append(0, request("op-1", "crates/a")).unwrap();
+    landing::land(&ledger, &path).unwrap();
+    let text = std::fs::read_to_string(&path).unwrap();
+    std::fs::write(&path, text.replacen("landed", "moved", 1)).unwrap();
+    assert_eq!(
+        landing::load(&path).unwrap().err(),
+        Some(Refusal::BrokenChain { seq: 1 })
+    );
+}
+
+#[test]
+fn an_unrepresentable_entry_lands_nothing() {
+    let dir = scratch("refused");
+    let path = dir.join("ledger.tsv");
+    let mut ledger = Ledger::new();
+    ledger.append(0, request("op-1", "crates/a")).unwrap();
+    let mut bad = request("op-2", "crates/b");
+    bad.subject = "crates/b	c".to_string();
+    ledger.append(1, bad).unwrap();
+    assert!(landing::land(&ledger, &path).is_err());
+    assert!(!path.exists(), "a refused render must not create the log");
+    assert!(!landing::staging_path(&path).exists());
+}
+
+#[test]
+fn landing_twice_keeps_one_chain() {
+    let dir = scratch("twice");
+    let path = dir.join("ledger.tsv");
+    let mut ledger = Ledger::new();
+    ledger.append(0, request("op-1", "crates/a")).unwrap();
+    landing::land(&ledger, &path).unwrap();
+    let first = std::fs::read_to_string(&path).unwrap();
+    landing::land(&ledger, &path).unwrap();
+    let second = std::fs::read_to_string(&path).unwrap();
+    assert_eq!(first, second, "landing is not additive");
+    assert_eq!(landing::load(&path).unwrap().unwrap().head_seq(), 1);
 }

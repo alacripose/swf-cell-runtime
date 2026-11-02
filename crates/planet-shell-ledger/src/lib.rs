@@ -1,8 +1,9 @@
 //! The shell's commit boundary, taken from the shell family's own ledger shape: one typed entry per
 //! change, where the durable record is the change and its evidence together; a SHA-256 chain with a
 //! genesis head; a caller-supplied head (`expected_seq`) so a stale writer is refused rather than
-//! silently rebased; idempotent operation ids; and an append that is not landed until it is synced.
+//! silently rebased; idempotent operation ids; and durability through `landing`, which stages beside the destination, syncs, then renames.
 
+pub mod landing;
 pub mod sha256;
 
 /// The chain's domain separator, so a hash from another structure cannot be replayed here.
