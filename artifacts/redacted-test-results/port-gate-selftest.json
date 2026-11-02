@@ -1,7 +1,7 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:c1af98778be85741fc7da1435821d04828ea48101111aafdbcf2d4332fd849a3",
+    "identity": "sha256:94e7d171f6fbe1da271e25f57f0f9cffe60e73d53df3b4342e376bb54c94de83",
     "inputs": 19
   },
   "python": "3.13.14",
