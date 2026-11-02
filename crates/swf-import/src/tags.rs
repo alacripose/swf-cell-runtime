@@ -18,50 +18,54 @@ pub struct Tag {
 pub type TagCounts = BTreeMap<u16, usize>;
 
 pub fn walk(header: &Header) -> Result<Vec<Tag>, Refusal> {
-    let body = &header.body;
-    let mut at = header.tag_start;
+    walk_range(&header.body, header.tag_start, header.body.len())
+}
+
+/// Walk a tag stream between `start` and `end`, stopping at the End tag or at `end`.
+pub fn walk_range(body: &[u8], start: usize, end: usize) -> Result<Vec<Tag>, Refusal> {
+    let mut at = start;
     let mut tags = Vec::new();
     loop {
-        if at + 2 > body.len() {
+        if at + 2 > end {
             return Err(Refusal::Truncated {
                 needed: at + 2,
-                found: body.len(),
+                found: end,
             });
         }
         let word = u16::from_le_bytes([body[at], body[at + 1]]);
         let code = word >> 6;
         let mut length = (word & 0x3f) as usize;
-        let mut start = at + 2;
+        let mut body_at = at + 2;
         if length == 0x3f {
-            if start + 4 > body.len() {
+            if body_at + 4 > end {
                 return Err(Refusal::Truncated {
-                    needed: start + 4,
-                    found: body.len(),
+                    needed: body_at + 4,
+                    found: end,
                 });
             }
             length = u32::from_le_bytes([
-                body[start],
-                body[start + 1],
-                body[start + 2],
-                body[start + 3],
+                body[body_at],
+                body[body_at + 1],
+                body[body_at + 2],
+                body[body_at + 3],
             ]) as usize;
-            start += 4;
+            body_at += 4;
         }
         if code == 0 {
             break;
         }
-        if start + length > body.len() {
+        if body_at + length > end {
             return Err(Refusal::Truncated {
-                needed: start + length,
-                found: body.len(),
+                needed: body_at + length,
+                found: end,
             });
         }
         tags.push(Tag {
             code,
             length,
-            at: start,
+            at: body_at,
         });
-        at = start + length;
+        at = body_at + length;
     }
     Ok(tags)
 }

@@ -153,24 +153,30 @@ pub fn read(bytes: &[u8]) -> Result<Header, Refusal> {
 }
 
 fn parse_rect(body: &[u8]) -> Result<(Rect, usize), Refusal> {
-    if body.is_empty() {
+    rect_at(body, 0)
+}
+
+/// Read one bit-packed `RECT` at byte offset `at`, as the header and every shape record writes it.
+pub fn rect_at(bytes: &[u8], at: usize) -> Result<(Rect, usize), Refusal> {
+    if bytes.len() <= at {
         return Err(Refusal::Truncated {
-            needed: 1,
-            found: 0,
+            needed: at + 1,
+            found: bytes.len(),
         });
     }
-    let nbits = (body[0] >> 3) as usize;
+    let nbits = (bytes[at] >> 3) as usize;
     let needed = (5 + 4 * nbits + 7) / 8;
-    if body.len() < needed {
+    if bytes.len() < at + needed {
         return Err(Refusal::Truncated {
-            needed,
-            found: body.len(),
+            needed: at + needed,
+            found: bytes.len(),
         });
     }
-    let x_min = signed_bits(body, 5, nbits);
-    let x_max = signed_bits(body, 5 + nbits, nbits);
-    let y_min = signed_bits(body, 5 + 2 * nbits, nbits);
-    let y_max = signed_bits(body, 5 + 3 * nbits, nbits);
+    let start = at * 8 + 5;
+    let x_min = signed_bits(bytes, start, nbits);
+    let x_max = signed_bits(bytes, start + nbits, nbits);
+    let y_min = signed_bits(bytes, start + 2 * nbits, nbits);
+    let y_max = signed_bits(bytes, start + 3 * nbits, nbits);
     Ok((
         Rect {
             x_min,

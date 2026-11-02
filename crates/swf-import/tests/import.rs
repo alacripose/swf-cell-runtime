@@ -89,14 +89,16 @@ fn the_emitted_package_mounts_through_the_canonical_path() {
     let header = header::read(&fws()).unwrap();
     let tags = tags::walk(&header).unwrap();
     let counts = tags::counts(&tags);
-    let frame = emit::package_frame("swf1", &header, &counts, tags.len()).expect("an emitted frame");
+    let inventory = swf_import::content::survey(&header, &tags).expect("surveyed");
+    let frame = emit::package_frame("swf1", &header, &counts, tags.len(), &inventory)
+        .expect("an emitted frame");
 
     let receipt = mount(&frame, "swf1", 1, 0, 0).expect("the package mounts");
     assert_eq!(receipt.surface, "swf1");
     assert_eq!(receipt.windows, 1);
     assert_eq!(receipt.digest, frame.frame_digest_hex());
 
-    let doc = emit::surface_document("swf1", &header, &counts, tags.len());
+    let doc = emit::surface_document("swf1", &header, &counts, tags.len(), &inventory);
     assert!(doc.contains("550"), "the stage width is the measured one");
     assert!(doc.contains("400"), "the stage height is the measured one");
     assert!(doc.contains("12 frames at 40 fps"), "the frame count is measured");
