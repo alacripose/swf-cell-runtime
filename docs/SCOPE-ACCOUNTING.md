@@ -8,34 +8,47 @@ Agent-authored implementation vocabulary: `present`, `not-implemented`, `blocked
 Source-feature gate states (`held` / `absent` / `refused`) are shell-authored and remain
 **unassigned** in this repository. Nothing here is a completion claim.
 
+In the package-layer table, `present` means **the authoritative crate already implements
+and owns the item**; it does not mean this repository has code for it. This repository has
+no client code yet.
+
 ## Block status
 
 | Block | Status | Note |
 |---|---|---|
 | H1 | present | Scaffold, six baseline patches, templates, ledger, first commits. |
-| H2 | blocked | Authoritative package crate absent from checkout. |
+| H2 | present | Ownership named from `planet-package`/`planet-core`; three plan premises corrected. |
 | H3 | present | `tools/port_gate.py` enforces decidable invariants and proves refusals. |
 | H4 | blocked | Shell-only ingestion; no agent may run or read it. |
-| H5 | blocked | Depends on H2 ownership and H4 inventory. |
+| H5 | blocked | Code-kind executor undecided; depends on a format-owner decision. |
 | H6 | not-implemented | |
 | H7 | not-implemented | |
 | H8 | not-implemented | |
 | H9 | not-implemented | |
 | H10 | not-implemented | |
 
-## Package and format layer (H2) — owner: format owner, blocked on authoritative crate
+## Package and format layer (H2) — owner: format owner, read in `planet-shploingus`
 
-| Item | Status | Blocking dependency |
+| Item | Status | Owner / evidence |
 |---|---|---|
-| `V4PKG001` frame header (magic, schema, kind, length, digest, payload) | blocked | crate absence |
-| Frame digest construction (domain separation) | blocked | crate absence |
-| Cell package row grammar / row schema / row kinds / field counts | blocked | crate absence |
-| Cell declaration grammar (`shploingus.cells/1`) | blocked | crate absence |
-| Cell frame grammar (`shploingus.cellframe/1`) | blocked | crate absence |
-| Asset/artifact reference mechanism | blocked | crate absence |
-| Reserved `Code` kind reader and executor contract | blocked | crate absence + format-owner decision |
-| Strict decode refusals (bad magic, schema, kind, truncation, overlong, digest, malformed row, unknown required field, bad cell ref, missing asset, duplicate id, trailing bytes) | not-implemented | H2 |
-| Single-grammar proof for builder and acceptor | not-implemented | H2 |
+| `V4PKG001` frame header (magic, schema `u16`, kind `u16`, length `u64`, 32-byte digest, payload) | present | `planet-package/src/frame.rs` |
+| Payload digest in the header (`domain ‖ schema ‖ len ‖ payload`) | present | `frame.rs`; `planet-core/src/hash.rs` |
+| Whole-frame digest in the file name (`<id>-<sha256>.pkg`) | present | `frame.rs` `frame_digest`, `file_name`, `id_and_digest` |
+| Payload grammar (`ROW_SCHEMA u16 = 1`, `u32` count, rows) | present | `rows.rs`, `frame.rs` `payload()` |
+| Row kinds/families (`row`, `bands`, `materials`, `shell`; declaration/value; `KINDS_ARE_TOTAL`) | present | `rows.rs` |
+| Declaration grammar (`.decl`, tab-separated, five panels, canonical re-encode) | present | `shell.rs` |
+| Refusal vocabulary (14 frame refusals, 10 declaration refusals) | present | `error.rs`, `shell.rs` |
+| Builder (`package build` / `package show`) | present | `src/bin/package.rs` |
+| Acceptor / mount (`Mount::watch`: newest by `(mtime, name)`, digest dedup, adopt-or-refuse-whole) | present | `planet-shell/src/mount.rs` |
+| Admission witness (package door `present_package`, ledger record) | present | `planet-shell/src/main.rs`; `planet-mcp/src/surface.rs` |
+| Media/asset carriage (canonical bytes in row fields; no separate archive) | present | `rows.rs` `Bands`/`Materials` |
+| `shploingus.cells/1` declaration grammar | blocked | No reader or owner in any tree; openlock-only (`ShellPackage.cs`, `gen_shell_data.py`) |
+| `shploingus.cellframe/1` frame grammar | blocked | No reader or writer anywhere; openlock header check only |
+| `surface.mount/2` transport | blocked | Absent from the authoritative tree; adoption is `Mount::watch` + door admission |
+| Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
+| Reserved `Code` kind — executor | blocked | No executor exists; `planet-shell` refuses code frames on mount (`mount.rs:111`) |
+| New media/asset kind | blocked | Format-owner decision: a new `Kind` plus a format-document line |
+| Streaming transport beyond the watched file | blocked | Not present; a new layer needing an explicit decision |
 
 ## Shell-only import layer (H4–H5, H7–H8) — owner: shell
 
@@ -57,12 +70,12 @@ Source-feature gate states (`held` / `absent` / `refused`) are shell-authored an
 
 | Item | Status | Blocking dependency |
 |---|---|---|
-| `package_owner` adapter (delegates to authoritative reader) | not-implemented | H2 |
-| `cell_mount` (validate + mount into one cell graph) | not-implemented | H2 |
-| `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | not-implemented | H5 |
-| `cell_runtime` (graph, timeline scheduler, event dispatch, state, save/recovery) | not-implemented | H2/H5 |
-| `cell_stream` (mount-v2 consumption, receipts, revisions, staging) | not-implemented | H2 |
-| `render_wgpu` (batches, atlases, text, layers/depth/mask/filter, disposable caches) | not-implemented | H2 |
+| `package_owner` adapter (thin call into `planet-package`; owns no bytes) | not-implemented | client crate needed |
+| `cell_mount` (`Mount::watch` semantics: digest dedup, adopt-or-refuse-whole) | not-implemented | client crate needed |
+| `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | blocked | H5 executor decision |
+| `cell_runtime` (graph, timeline scheduler, event dispatch, state, save/recovery) | not-implemented | H4/H5 |
+| `cell_stream` (watched file + door admission; no second transport) | not-implemented | client crate needed |
+| `render_wgpu` (batches, atlases, text, layers/depth/mask/filter, disposable caches) | not-implemented | H2 present; client crate needed |
 | `client` (`winit` lifecycle, input forwarding, resize, redraw, notices) | not-implemented | — |
 | Single surface identity, no second window/renderer/router/scheduler | present as a gate rule | enforcement is guard-only until code exists |
 
@@ -70,10 +83,10 @@ Source-feature gate states (`held` / `absent` / `refused`) are shell-authored an
 
 | Step | Status |
 |---|---|
-| 1. Discover from configured roots / package store | not-implemented |
-| 2. Receive exact bytes via mount-v2 | not-implemented |
+| 1. Discover from configured roots / the shell's `packages/` | not-implemented |
+| 2. Receive the exact bytes the store names | not-implemented |
 | 3. Enforce size, count, nesting, time, resource ceilings pre-parse | not-implemented |
-| 4. Decode one canonical frame, validate all referenced artifacts and capabilities | not-implemented |
+| 4. Decode one canonical frame; validate rows, declaration, media fields, capabilities | not-implemented |
 | 5. Resolve dependencies, check base/addon compatibility | not-implemented |
 | 6. Reject stale, same-version-different-bytes, duplicate identity, undeclared refs, conflicting extension points | not-implemented |
 | 7. Build candidate graph without touching the live graph | not-implemented |

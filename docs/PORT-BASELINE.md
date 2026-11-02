@@ -7,7 +7,7 @@ Status vocabulary in this document is implementation vocabulary: `present`,
 `not-implemented`, `blocked`. Gate states (`held`, `absent`, `refused`) are shell-assigned
 and appear here only as `unassigned` until the shell records them.
 
-Current position: **H3 present; H2 blocked; H4+ not started.**
+Current position: **H1–H3 present; H4+ not started.**
 
 ### H1 — project scaffold and patch baselines
 
@@ -21,7 +21,7 @@ Current position: **H3 present; H2 blocked; H4+ not started.**
 - Artifact: `docs/PACKAGE-OWNERSHIP.md`.
 - Exit test: names the authoritative package crate, its exact frame and row readers/writers, the cell declaration and cellframe owner, the mount-v2 owner, the selected repository code paths, the rejected alternatives, and evidence that builder and acceptor share grammar.
 - Refuses: new magic, a new `secure-shell.*` game format, a second reader, or copying the Java reader as a competing Rust parser.
-- Status: blocked — the authoritative `planet-package`/cell-package source is not present in this checkout, so ownership cannot be named from evidence. Recorded in `docs/PACKAGE-OWNERSHIP.md`; no parser, schema, or bytecode grammar may be written until the crate is supplied (§12 of the plan).
+- Status: present — `planet-package` and `planet-core` were read at the supplied checkouts, and `docs/PACKAGE-OWNERSHIP.md` names every owner from that source. Three plan premises were contradicted by the tree (`shploingus.cells`/`cellframe` ownership, `surface.mount/2`); all are recorded there as corrections rather than silently adopted.
 
 ### H3 — drift gate and repository workflow
 
