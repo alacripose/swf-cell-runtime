@@ -914,6 +914,87 @@ def check_ruling_index(root: Path) -> list[str]:
     return problems
 
 
+RECORD_PATH = "artifacts/redacted-test-results/port-gate-selftest.json"
+
+
+def normalise_problem(problem: str) -> str:
+    """Replace a throwaway fixture commit hash so a rerun records the same words."""
+    return re.sub(r"\b[0-9a-f]{7,40}\b", "<fixture-commit>", problem)
+
+
+def fixture_identity(root: Path) -> str:
+    """Digest of the inputs a selftest run exercises: stable, and blind to nothing."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    files: list[Path] = []
+    for rel in FIXTURE_PATHS:
+        target = root / rel
+        if target.is_dir():
+            files.extend(path for path in target.rglob("*") if path.is_file())
+        elif target.is_file():
+            files.append(target)
+    for path in sorted(files, key=lambda item: item.relative_to(root).as_posix()):
+        relative = path.relative_to(root).as_posix()
+        if relative.startswith("artifacts/"):
+            continue
+        if "__pycache__" in relative or relative.endswith(".pyc"):
+            continue
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return "sha256:" + digest.hexdigest()
+
+
+def build_record(results: list[dict], identity: str) -> dict:
+    """The evidence, as a pure function of the results and the tree they describe."""
+    return {
+        "tool": "tools/port_gate.py selftest",
+        "fixture": {"identity": identity, "inputs": len(FIXTURE_PATHS)},
+        "python": sys.version.split()[0],
+        "scenarios": len(results),
+        "passed": sum(1 for item in results if item["pass"]),
+        "results": results,
+        "exit_status": 0 if all(item["pass"] for item in results) else 1,
+    }
+
+
+def serialise_record(record: dict) -> str:
+    return json.dumps(record, indent=2) + "\n"
+
+
+def check_selftest_record(root: Path) -> list[str]:
+    """The recorded evidence describes this tree and is reproducible from its own results."""
+    out = root / RECORD_PATH
+    if not out.is_file():
+        return [f"{RECORD_PATH} is missing; run python tools/port_gate.py selftest"]
+    text = read_text(out)
+    try:
+        record = json.loads(text)
+    except json.JSONDecodeError as exc:
+        return [f"{RECORD_PATH} is not valid JSON: {exc}"]
+
+    identity = fixture_identity(root)
+    recorded = (record.get("fixture") or {}).get("identity")
+    if recorded != identity:
+        return [
+            f"{RECORD_PATH}: the record describes fixture {recorded!r}, but this tree is "
+            f"{identity!r}; re-run selftest so the evidence matches what it certifies"
+        ]
+
+    results = record.get("results")
+    if not isinstance(results, list):
+        return [f"{RECORD_PATH}: the scenario results are missing"]
+    if serialise_record(build_record(results, identity)) != text:
+        return [
+            f"{RECORD_PATH}: the record cannot be rebuilt from its own results, so it carries "
+            "something a second run would change; the only permitted inputs are the results and "
+            "the fixture identity"
+        ]
+    return []
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -930,6 +1011,7 @@ CHECKS = (
     ("cell_media", check_cell_media, "PATCH-0005"),
     ("cell_stream", check_cell_stream, "PATCH-0005"),
     ("ruling_index", check_ruling_index, "PATCH-0001, PATCH-0002"),
+    ("selftest_record", check_selftest_record, "PATCH-0001"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1003,6 +1085,15 @@ FIXTURE_PATHS = (
 FIXTURE_COMMIT = "TICKET-0001 LEDGER-0001 fixture baseline"
 
 
+def write_fixture_record(fixture: Path) -> None:
+    """Give the fixture a record that describes the fixture, not the checkout it came from."""
+    out = fixture / RECORD_PATH
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        serialise_record(build_record([], fixture_identity(fixture))), encoding="utf-8"
+    )
+
+
 def build_fixture(project_root: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     for rel in FIXTURE_PATHS:
@@ -1015,6 +1106,7 @@ def build_fixture(project_root: Path, destination: Path) -> None:
             shutil.copytree(source, target)
         else:
             shutil.copy2(source, target)
+    write_fixture_record(destination)
     git(destination, "init", "-q")
     git(destination, "add", "-A")
     git(
@@ -1297,6 +1389,19 @@ def mutate_ruling_index_wire_token(root: Path) -> None:
     path.write_text(text + "\nThe index row is `Kind::Index` .\n", encoding="utf-8")
 
 
+def mutate_record_stale_fixture(root: Path) -> None:
+    path = root / "docs" / "CELL-MEDIA-DECISION.md"
+    text = read_text(path)
+    path.write_text(text + "\nA paragraph that changes the fixture inputs.\n", encoding="utf-8")
+
+
+def mutate_record_volatile_field(root: Path) -> None:
+    path = root / RECORD_PATH
+    record = json.loads(read_text(path))
+    record["timestamp"] = "whenever this ran"
+    path.write_text(serialise_record(record), encoding="utf-8")
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1327,6 +1432,8 @@ SELFTEST_SCENARIOS = (
     ("ruling_index_extra_id_refused", mutate_ruling_index_extra_id, "ruling_index"),
     ("ruling_index_recommendation_as_ruled_refused", mutate_ruling_index_recommendation_as_ruled, "ruling_index"),
     ("ruling_index_wire_token_refused", mutate_ruling_index_wire_token, "ruling_index"),
+    ("selftest_record_stale_refused", mutate_record_stale_fixture, "selftest_record"),
+    ("selftest_record_volatile_field_refused", mutate_record_volatile_field, "selftest_record"),
 )
 
 
@@ -1368,7 +1475,7 @@ def command_selftest(project_root: Path) -> int:
                     "scenario": name,
                     "expected_failure": expected_failure,
                     "failing_checks": sorted(failed),
-                    "problems": problems[:10],
+                    "problems": [normalise_problem(line) for line in problems[:10]],
                     "pass": ok,
                 }
             )
@@ -1384,23 +1491,16 @@ def command_selftest(project_root: Path) -> int:
         except OSError:
             print(f"  warning: could not fully remove {work}")
 
-    record = {
-        "tool": "tools/port_gate.py selftest",
-        "timestamp": date.today().isoformat(),
-        "python": sys.version.split()[0],
-        "scenarios": len(records),
-        "passed": sum(1 for item in records if item["pass"]),
-        "results": records,
-        "exit_status": 0 if not failures else 1,
-    }
-    out = project_root / "artifacts" / "redacted-test-results" / "port-gate-selftest.json"
+    identity = fixture_identity(project_root)
+    record = build_record(records, identity)
+    out = project_root / RECORD_PATH
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    out.write_text(serialise_record(record), encoding="utf-8")
 
     print()
     for failure in failures:
         print(f"  - {failure}")
-    print(f"record: {out.relative_to(project_root)}")
+    print(f"record: {out.relative_to(project_root)} (fixture {identity})")
     if failures:
         print(f"RESULT: FAIL ({len(failures)} scenarios)")
         return 1

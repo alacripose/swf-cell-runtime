@@ -1,9 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
-  "timestamp": "2026-11-02",
+  "fixture": {
+    "identity": "sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f",
+    "inputs": 18
+  },
   "python": "3.13.14",
-  "scenarios": 29,
-  "passed": 29,
+  "scenarios": 31,
+  "passed": 31,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -27,10 +30,12 @@
       "scenario": "output_escape_refused",
       "expected_failure": "output_roots",
       "failing_checks": [
-        "output_roots"
+        "output_roots",
+        "selftest_record"
       ],
       "problems": [
-        "../outside-scratch/: output path escapes the project root"
+        "../outside-scratch/: output path escapes the project root",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:2ee20d65db0d05a78d13d9ac198dc4fbc8d506be6ab9ab88757ae7825355d42e'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -38,11 +43,13 @@
       "scenario": "missing_baseline_refused",
       "expected_failure": "baselines_present",
       "failing_checks": [
-        "baselines_present"
+        "baselines_present",
+        "selftest_record"
       ],
       "problems": [
         "missing baseline patch PATCH-0004-*.md",
-        "expected 6 baseline patches, found 5: PATCH-0001-version-control.md, PATCH-0002-ticket-and-review-discipline.md, PATCH-0003-source-and-build-artifact-boundary.md, PATCH-0005-one-cell-surface-and-format.md, PATCH-0006-abstract-mcp-cua-axis.md"
+        "expected 6 baseline patches, found 5: PATCH-0001-version-control.md, PATCH-0002-ticket-and-review-discipline.md, PATCH-0003-source-and-build-artifact-boundary.md, PATCH-0005-one-cell-surface-and-format.md, PATCH-0006-abstract-mcp-cua-axis.md",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:d0e72e71fa4ca5a4e44d0170f4ba45db43eccb48f5d00e1ef843294a379ad3e3'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -50,10 +57,12 @@
       "scenario": "invalid_ledger_refused",
       "expected_failure": "ledger_valid",
       "failing_checks": [
-        "ledger_valid"
+        "ledger_valid",
+        "selftest_record"
       ],
       "problems": [
-        "ledger line 1: missing exit_test"
+        "ledger line 1: missing exit_test",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:fe70ce8e3bcc695534fa7e7450de7dd558dea2f45efe3d9d46fba60c445f0bb4'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -64,8 +73,8 @@
         "commit_refs"
       ],
       "problems": [
-        "c598a218: subject has no TICKET-NNNN reference",
-        "c598a218: subject has no LEDGER-NNNN reference"
+        "<fixture-commit>: subject has no TICKET-NNNN reference",
+        "<fixture-commit>: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -73,10 +82,12 @@
       "scenario": "block_without_exit_test_refused",
       "expected_failure": "baseline_blocks",
       "failing_checks": [
-        "baseline_blocks"
+        "baseline_blocks",
+        "selftest_record"
       ],
       "problems": [
-        "H7: missing Exit test:"
+        "H7: missing Exit test:",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:3b5265d3fe99f3f01ecfb51656dbd166de533f02e54ec6131098ba0641422e07'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -84,10 +95,12 @@
       "scenario": "agent_gate_state_refused",
       "expected_failure": "ledger_valid",
       "failing_checks": [
-        "ledger_valid"
+        "ledger_valid",
+        "selftest_record"
       ],
       "problems": [
-        "ledger line 1: an agent may not assign the shell gate state 'held'"
+        "ledger line 1: an agent may not assign the shell gate state 'held'",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:7d48240c956ea68b7ca2f3a25134e8c0e8bd35c78d8d484689cd593b9ae85860'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -95,10 +108,12 @@
       "scenario": "erratum_removed_refused",
       "expected_failure": "plan_errata",
       "failing_checks": [
-        "plan_errata"
+        "plan_errata",
+        "selftest_record"
       ],
       "problems": [
-        "E-3: no '> **ERRATUM E-3' block in the plan"
+        "E-3: no '> **ERRATUM E-3' block in the plan",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:f79e46332ba10e2424e5fe96cc0f7818021cbfa6432f67eff9b9103defe77b22'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -106,10 +121,12 @@
       "scenario": "erratum_original_removed_refused",
       "expected_failure": "plan_errata",
       "failing_checks": [
-        "plan_errata"
+        "plan_errata",
+        "selftest_record"
       ],
       "problems": [
-        "E-1: the original wording was removed from the plan; it must stay visible beside the correction ('`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system')"
+        "E-1: the original wording was removed from the plan; it must stay visible beside the correction ('`shploingus.cells/1` and `shploingus.cellframe/1` are existing cell declarations/records within the package system')",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:030b33beec4e6e38472d63b5f7a75c7370e572a874b5ac1a74dd6bf13c232201'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -117,10 +134,12 @@
       "scenario": "cell_invariant_removed_refused",
       "expected_failure": "cell_schema",
       "failing_checks": [
-        "cell_schema"
+        "cell_schema",
+        "selftest_record"
       ],
       "problems": [
-        "I-2: the model no longer states the invariant 'Roles, not colours.'"
+        "I-2: the model no longer states the invariant 'Roles, not colours.'",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:f13d137d06757cf90ff67f2bb37f14b7af07b7d926401c6da74d55d0bd28f97d'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -128,10 +147,12 @@
       "scenario": "cell_wire_token_refused",
       "expected_failure": "cell_schema",
       "failing_checks": [
-        "cell_schema"
+        "cell_schema",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-SCHEMA.md: port wire token 'Kind::' is not the port's to decide"
+        "docs\\CELL-SCHEMA.md: port wire token 'Kind::' is not the port's to decide",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:e98aa987f8102f916126f5aaed3c6e0f592edd36dfadff0d903df15700e8b4a4'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -139,10 +160,12 @@
       "scenario": "cell_raster_target_refused",
       "expected_failure": "cell_schema",
       "failing_checks": [
-        "cell_schema"
+        "cell_schema",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-SCHEMA.md:145: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])"
+        "docs\\CELL-SCHEMA.md:145: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:4789dc43c19393448e30c09d72d62c330e4b719c48ddd5646a55d54593dcad9f'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -150,10 +173,12 @@
       "scenario": "cell_question_unanswered_refused",
       "expected_failure": "cell_schema",
       "failing_checks": [
-        "cell_schema"
+        "cell_schema",
+        "selftest_record"
       ],
       "problems": [
-        "Q-1: missing its 'Falsifier' part"
+        "Q-1: missing its 'Falsifier' part",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:89f8adfaa252bc873e3e815f675e3fa7b1be42aaaa02b8f3235bd9b9205e5bba'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -162,12 +187,14 @@
       "expected_failure": "cell_program",
       "failing_checks": [
         "cell_program",
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
         "P-1: missing its 'Owner' part",
         "P-1 in docs/CELL-PROGRAM-DECISION.md has no owner line to index",
-        "P-1: the index carries a question no source carries"
+        "P-1: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:8f9356b5124d176c34dbd97afce7937c6d5d2bece62a5ff052f8e3e4f10fc850'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -175,10 +202,12 @@
       "scenario": "cell_program_wire_token_refused",
       "expected_failure": "cell_program",
       "failing_checks": [
-        "cell_program"
+        "cell_program",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-PROGRAM-DECISION.md: port wire token 'Kind::' is not the port's to decide"
+        "docs\\CELL-PROGRAM-DECISION.md: port wire token 'Kind::' is not the port's to decide",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:e1666c4c630fb36acc2d34164773990853d5b7fcae9d5912631d3c00fbcde5a8'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -186,10 +215,12 @@
       "scenario": "cell_program_budget_unlabelled_refused",
       "expected_failure": "cell_program",
       "failing_checks": [
-        "cell_program"
+        "cell_program",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-PROGRAM-DECISION.md:137: a budget is stated without a label; every figure must be marked as one of ['[proposal]', '[class of limit]']"
+        "docs\\CELL-PROGRAM-DECISION.md:137: a budget is stated without a label; every figure must be marked as one of ['[proposal]', '[class of limit]']",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:ae6dc904cbbc6ab3908aa01090049e31252f327a0d8154fb4367719e08e8a506'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -197,10 +228,12 @@
       "scenario": "cell_program_budget_as_constraint_refused",
       "expected_failure": "cell_program",
       "failing_checks": [
-        "cell_program"
+        "cell_program",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-PROGRAM-DECISION.md: a budget is framed as \"the imported program's limit\"; every figure here is a proposal about the class of limit, never a constraint of the imported program"
+        "docs\\CELL-PROGRAM-DECISION.md: a budget is framed as \"the imported program's limit\"; every figure here is a proposal about the class of limit, never a constraint of the imported program",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:5e8038c974de0924bbc0a1406ca9c5681c7bd83d30e8bd445d68fff90b00ac71'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -209,12 +242,14 @@
       "expected_failure": "cell_media",
       "failing_checks": [
         "cell_media",
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
         "M-1: missing its 'Owner' part",
         "M-1 in docs/CELL-MEDIA-DECISION.md has no owner line to index",
-        "M-1: the index carries a question no source carries"
+        "M-1: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:c70e0c651bad7d106c1d134347b684cab116463c399e29aa67e6aa3df298975b'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -222,10 +257,12 @@
       "scenario": "cell_media_wire_token_refused",
       "expected_failure": "cell_media",
       "failing_checks": [
-        "cell_media"
+        "cell_media",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-MEDIA-DECISION.md: port wire token 'Kind::' is not the port's to decide"
+        "docs\\CELL-MEDIA-DECISION.md: port wire token 'Kind::' is not the port's to decide",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:a629bd14ddc18d7c5c9d45f4a5abcf4c06b4ace81844d1e667c9525b19e80154'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -234,11 +271,13 @@
       "expected_failure": "cell_media",
       "failing_checks": [
         "cell_media",
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
         "M-4: no '## M-4' section in the decision document",
-        "M-4: the index carries a question no source carries"
+        "M-4: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:7afbfaa15f9011906b03c689701f33c749709b1fa46e1181fce9502887d7218c'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -247,12 +286,14 @@
       "expected_failure": "cell_stream",
       "failing_checks": [
         "cell_stream",
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
         "T-1: missing its 'Owner' part",
         "T-1 in docs/CELL-TRANSPORT-DECISION.md has no owner line to index",
-        "T-1: the index carries a question no source carries"
+        "T-1: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:2b16e5a810abcb9e82a6b3fc81a1c32141de9b06528200b9a54d476c6ec197eb'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -260,10 +301,12 @@
       "scenario": "cell_stream_wire_token_refused",
       "expected_failure": "cell_stream",
       "failing_checks": [
-        "cell_stream"
+        "cell_stream",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-TRANSPORT-DECISION.md: port wire token 'Kind::' is not the port's to decide"
+        "docs\\CELL-TRANSPORT-DECISION.md: port wire token 'Kind::' is not the port's to decide",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:495de331fc32f582579297b6f84624973f604eae6aa709da5215a34c527adac1'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -272,11 +315,13 @@
       "expected_failure": "cell_stream",
       "failing_checks": [
         "cell_stream",
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
         "T-4: no '## T-4' section in the decision document",
-        "T-4: the index carries a question no source carries"
+        "T-4: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:cf66d0bd1be4742ee5ae1cb4967b28dbb3ad1e306d1f2b5aaf988af26b05fb7c'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -284,10 +329,12 @@
       "scenario": "ruling_index_owner_removed_refused",
       "expected_failure": "ruling_index",
       "failing_checks": [
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\RULING-INDEX.md:22: Q-6 owner '' does not match the source's 'project owner.'"
+        "docs\\RULING-INDEX.md:22: Q-6 owner '' does not match the source's 'project owner.'",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:176a3d90d349d1a5e2ed4f536b55aba0164ab48434e1576918d112fcc0a73886'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -295,10 +342,12 @@
       "scenario": "ruling_index_id_dropped_refused",
       "expected_failure": "ruling_index",
       "failing_checks": [
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
-        "P-3: a source carries this question and the index omits it"
+        "P-3: a source carries this question and the index omits it",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:d239bdaf6b7d0086f779a37ed94d005457b64cb02009f4b2d0bea1e7c19e339d'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -306,10 +355,12 @@
       "scenario": "ruling_index_extra_id_refused",
       "expected_failure": "ruling_index",
       "failing_checks": [
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
-        "Q-9: the index carries a question no source carries"
+        "Q-9: the index carries a question no source carries",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:62e3ccf49fa3750d410c29650d53c10f19490549388f977e3bb6484fe35f098f'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -317,10 +368,12 @@
       "scenario": "ruling_index_recommendation_as_ruled_refused",
       "expected_failure": "ruling_index",
       "failing_checks": [
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\RULING-INDEX.md:23: P-1 is shown as 'ruled'; a question may only be presented as one of ['recommended, awaiting ruling', 'tabled \u2014 owner choice']"
+        "docs\\RULING-INDEX.md:23: P-1 is shown as 'ruled'; a question may only be presented as one of ['recommended, awaiting ruling', 'tabled \u2014 owner choice']",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:3f26e70d0b273c844d3539b2d1b839fa105bc2695d6a8b8d03e528e4d7dd8725'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
     },
@@ -328,10 +381,34 @@
       "scenario": "ruling_index_wire_token_refused",
       "expected_failure": "ruling_index",
       "failing_checks": [
-        "ruling_index"
+        "ruling_index",
+        "selftest_record"
       ],
       "problems": [
-        "docs\\RULING-INDEX.md: port wire token 'Kind::' is not the port's to decide"
+        "docs\\RULING-INDEX.md: port wire token 'Kind::' is not the port's to decide",
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:e15ace71e00b52de6b9868fdcccf6492d4b103535e717acc5b355b17a79728bf'; re-run selftest so the evidence matches what it certifies"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "selftest_record_stale_refused",
+      "expected_failure": "selftest_record",
+      "failing_checks": [
+        "selftest_record"
+      ],
+      "problems": [
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture 'sha256:279d2ea104ef09135118f0558b5a13a8284e6d89ab2092848453063cbb0eda6f', but this tree is 'sha256:329f5487714ff70c3cd40595b5646b13415a0c09e6e107720cc1a378eabfb848'; re-run selftest so the evidence matches what it certifies"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "selftest_record_volatile_field_refused",
+      "expected_failure": "selftest_record",
+      "failing_checks": [
+        "selftest_record"
+      ],
+      "problems": [
+        "artifacts/redacted-test-results/port-gate-selftest.json: the record cannot be rebuilt from its own results, so it carries something a second run would change; the only permitted inputs are the results and the fixture identity"
       ],
       "pass": true
     }
