@@ -1927,6 +1927,144 @@ SILENCE = (
 )
 
 
+# Each check's mutation leaves a visible symptom. A decoy carries that symptom on an otherwise
+# conformant tree, so a check keyed on the symptom instead of its rule fires on an innocent fixture.
+# Every decoy must leave the whole tree clean, so any refusal is that keying and nothing else.
+def decoy_file(relative: str, text: str):
+    def mutate(root: Path) -> None:
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        write_fixture_record(root)
+
+    return mutate
+
+
+def decoy_appended(relative: str, text: str):
+    def mutate(root: Path) -> None:
+        path = root / relative
+        path.write_text(read_text(path) + text, encoding="utf-8")
+        write_fixture_record(root)
+
+    return mutate
+
+
+def decoy_truncated(relative: str):
+    def mutate(root: Path) -> None:
+        path = root / relative
+        path.write_text("", encoding="utf-8")
+        write_fixture_record(root)
+
+    return mutate
+
+
+def decoy_output_note(root: Path) -> None:
+    path = root / "config" / "output-roots.json"
+    config = json.loads(read_text(path))
+    config["outputRoots"][0]["note"] = "C:/scratch/not-a-destination"
+    path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_fixture_record(root)
+
+
+def decoy_ledger_field(field: str, value: str):
+    def mutate(root: Path) -> None:
+        path = root / LEDGER_PATH
+        records = [
+            json.loads(line) for line in read_text(path).splitlines() if line.strip()
+        ]
+        records[0][field] = value
+        path.write_text(
+            "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+        )
+        write_fixture_record(root)
+
+    return mutate
+
+
+def decoy_commit_body(root: Path) -> None:
+    (root / "docs" / "drift-note.md").write_text("a note\n", encoding="utf-8")
+    fixture_commit(
+        root,
+        "TICKET-0001 LEDGER-0001 a decoy\n\nThis body mentions no ticket and no ledger.",
+    )
+    write_fixture_record(root)
+
+
+DECOY = (
+    (
+        "baselines_present",
+        decoy_file(
+            "patches/baselines/PATCH-0004.md.orig",
+            "## Required rule\n\n## Mechanical evidence\n",
+        ),
+    ),
+    ("governance_files", decoy_truncated("tickets/TEMPLATE.md")),
+    (
+        "source_exclusion",
+        decoy_file("docs/footage.swf", "a placeholder that is never added to the index\n"),
+    ),
+    ("output_roots", decoy_output_note),
+    ("format_magics", decoy_file("docs/format-note.md", "Another family writes SHPKG002.\n")),
+    ("ledger_valid", decoy_ledger_field("note_ref", "0" * 40)),
+    ("commit_refs", decoy_commit_body),
+    (
+        "baseline_blocks",
+        decoy_appended("docs/PORT-BASELINE.md", "\nNo field was (removed) in this revision.\n"),
+    ),
+    (
+        "scope_accounting",
+        decoy_appended("docs/SCOPE-ACCOUNTING.md", "\nThe work already done is recorded below.\n"),
+    ),
+    (
+        "plan_errata",
+        decoy_appended(
+            "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
+            "\n> **ERRATUM E-9 — an unlisted draft\n>\n> **Status:** draft, not in the manifest.\n",
+        ),
+    ),
+    (
+        "cell_schema",
+        decoy_appended(
+            "docs/CELL-SCHEMA.md",
+            "\n**Note:** the falsifier for each question is stated above.\n",
+        ),
+    ),
+    (
+        "cell_program",
+        decoy_appended(
+            "docs/CELL-PROGRAM-DECISION.md", "\n**Decided by:** the format owner, per the index.\n"
+        ),
+    ),
+    (
+        "cell_media",
+        decoy_appended("docs/CELL-MEDIA-DECISION.md", "\n## Bounds — an appendix\n\nNo M-number here.\n"),
+    ),
+    (
+        "cell_stream",
+        decoy_appended(
+            "docs/CELL-TRANSPORT-DECISION.md", "\n## Duplicate delivery — an appendix\n\nNo T-number here.\n"
+        ),
+    ),
+    (
+        "ruling_index",
+        decoy_appended(
+            "docs/RULING-INDEX.md",
+            "\n| X-9 | a decoy row that carries no question | recommended, awaiting ruling | "
+            "format owner | docs/CELL-SCHEMA.md |\n",
+        ),
+    ),
+    (
+        "selftest_record",
+        decoy_file(
+            "artifacts/redacted-test-results/decoy-note.json", '{"timestamp": "never recorded"}\n'
+        ),
+    ),
+    ("ledger_binding", decoy_ledger_field("witness", "0" * 40)),
+    ("mcp_surface", decoy_file("docs/mcp-notes.md", "surface.capture is not permitted.\n")),
+    ("duplicate_reader", decoy_file("docs/reader-note.md", "The frame magic is V4PKG001.\n")),
+)
+
+
 def command_selftest(project_root: Path) -> int:
     work = project_root / "target" / "port-gate-selftest"
     remove_tree(work)
@@ -1978,10 +2116,11 @@ def command_selftest(project_root: Path) -> int:
 
         covered = {check for check, _mutate, _message in SWEEP}
         quiet = {check for check, _mutate in SILENCE}
+        decoys = {check for check, _mutate in DECOY}
         unproven = [
             name
             for name, _function, _patch in CHECKS
-            if name not in covered or name not in quiet
+            if name not in covered or name not in quiet or name not in decoys
         ]
         records.append(
             {
@@ -1989,7 +2128,7 @@ def command_selftest(project_root: Path) -> int:
                 "expected_failure": None,
                 "failing_checks": [],
                 "problems": [
-                    f"no violation and silence pair proves {name} decides anything"
+                    f"no violation, silence and decoy set proves {name} decides anything"
                     for name in unproven
                 ],
                 "pass": not unproven,
@@ -1998,7 +2137,7 @@ def command_selftest(project_root: Path) -> int:
         print(
             f"  {'PASS' if not unproven else 'FAIL'} sweep_covers_every_check"
             f"{'':<15} {len(SWEEP)} violations, {len(SILENCE)} silences, "
-            f"{len(CHECKS)} checks"
+            f"{len(DECOY)} decoys, {len(CHECKS)} checks"
         )
         if unproven:
             failures.append(f"sweep_covers_every_check: unproven {unproven}")
@@ -2095,6 +2234,43 @@ def command_selftest(project_root: Path) -> int:
             print(
                 f"  {'PASS' if ok else 'FAIL'} silent_{check:<27} quiet while "
                 f"{', '.join(broke) if broke else 'nothing'} failed"
+            )
+            for problem in problems[:3]:
+                print(f"       - {problem}")
+
+        for check, mutate in DECOY:
+            fixture = work / f"decoy-{check}"
+            problems: list[str] = []
+            failed: set[str] = set()
+            ok = False
+            try:
+                build_fixture(project_root, fixture)
+                mutate(fixture)
+                results = run_checks(fixture)
+                failed = {name for name, _patch, errs in results if errs}
+                own = [p for name, _patch, errs in results if name == check for p in errs]
+                ok = not failed
+                problems = own[:2] or [
+                    f"{name} refused an innocent fixture"
+                    for name in sorted(failed)
+                    if name != check
+                ][:2]
+            except GateError as exc:
+                problems = [f"gate error: {exc}"]
+            if not ok:
+                failures.append(f"decoy_{check}: {problems[-1]}")
+            records.append(
+                {
+                    "scenario": f"decoy_{check}",
+                    "expected_failure": None,
+                    "failing_checks": sorted(failed),
+                    "problems": [normalise_problem(line) for line in problems[:6]],
+                    "pass": ok,
+                }
+            )
+            print(
+                f"  {'PASS' if ok else 'FAIL'} decoy_{check:<28} symptom present, rule intact, "
+                f"{'silent' if ok else 'refused'}"
             )
             for problem in problems[:3]:
                 print(f"       - {problem}")
