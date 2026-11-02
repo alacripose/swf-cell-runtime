@@ -1902,6 +1902,31 @@ SWEEP = (
 )
 
 
+# For each check, damage a different check's rule. The check under test must stay silent while its
+# neighbour refuses, so a check that also fires on someone else's damage cannot pass unnoticed.
+SILENCE = (
+    ("baselines_present", mutate_governance_file_removed),
+    ("governance_files", mutate_missing_baseline),
+    ("source_exclusion", mutate_output_escape),
+    ("output_roots", mutate_scope_block_dropped),
+    ("format_magics", mutate_duplicate_reader_second_parser),
+    ("ledger_valid", mutate_commit_without_ticket),
+    ("commit_refs", mutate_invalid_ledger),
+    ("baseline_blocks", mutate_scope_block_dropped),
+    ("scope_accounting", mutate_block_without_exit_test),
+    ("plan_errata", mutate_cell_question_unanswered),
+    ("cell_schema", mutate_cell_program_owner_removed),
+    ("cell_program", mutate_cell_media_owner_removed),
+    ("cell_media", mutate_cell_stream_owner_removed),
+    ("cell_stream", mutate_cell_media_question_missing),
+    ("ruling_index", mutate_missing_erratum),
+    ("selftest_record", mutate_second_format_magic),
+    ("ledger_binding", mutate_record_volatile_field),
+    ("mcp_surface", mutate_duplicate_reader_second_parser),
+    ("duplicate_reader", mutate_mcp_forbidden_operation),
+)
+
+
 def command_selftest(project_root: Path) -> int:
     work = project_root / "target" / "port-gate-selftest"
     remove_tree(work)
@@ -1952,19 +1977,28 @@ def command_selftest(project_root: Path) -> int:
                     print(f"       - {problem}")
 
         covered = {check for check, _mutate, _message in SWEEP}
-        unproven = [name for name, _function, _patch in CHECKS if name not in covered]
+        quiet = {check for check, _mutate in SILENCE}
+        unproven = [
+            name
+            for name, _function, _patch in CHECKS
+            if name not in covered or name not in quiet
+        ]
         records.append(
             {
                 "scenario": "sweep_covers_every_check",
                 "expected_failure": None,
                 "failing_checks": [],
-                "problems": [f"no sweep entry proves {name} can refuse" for name in unproven],
+                "problems": [
+                    f"no violation and silence pair proves {name} decides anything"
+                    for name in unproven
+                ],
                 "pass": not unproven,
             }
         )
         print(
             f"  {'PASS' if not unproven else 'FAIL'} sweep_covers_every_check"
-            f"{'':<15} {len(SWEEP)} of {len(CHECKS)} checks have a violating mutation"
+            f"{'':<15} {len(SWEEP)} violations, {len(SILENCE)} silences, "
+            f"{len(CHECKS)} checks"
         )
         if unproven:
             failures.append(f"sweep_covers_every_check: unproven {unproven}")
@@ -2021,6 +2055,46 @@ def command_selftest(project_root: Path) -> int:
             print(
                 f"  {'PASS' if ok else 'FAIL'} sweep_{check:<28} refused by {check}, silent "
                 "when disabled"
+            )
+            for problem in problems[:3]:
+                print(f"       - {problem}")
+
+        for check, mutate in SILENCE:
+            fixture = work / f"silent-{check}"
+            problems: list[str] = []
+            failed: set[str] = set()
+            broke: list[str] = []
+            ok = False
+            try:
+                build_fixture(project_root, fixture)
+                mutate(fixture)
+                results = run_checks(fixture)
+                failed = {name for name, _patch, errs in results if errs}
+                broke = sorted(failed - {check})
+                own = [p for name, _patch, errs in results if name == check for p in errs]
+                ok = not own and bool(broke)
+                problems = own[:2]
+                if not broke:
+                    problems.append(
+                        f"the neighbour mutation broke nothing, so {check} staying quiet proves "
+                        "nothing"
+                    )
+            except GateError as exc:
+                problems = [f"gate error: {exc}"]
+            if not ok:
+                failures.append(f"silent_{check}: {problems[-1]}")
+            records.append(
+                {
+                    "scenario": f"silent_{check}",
+                    "expected_failure": None,
+                    "failing_checks": sorted(failed),
+                    "problems": [normalise_problem(line) for line in problems[:6]],
+                    "pass": ok,
+                }
+            )
+            print(
+                f"  {'PASS' if ok else 'FAIL'} silent_{check:<27} quiet while "
+                f"{', '.join(broke) if broke else 'nothing'} failed"
             )
             for problem in problems[:3]:
                 print(f"       - {problem}")

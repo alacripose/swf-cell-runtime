@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:f775d00e0e40eff38c3ec01a82aaff7584eeba445a978de2eeb3dddb1745667d",
+    "identity": "sha256:cf28a783d7eaf3ebc5ec2c4f3f75e7725e9a45a9fa25afd156818d8a087a36ba",
     "inputs": 18
   },
   "python": "3.13.14",
-  "scenarios": 58,
-  "passed": 58,
+  "scenarios": 77,
+  "passed": 77,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -715,6 +715,194 @@
       "problems": [
         "crates/other-reader/src/frame.rs: parses the package frame outside the planet-package reader named in the ownership record"
       ],
+      "pass": true
+    },
+    {
+      "scenario": "silent_baselines_present",
+      "expected_failure": null,
+      "failing_checks": [
+        "governance_files",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_governance_files",
+      "expected_failure": null,
+      "failing_checks": [
+        "baselines_present",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_source_exclusion",
+      "expected_failure": null,
+      "failing_checks": [
+        "output_roots",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_output_roots",
+      "expected_failure": null,
+      "failing_checks": [
+        "scope_accounting",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_format_magics",
+      "expected_failure": null,
+      "failing_checks": [
+        "duplicate_reader"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_ledger_valid",
+      "expected_failure": null,
+      "failing_checks": [
+        "commit_refs"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_commit_refs",
+      "expected_failure": null,
+      "failing_checks": [
+        "ledger_valid",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_baseline_blocks",
+      "expected_failure": null,
+      "failing_checks": [
+        "scope_accounting",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_scope_accounting",
+      "expected_failure": null,
+      "failing_checks": [
+        "baseline_blocks",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_plan_errata",
+      "expected_failure": null,
+      "failing_checks": [
+        "cell_schema",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_cell_schema",
+      "expected_failure": null,
+      "failing_checks": [
+        "cell_program",
+        "ruling_index",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_cell_program",
+      "expected_failure": null,
+      "failing_checks": [
+        "cell_media",
+        "ruling_index",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_cell_media",
+      "expected_failure": null,
+      "failing_checks": [
+        "cell_stream",
+        "ruling_index",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_cell_stream",
+      "expected_failure": null,
+      "failing_checks": [
+        "cell_media",
+        "ruling_index",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_ruling_index",
+      "expected_failure": null,
+      "failing_checks": [
+        "plan_errata",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_selftest_record",
+      "expected_failure": null,
+      "failing_checks": [
+        "format_magics"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_ledger_binding",
+      "expected_failure": null,
+      "failing_checks": [
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_mcp_surface",
+      "expected_failure": null,
+      "failing_checks": [
+        "duplicate_reader"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_duplicate_reader",
+      "expected_failure": null,
+      "failing_checks": [
+        "mcp_surface"
+      ],
+      "problems": [],
       "pass": true
     }
   ],
