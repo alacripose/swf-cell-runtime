@@ -2,8 +2,8 @@
   "tool": "tools/port_gate.py selftest",
   "timestamp": "2026-11-02",
   "python": "3.13.14",
-  "scenarios": 14,
-  "passed": 14,
+  "scenarios": 18,
+  "passed": 18,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -64,8 +64,8 @@
         "commit_refs"
       ],
       "problems": [
-        "b194dff6: subject has no TICKET-NNNN reference",
-        "b194dff6: subject has no LEDGER-NNNN reference"
+        "53d561d1: subject has no TICKET-NNNN reference",
+        "53d561d1: subject has no LEDGER-NNNN reference"
       ],
       "pass": true
     },
@@ -154,6 +154,50 @@
       ],
       "problems": [
         "Q-1: missing its 'Falsifier' part"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_program_owner_removed_refused",
+      "expected_failure": "cell_program",
+      "failing_checks": [
+        "cell_program"
+      ],
+      "problems": [
+        "P-1: missing its 'Owner' part"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_program_wire_token_refused",
+      "expected_failure": "cell_program",
+      "failing_checks": [
+        "cell_program"
+      ],
+      "problems": [
+        "docs\\CELL-PROGRAM-DECISION.md: port wire token 'Kind::' is not the port's to decide"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_program_budget_unlabelled_refused",
+      "expected_failure": "cell_program",
+      "failing_checks": [
+        "cell_program"
+      ],
+      "problems": [
+        "docs\\CELL-PROGRAM-DECISION.md:137: a budget is stated without a label; every figure must be marked as one of ['[proposal]', '[class of limit]']"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "cell_program_budget_as_constraint_refused",
+      "expected_failure": "cell_program",
+      "failing_checks": [
+        "cell_program"
+      ],
+      "problems": [
+        "docs\\CELL-PROGRAM-DECISION.md: a budget is framed as \"the imported program's limit\"; every figure here is a proposal about the class of limit, never a constraint of the imported program"
       ],
       "pass": true
     }

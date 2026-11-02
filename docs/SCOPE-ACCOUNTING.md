@@ -20,7 +20,7 @@ no client code yet.
 | H2 | present | Both package families read; family A (`V4PKG001`) is the port's frame, family B (`SHPKG002/003`, `cells/1`, `cellframe/1`) is evidence and is not adopted. |
 | H3 | present | `tools/port_gate.py` enforces decidable invariants and proves refusals. |
 | H4 | blocked | Shell-only ingestion; no agent may run or read it. |
-| H5 | blocked | Code-kind executor undecided; depends on a format-owner decision. |
+| H5 | blocked | A decision proposal covering the op set, capabilities, budgets, carriage and determinism witness is in `docs/CELL-PROGRAM-DECISION.md`; the format owner's ruling and the shell-private compiler contract are both still missing. |
 | H6 | not-implemented | |
 | H7 | not-implemented | |
 | H8 | not-implemented | |
@@ -51,7 +51,7 @@ no client code yet.
 | Family-A cell model | not-implemented | Ruled D-1 and scoped in `docs/CELL-MODEL.md`; a schema proposal with recommendations, rejected alternatives, falsifiers and named owners is in `docs/CELL-SCHEMA.md`, awaiting the format owner's ruling |
 | `surface.mount/2` transport | blocked | Absent from both families; A adopts via `Mount::watch` + door admission, B reads folders/artifact maps |
 | Reserved `Code` kind — frame reader | present | `FrameKind::Code = 2`; encodes via `--code`, decodes |
-| Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`) |
+| Reserved `Code` kind — executor | not-implemented | Ruled D-3: bounded deterministic cell-program instruction set; no executor exists yet, and `planet-shell` still refuses code frames on mount (`mount.rs:111`); proposal in `docs/CELL-PROGRAM-DECISION.md`, awaiting the format owner's ruling |
 | Media kinds (bitmap, font, audio) | not-implemented | Ruled D-2: one kind per media type, one field each, each needing a format-document line |
 | Streamed transport | not-implemented | Ruled D-4: a new layer with its own byte/digest/receipt decisions; not "mount-v2", which does not exist in either family |
 
@@ -77,7 +77,7 @@ no client code yet.
 |---|---|---|
 | `package_owner` adapter (thin call into `planet-package`; owns no bytes) | not-implemented | client crate needed |
 | `cell_mount` (`Mount::watch` semantics: digest dedup, adopt-or-refuse-whole) | not-implemented | client crate needed |
-| `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | blocked | H5 executor decision |
+| `cell_program` (deterministic instruction set, capabilities, budgets, cancellation) | blocked | H5: proposal written (`docs/CELL-PROGRAM-DECISION.md`), awaiting the format owner's ruling |
 | `cell_runtime` (graph, timeline scheduler, event dispatch, state, save/recovery) | not-implemented | H4/H5 |
 | `cell_stream` (watched file + door admission; no second transport) | not-implemented | client crate needed |
 | `render_wgpu` (batches, atlases, text, layers/depth/mask/filter, disposable caches) | not-implemented | H2 present; client crate needed |
@@ -135,6 +135,7 @@ no client code yet.
 | Append-only ledger with checkpoint fields | present |
 | Drift gate: tracked source binaries, output escape, second magics, commit refs, ledger validity, baseline presence, block exit tests | present |
 | Gate self-test proving each refusal | present |
+| Cell-program guard (four-part questions, labelled budgets, no wire tokens, no budget framed as a program constraint) | present | `tools/port_gate.py` `cell_program` over `config/cell-program.json` |
 | Cell-schema guard (six invariants, four-part answers, no wire tokens, no raster target) | present | `tools/port_gate.py` `cell_schema` over `config/cell-schema.json` |
 | Plan errata guard (block, quote, citations, index entry) | present | `tools/port_gate.py` `plan_errata` over `config/plan-errata.json` |
 | Pre-commit hook and CI workflow running the gate | present |

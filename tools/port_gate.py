@@ -53,6 +53,7 @@ GOVERNANCE_FILES = (
     "docs/SCOPE-ACCOUNTING.md",
     "docs/CELL-MODEL.md",
     "docs/CELL-SCHEMA.md",
+    "docs/CELL-PROGRAM-DECISION.md",
     "tickets/TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/ticket.md",
     ".github/pull_request_template.md",
@@ -649,6 +650,71 @@ def check_cell_schema(root: Path) -> list[str]:
     return problems
 
 
+def check_cell_program(root: Path) -> list[str]:
+    """The decision keeps its four parts, labels every budget, and claims no wire format."""
+    manifest_path = root / "config" / "cell-program.json"
+    if not manifest_path.is_file():
+        return ["config/cell-program.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/cell-program.json is not valid JSON: {exc}"]
+
+    document_path = root / str(manifest.get("document", "docs/CELL-PROGRAM-DECISION.md"))
+    if not document_path.is_file():
+        return [f"{document_path.relative_to(root)} is missing"]
+    rel = document_path.relative_to(root)
+    document = read_text(document_path)
+    problems: list[str] = []
+
+    sections = sections_by_heading(document, r"^#{2,3} (P-\d+)\b.*$")
+    for question in manifest.get("questions", []):
+        section = sections.get(question)
+        if section is None:
+            problems.append(f"{question}: no '## {question}' section in the decision document")
+            continue
+        for label in manifest.get("questionLabels", []):
+            if f"**{label}:**" not in section:
+                problems.append(f"{question}: missing its {label!r} part")
+
+    marker = manifest.get("proposalMarker")
+    if marker and marker.lower() not in document.lower():
+        problems.append(f"the decision document never says it is a {marker!r}")
+
+    tokens = [str(token) for token in manifest.get("forbiddenTokens", [])]
+    if tokens:
+        token_pattern = re.compile(
+            "|".join(
+                rf"\b{re.escape(token)}\b" if token.isalnum() else re.escape(token)
+                for token in tokens
+            )
+        )
+        found = token_pattern.search(document)
+        if found:
+            problems.append(f"{rel}: port wire token {found.group(0)!r} is not the port's to decide")
+
+    budget_pattern = manifest.get("budgetPattern")
+    budget_labels = [str(label).lower() for label in manifest.get("budgetLabels", [])]
+    if budget_pattern and budget_labels:
+        figures = re.compile(budget_pattern)
+        for number, line in enumerate(document.splitlines(), start=1):
+            if not figures.search(line):
+                continue
+            if not any(label in line.lower() for label in budget_labels):
+                problems.append(
+                    f"{rel}:{number}: a budget is stated without a label; every figure must be "
+                    f"marked as one of {budget_labels}"
+                )
+
+    for phrase in manifest.get("forbiddenBudgetFrames", []):
+        if str(phrase).lower() in document.lower():
+            problems.append(
+                f"{rel}: a budget is framed as {str(phrase)!r}; every figure here is a proposal "
+                "about the class of limit, never a constraint of the imported program"
+            )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -661,6 +727,7 @@ CHECKS = (
     ("scope_accounting", check_scope_accounting, "PATCH-0001"),
     ("plan_errata", check_plan_errata, "PATCH-0002"),
     ("cell_schema", check_cell_schema, "PATCH-0005"),
+    ("cell_program", check_cell_program, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -720,6 +787,7 @@ FIXTURE_PATHS = (
     "docs/SCOPE-ACCOUNTING.md",
     "docs/CELL-MODEL.md",
     "docs/CELL-SCHEMA.md",
+    "docs/CELL-PROGRAM-DECISION.md",
     "docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md",
     "patches",
     "tickets",
@@ -887,6 +955,37 @@ def mutate_cell_question_unanswered(root: Path) -> None:
     path.write_text(text.replace(phrase, "**Note:**", 1), encoding="utf-8")
 
 
+def mutate_cell_program_owner_removed(root: Path) -> None:
+    path = root / "docs" / "CELL-PROGRAM-DECISION.md"
+    text = read_text(path)
+    phrase = "**Owner:**"
+    if phrase not in text:
+        raise GateError("fixture: the owner label was not found before mutation")
+    path.write_text(text.replace(phrase, "**Decided by:**", 1), encoding="utf-8")
+
+
+def mutate_cell_program_wire_token(root: Path) -> None:
+    path = root / "docs" / "CELL-PROGRAM-DECISION.md"
+    text = read_text(path)
+    path.write_text(text + "\nThe program is carried as `Kind::Program`.\n", encoding="utf-8")
+
+
+def mutate_cell_program_budget_unlabelled(root: Path) -> None:
+    path = root / "docs" / "CELL-PROGRAM-DECISION.md"
+    text = read_text(path)
+    path.write_text(
+        text + "\nEach activation may execute 4096 instructions in total.\n", encoding="utf-8"
+    )
+
+
+def mutate_cell_program_budget_as_constraint(root: Path) -> None:
+    path = root / "docs" / "CELL-PROGRAM-DECISION.md"
+    text = read_text(path)
+    path.write_text(
+        text + "\n[proposal] This is the imported program's limit.\n", encoding="utf-8"
+    )
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -902,6 +1001,10 @@ SELFTEST_SCENARIOS = (
     ("cell_wire_token_refused", mutate_cell_wire_token, "cell_schema"),
     ("cell_raster_target_refused", mutate_cell_raster_target, "cell_schema"),
     ("cell_question_unanswered_refused", mutate_cell_question_unanswered, "cell_schema"),
+    ("cell_program_owner_removed_refused", mutate_cell_program_owner_removed, "cell_program"),
+    ("cell_program_wire_token_refused", mutate_cell_program_wire_token, "cell_program"),
+    ("cell_program_budget_unlabelled_refused", mutate_cell_program_budget_unlabelled, "cell_program"),
+    ("cell_program_budget_as_constraint_refused", mutate_cell_program_budget_as_constraint, "cell_program"),
 )
 
 
