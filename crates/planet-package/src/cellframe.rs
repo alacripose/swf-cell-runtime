@@ -908,6 +908,9 @@ pub struct Loaded {
 ///   the line of the `frame` row — a reference that resolves to nothing is a window with no cells;
 /// * a frame no declaration names is refused `cellframe-unreferenced` — an unreachable frame looks
 ///   mounted and is not;
+/// * a frame whose extent disagrees with its window's content space is refused
+///   `cellframe-extent` with the binding line, in the same pass as the reference, so a mismatched
+///   binding never loads;
 /// * the frame a window loads with is the frame its id names and nothing else, which is what each
 ///   returned [`Bound`] records.
 pub fn resolve(surface: &Surface, frames: &[&str]) -> Result<Vec<Bound>, Refusals> {
@@ -925,16 +928,27 @@ pub fn resolve(surface: &Surface, frames: &[&str]) -> Result<Vec<Bound>, Refusal
     }
 
     let mut bound: Vec<Bound> = Vec::new();
+    let mut referenced: Vec<String> = Vec::new();
     for window in &surface.windows {
         let Some(reference) = &window.frame else {
             continue;
         };
         match parsed.iter().find(|frame| frame.id == reference.id) {
-            Some(frame) => bound.push(Bound {
-                window: window.id.clone(),
-                line: reference.line,
-                frame: frame.clone(),
-            }),
+            Some(frame) => {
+                referenced.push(frame.id.clone());
+                let content = [
+                    u32::try_from(window.w).unwrap_or(u32::MAX),
+                    u32::try_from(window.h).unwrap_or(u32::MAX),
+                ];
+                match check_extent(frame, &window.id, content, reference.line) {
+                    Ok(()) => bound.push(Bound {
+                        window: window.id.clone(),
+                        line: reference.line,
+                        frame: frame.clone(),
+                    }),
+                    Err(refusal) => problems.refuse(refusal),
+                }
+            }
             None => problems.refuse(Refusal::CellframeReference {
                 line: reference.line,
                 window: window.id.clone(),
@@ -944,7 +958,7 @@ pub fn resolve(surface: &Surface, frames: &[&str]) -> Result<Vec<Bound>, Refusal
     }
 
     for frame in &parsed {
-        if !bound.iter().any(|entry| entry.frame.id == frame.id) {
+        if !referenced.iter().any(|id| id == &frame.id) {
             problems.refuse(Refusal::CellframeUnreferenced {
                 frame: frame.id.clone(),
             });
@@ -993,22 +1007,21 @@ pub fn load(
     })
 }
 
-/// **A frame is addressed to one window's content space**, so it must fit it.
+/// **A frame is addressed to one window's content space, and the two extents agree.**
 ///
-/// The owning reader asks the window for its extent and refuses a frame that does not fit by cell
-/// count rather than drawing through the window's chrome. This port has the window's extent in the
-/// declaration (`surface::Window::w` and `h`), so the caller passes it and the answer is the format's.
-pub fn check_extent(frame: &CellFrame, window: &str, content: [u32; 2]) -> Result<(), Refusal> {
-    if frame.window != window {
+/// The owning reader refuses a frame that does not fit its window by cell count rather than drawing
+/// through the window's chrome. This port enforces the same property as an agreement, because a frame
+/// smaller than its content space leaves declared cells undrawn and that erased region must not be
+/// implicit. `line` is the binding row, so the refusal names the row that made the claim.
+pub fn check_extent(
+    frame: &CellFrame,
+    window: &str,
+    content: [u32; 2],
+    line: usize,
+) -> Result<(), Refusal> {
+    if frame.window != window || frame.cols != content[0] || frame.rows != content[1] {
         return Err(Refusal::CellframeExtent {
-            frame: frame.id.clone(),
-            window: window.to_string(),
-            found: [frame.cols, frame.rows],
-            allowed: content,
-        });
-    }
-    if frame.cols > content[0] || frame.rows > content[1] {
-        return Err(Refusal::CellframeExtent {
+            line,
             frame: frame.id.clone(),
             window: window.to_string(),
             found: [frame.cols, frame.rows],

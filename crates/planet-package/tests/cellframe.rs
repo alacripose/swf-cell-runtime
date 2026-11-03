@@ -226,16 +226,23 @@ fn an_unterminated_vocabulary_section_is_refused() {
 #[test]
 fn a_frame_fits_its_window_or_it_is_refused() {
     let frame = parse(&base()).unwrap();
-    assert_eq!(check_extent(&frame, "map-plan", [56, 22]), Ok(()));
-    match check_extent(&frame, "map-plan", [42, 18]) {
+    assert_eq!(check_extent(&frame, "map-plan", [56, 22], 5), Ok(()));
+    match check_extent(&frame, "map-plan", [42, 18], 5) {
         Err(refusal) => {
             assert_eq!(refusal.code(), "cellframe-extent");
             assert!(refusal.message().contains("map-plan"), "{}", refusal.message());
         }
         Ok(()) => panic!("a frame wider than its window must be refused"),
     }
+    // A frame smaller than its content space leaves declared cells undrawn, so it disagrees too.
     assert_eq!(
-        check_extent(&frame, "taskbar", [56, 22])
+        check_extent(&frame, "map-plan", [57, 23], 5)
+            .unwrap_err()
+            .code(),
+        "cellframe-extent"
+    );
+    assert_eq!(
+        check_extent(&frame, "taskbar", [56, 22], 5)
             .unwrap_err()
             .code(),
         "cellframe-extent"

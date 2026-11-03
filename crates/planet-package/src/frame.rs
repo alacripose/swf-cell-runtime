@@ -158,6 +158,7 @@ pub enum Refusal {
         found: String,
     },
     CellframeExtent {
+        line: usize,
         frame: String,
         window: String,
         found: [u32; 2],
@@ -312,13 +313,15 @@ impl Refusal {
                 format!("{vocabulary} {found:?} is not declared by this package's vocabulary section")
             }
             Refusal::CellframeExtent {
+                line,
                 frame,
                 window,
                 found,
                 allowed,
             } => format!(
-                "frame {frame} is {} by {} and window {window} has {} by {} of content space; a \
-                 frame fits its window or it is refused, never drawn through the chrome",
+                "cellframe line {line}: frame {frame} is {} by {} and window {window} has {} by {} \
+                 of content space; a frame agrees with its window or the binding is refused, never \
+                 drawn through the chrome and never leaving declared cells undrawn",
                 found[0], found[1], allowed[0], allowed[1]
             ),
             Refusal::CellframeReference {
