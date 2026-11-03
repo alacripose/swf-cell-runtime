@@ -153,3 +153,23 @@ program question D-3 — all the format owner's. Rather than stall, the importer
 was deepened inside §1.1: shape identifiers and bounds, sprite frame structure, and a media inventory
 by kind and byte size. No cell, media or program schema is introduced; `MediaKind` in
 `crates/swf-import/src/content.rs` is an importer-local inventory classification, not a package kind.
+
+## D-7b — The owner widens the importer to lower these games (2026-11-03)
+
+**Decision, by the project owner.** For a movie the owner places in `inputs/`, and only for that movie,
+the importer may lower geometry, timeline and media into declared cells and frame documents, so the
+client paints the game instead of its measurements. This supersedes D-7a's *"the lowering stays with the
+format owner"* for those files and leaves it standing everywhere else.
+
+**Why the rule changed.** The streaming format exists for one purpose: an importer, driven by trained CUA
+drivers, auto-translating a movie into the new formats and displaying it accurately on the owner's client.
+The no-agent-trust rule protects a different thing — that a later import never carries the game's own
+names, methods or assets into this repository, only a generic approximation of what it needs.
+
+**Bounds that do not move.** No source names, strings, identifiers, offsets, tag payload bytes or media
+bytes in tracked files; no Flash player, second runtime, renderer, input router or package format; no
+claim that an imported game plays, since the witness stays the owner's.
+
+**Order.** Placement parsing, then one-frame geometry, then per-frame timeline with a client clock, then
+media — each step its own ticket with its own exit test.
+

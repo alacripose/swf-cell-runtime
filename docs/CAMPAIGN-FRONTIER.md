@@ -28,7 +28,7 @@ routes what the package declares.
 | §9.2/§9.4 oracle and witness | shell, private | shell | Shell-private oracle runs; agents receive redacted results only. |
 | XML lowering, second surface format | closed | nobody | "No second package magic, package row grammar, asset archive, or window/surface format." |
 | Importer streaming (P4) | built | agent (done) | Q7: "Per stage, plus every 1,000 records inside a stage"; §7 refuses "a scan or import that holds its output until exit". Rows are sealed, flushed as written, and an unterminated stream reads back `import-truncated`. |
-| Importer lowering of shapes, timelines, scripts | shell | shell | D-7: the importer "lowers no shape, timeline or script"; `SCOPE-ACCOUNTING.md` assigns visual, timeline and interaction lowering to shell execution. |
+| Importer lowering of shapes, timelines, media | agent, for owner-supplied movies | agent writes the code; the owner supplies the movie and witnesses the result | D-7b: the importer may lower geometry, timeline and media into declared cells and frames for a movie the owner placed, never carrying the movie's names, strings, identifiers or assets into tracked files. D-7a's "the lowering stays with the format owner" still stands for every other movie. |
 | Push to a remote | blocked | user | The repository has no configured remote; the owner must supply one before a push can exist. |
 
 ## Working rules learned the hard way
