@@ -14,9 +14,11 @@
 pub mod cell_mount;
 pub mod package_owner;
 pub mod render;
+pub mod scene;
 pub mod xml;
 
 pub use cell_mount::{Adopted, CellMount};
 pub use package_owner::{decode, digest, encode};
 pub use render::Scene;
+pub use scene::{from_adopted, opened};
 pub use xml::Window;
