@@ -177,6 +177,12 @@ pub enum Refusal {
         window: String,
         frame: String,
     },
+    CellframeRole {
+        line: usize,
+        window: String,
+        frame: String,
+        role: String,
+    },
 }
 
 impl Refusal {
@@ -217,6 +223,7 @@ impl Refusal {
             Refusal::CellframeReference { .. } => "cellframe-reference",
             Refusal::CellframeUnreferenced { .. } => "cellframe-unreferenced",
             Refusal::CellframeSurface { .. } => "cellframe-surface",
+            Refusal::CellframeRole { .. } => "cellframe-role",
         }
     }
 
@@ -350,6 +357,16 @@ impl Refusal {
                 "cellframe line {line}: window {window} binds frame {frame:?}, and the surface being \
                  mounted declares no such window; a mount carries frames addressed at windows that \
                  exist"
+            ),
+            Refusal::CellframeRole {
+                line,
+                window,
+                frame,
+                role,
+            } => format!(
+                "cellframe line {line}: window {window} binds frame {frame:?}, whose paper or ink \
+                 role {role:?} the drawing palette does not carry; a role is resolved or the frame \
+                 is not drawn"
             ),
         }
     }

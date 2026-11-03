@@ -12,12 +12,16 @@
 //! re-implements a frame reader, a surface parser or a second transport (AGENTS.md §2).
 
 pub mod cell_mount;
+pub mod draw;
 pub mod package_owner;
+pub mod palette;
 pub mod render;
 pub mod scene;
 pub mod xml;
 
 pub use cell_mount::{Adopted, CellMount};
+pub use draw::{rasters, Cell, Raster, WindowRaster};
+pub use palette::{Palette, Rgba};
 pub use package_owner::{decode, digest, encode};
 pub use render::Scene;
 pub use scene::{from_adopted, opened};

@@ -1,15 +1,15 @@
 //! The wgpu client format: a window over a mounted package.
 //!
-//! Reads the newest `.pkg` in `generated/` and every `.frame` beside it, hands both to
-//! `planet_client::scene`, and draws the scene that comes back through `planet_client::render`.
-//! Nothing here parses a frame, a surface or a package, and nothing here pairs a window with a frame:
-//! the mount already did that, and the refusal it answers is shown as it was written.
+//! Reads the newest `.pkg` in `generated/` and every `.frame` beside it, adopts and mounts them, then
+//! shows the scene the mount answers and the cells the palette resolved for it. Nothing here parses a
+//! frame, a surface or a package, and nothing here pairs a window with a frame: the mount did that.
 
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+use planet_client::palette::Palette;
 use planet_client::render::{self, Scene};
-use planet_client::scene;
+use planet_client::{draw, scene, CellMount};
 
 fn newest(dir: &Path, extension: &str) -> Option<PathBuf> {
     let mut best: Option<(SystemTime, PathBuf)> = None;
@@ -30,8 +30,7 @@ fn newest(dir: &Path, extension: &str) -> Option<PathBuf> {
     best.map(|(_, path)| path)
 }
 
-/// Every frame document beside the package, in file-name order. The package names its frames by id;
-/// this list is what those ids are resolved against.
+/// Every frame document beside the package, in file-name order.
 fn frame_documents() -> Vec<String> {
     let mut paths: Vec<PathBuf> = std::fs::read_dir("generated")
         .into_iter()
@@ -60,13 +59,33 @@ fn opened() -> Scene {
     };
     let frames = frame_documents();
     let documents: Vec<&str> = frames.iter().map(String::as_str).collect();
-    match scene::opened(&bytes, &documents, 0) {
-        Ok(scene) => scene,
-        Err(refusals) => Scene::new(
-            format!("refused {}", refusals.code()),
-            vec![refusals.message()],
-        ),
+    let mut mount = CellMount::new();
+    let adopted = match mount.adopt_frames(&bytes, &documents, 0) {
+        Ok(adopted) => adopted,
+        Err(refusals) => {
+            return Scene::new(
+                format!("refused {}", refusals.code()),
+                vec![refusals.message()],
+            )
+        }
+    };
+    let mut shown = scene::from_adopted(adopted);
+    match draw::rasters(adopted, &Palette::declared()) {
+        Ok(rasters) => {
+            for raster in &rasters {
+                shown.lines.push(format!(
+                    "raster {} by {} cells from {}",
+                    raster.raster.cols, raster.raster.rows, raster.frame
+                ));
+            }
+        }
+        Err(refusals) => shown.lines.push(format!(
+            "not drawn: {} — {}",
+            refusals.code(),
+            refusals.message()
+        )),
     }
+    shown
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
