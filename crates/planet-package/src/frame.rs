@@ -111,6 +111,14 @@ pub enum Refusal {
     SurfaceWindows {
         found: usize,
     },
+    FormatHashMismatch {
+        declared: String,
+        found: String,
+    },
+    FormatIdLegacyEmitted {
+        found: String,
+        current: String,
+    },
 }
 
 impl Refusal {
@@ -135,6 +143,8 @@ impl Refusal {
             Refusal::SurfaceSchema { .. } => "surface-schema",
             Refusal::UnknownValue { code, .. } => code,
             Refusal::SurfaceWindows { .. } => "surface-windows",
+            Refusal::FormatHashMismatch { .. } => "format-hash-mismatch",
+            Refusal::FormatIdLegacyEmitted { .. } => "format-id-legacy-emitted",
         }
     }
 
@@ -200,6 +210,12 @@ impl Refusal {
             }
             Refusal::SurfaceWindows { found } => {
                 format!("surface declares {found} windows; a mount with none declares nothing")
+            }
+            Refusal::FormatHashMismatch { declared, found } => {
+                format!("declared format id {declared} is not the id this reader computes, {found}")
+            }
+            Refusal::FormatIdLegacyEmitted { found, current } => {
+                format!("format id {found} is legacy; a new document carries {current}")
             }
         }
     }

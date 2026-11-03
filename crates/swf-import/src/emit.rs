@@ -21,7 +21,7 @@ pub fn surface_document(
     let width = header.stage.width_px().max(1);
     let height = header.stage.height_px().max(1);
     let mut doc = String::new();
-    doc.push_str(SURFACE_SCHEMA);
+    doc.push_str(planet_package::schema_id());
     doc.push('\n');
     doc.push_str(&format!("surface\t{id}\n"));
     doc.push_str("requires\tobserve\n");

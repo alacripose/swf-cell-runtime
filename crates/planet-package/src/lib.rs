@@ -10,12 +10,14 @@
 //! define is refused by name. [`mount`] has no other path, and [`record::mount_and_record`] writes the
 //! receipt as one `mount` entry through the ledger's own durable path, idempotent on the frame digest.
 
+pub mod format_id;
 pub mod frame;
 pub mod mount;
 pub mod record;
 pub mod surface;
 pub mod vocabulary;
 
+pub use format_id::{id as schema_id, Outcome as FormatOutcome};
 pub use frame::{Frame, Kind, Refusal, DOMAIN, HEADER, MAGIC, PAYLOAD_LIMIT, SCHEMA};
 pub use mount::{mount, Receipt};
 pub use record::{ledger_code, mount_and_record, operation_id, MountRefusal, Recorded};

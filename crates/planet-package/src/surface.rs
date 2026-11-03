@@ -10,6 +10,7 @@
 //! family's own code — `unknown-lane`, `unknown-rule` — or the same shape for the rest, and the
 //! refusal names the value it refused.
 
+use crate::format_id;
 use crate::frame::Refusal;
 use crate::vocabulary::{self, RoleClass, Vocabulary};
 
@@ -178,11 +179,9 @@ impl Surface {
         })?;
         let mut lines = text.lines();
         let header = lines.next().unwrap_or("");
-        if header != SURFACE_SCHEMA {
-            return Err(Refusal::SurfaceSchema {
-                found: header.to_string(),
-            });
-        }
+        // The computed id reads as current; a legacy numeric id reads as the current format and is
+        // re-emitted under the hashed id; a hash this reader did not compute is refused by name.
+        format_id::read(header)?;
 
         let mut id: Option<String> = None;
         let mut requires: Option<Requirement> = None;

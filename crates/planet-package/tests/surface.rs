@@ -132,23 +132,29 @@ fn a_duplicate_node_is_refused_by_name() {
 }
 
 #[test]
-fn an_older_surface_schema_is_refused_by_name() {
+fn an_older_surface_schema_is_read_as_the_current_format() {
     let document = base().replace(SURFACE_SCHEMA, "dl-enclave.surface/0");
-    assert_eq!(
-        parse(&document),
-        Err(Refusal::SurfaceSchema {
-            found: "dl-enclave.surface/0".to_string()
-        })
+    assert!(
+        parse(&document).is_ok(),
+        "a legacy numeric id is read as an upgrade, not refused"
     );
 }
 
 #[test]
-fn a_newer_surface_schema_is_refused_by_name() {
-    let document = base().replace(SURFACE_SCHEMA, "dl-enclave.surface/2");
+fn a_hash_this_reader_did_not_compute_is_refused_by_name() {
+    let foreign = format!("dl-enclave.surface/{}", "a".repeat(32));
+    let document = base().replace(SURFACE_SCHEMA, &foreign);
     match parse(&document) {
-        Err(Refusal::SurfaceSchema { found }) => assert_eq!(found, "dl-enclave.surface/2"),
-        other => panic!("expected a schema refusal, got {other:?}"),
+        Err(Refusal::FormatHashMismatch { declared, .. }) => assert_eq!(declared, foreign),
+        other => panic!("expected a hash mismatch, got {other:?}"),
     }
+}
+
+#[test]
+fn the_emitted_head_is_the_hashed_id() {
+    let id = planet_package::schema_id();
+    assert!(planet_package::format_id::is_hashed(id), "{id}");
+    assert!(!planet_package::format_id::is_legacy(id), "{id}");
 }
 
 #[test]
