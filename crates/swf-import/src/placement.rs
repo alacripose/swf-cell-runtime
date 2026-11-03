@@ -143,16 +143,18 @@ fn matrix(body: &[u8], at: usize) -> Result<(Option<Matrix>, usize), Refusal> {
     if body.len() <= at {
         return Ok((None, at));
     }
+    // The field order is the format's, not a convenient one: each of scale and rotation carries its
+    // own presence bit and its own width immediately before its own values, so a matrix with a scale
+    // and no rotation does not have to declare a rotation width it never uses.
     let mut bits = Bits::new(&body[at..]);
-    let has_scale = bits.bit()? == 1;
-    let has_rotate = bits.bit()? == 1;
-    let nbits = bits.bits(5)? as usize;
     let mut matrix = Matrix::IDENTITY;
-    if has_scale {
+    if bits.bit()? == 1 {
+        let nbits = bits.bits(5)? as usize;
         matrix.scale_x = bits.signed(nbits)?;
         matrix.scale_y = bits.signed(nbits)?;
     }
-    if has_rotate {
+    if bits.bit()? == 1 {
+        let nbits = bits.bits(5)? as usize;
         matrix.rotate_0 = bits.signed(nbits)?;
         matrix.rotate_1 = bits.signed(nbits)?;
     }

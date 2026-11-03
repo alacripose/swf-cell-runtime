@@ -66,10 +66,11 @@ fn scaled(scale: f64, rotate: (f64, f64), x: i32, y: i32) -> Vec<u8> {
     // in 16 bits would be asking the reader to truncate and then blaming it for returning zero.
     let mut w = Writer::new();
     w.bit(1);
-    w.bit(1);
     w.bits(19, 5);
     w.bits((scale * 65_536.0) as i32, 19);
     w.bits((scale * 65_536.0) as i32, 19);
+    w.bit(1);
+    w.bits(19, 5);
     w.bits((rotate.0 * 65_536.0) as i32, 19);
     w.bits((rotate.1 * 65_536.0) as i32, 19);
     w.align();
@@ -111,6 +112,65 @@ fn a_place_object_2_reads_scale_and_rotation() {
     assert_eq!(matrix.scale(), (2.0, 2.0));
     assert_eq!(matrix.rotate_0, 32_768);
     assert_eq!(matrix.translation_px(), (5, -2));
+}
+
+#[test]
+fn a_matrix_may_carry_a_scale_with_no_rotation() {
+    // Under a reader that reads the rotation flag beside the scale flag, this body's rotation flag is
+    // read out of the scale width and the scale comes back truncated to zero: the failure mode the
+    // old order had, proved rather than described.
+    let mut w = Writer::new();
+    w.bit(1);
+    w.bits(19, 5);
+    w.bits((2.0 * 65_536.0) as i32, 19);
+    w.bits((2.0 * 65_536.0) as i32, 19);
+    w.bit(0);
+    w.align();
+    w.bits(17, 5);
+    w.bits(300, 17);
+    w.bits(-200, 17);
+    w.align();
+
+    let mut body = vec![0x06];
+    body.extend_from_slice(&3u16.to_le_bytes());
+    body.extend_from_slice(&9u16.to_le_bytes());
+    body.extend(w.take());
+
+    let matrix = placement::place_object_2(&body)
+        .expect("a placement")
+        .matrix
+        .expect("a matrix");
+    assert_eq!(matrix.scale(), (2.0, 2.0));
+    assert_eq!((matrix.rotate_0, matrix.rotate_1), (0, 0), "no rotation is declared");
+    assert_eq!(matrix.translation_px(), (15, -10));
+}
+
+#[test]
+fn a_matrix_may_carry_a_rotation_with_no_scale() {
+    let mut w = Writer::new();
+    w.bit(0);
+    w.bit(1);
+    w.bits(19, 5);
+    w.bits(16_384, 19);
+    w.bits(0, 19);
+    w.align();
+    w.bits(17, 5);
+    w.bits(0, 17);
+    w.bits(0, 17);
+    w.align();
+
+    let mut body = vec![0x06];
+    body.extend_from_slice(&1u16.to_le_bytes());
+    body.extend_from_slice(&2u16.to_le_bytes());
+    body.extend(w.take());
+
+    let matrix = placement::place_object_2(&body)
+        .expect("a placement")
+        .matrix
+        .expect("a matrix");
+    assert_eq!(matrix.scale(), (1.0, 1.0), "an undeclared scale is identity, not zero");
+    assert_eq!(matrix.rotate_0, 16_384);
+    assert_eq!(matrix.rotate_1, 0);
 }
 
 #[test]
