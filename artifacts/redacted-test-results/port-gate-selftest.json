@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:14322e4d6ac3e26e47c6314635a962ba5418794ccf1029a9ff1276f7b7ae3782",
+    "identity": "sha256:0b16ce0322699a6741e647127e0aa63b20cbb4ef101e7ccc2a41f183ef632865",
     "inputs": 19
   },
   "python": "3.13.14",
-  "scenarios": 119,
-  "passed": 119,
+  "scenarios": 123,
+  "passed": 123,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -729,6 +729,17 @@
       "pass": true
     },
     {
+      "scenario": "sweep_legacy_formats",
+      "expected_failure": "legacy_formats",
+      "failing_checks": [
+        "legacy_formats"
+      ],
+      "problems": [
+        "legacy-unregistered: `probe.one/9` at crates\\legacy-probe\\src\\lib.rs"
+      ],
+      "pass": true
+    },
+    {
       "scenario": "silent_baselines_present",
       "expected_failure": null,
       "failing_checks": [
@@ -927,6 +938,15 @@
       "pass": true
     },
     {
+      "scenario": "silent_legacy_formats",
+      "expected_failure": null,
+      "failing_checks": [
+        "addon_parity"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "decoy_baselines_present",
       "expected_failure": null,
       "failing_checks": [],
@@ -1067,6 +1087,13 @@
       "pass": true
     },
     {
+      "scenario": "decoy_legacy_formats",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "near_baselines_present",
       "expected_failure": "baselines_present",
       "failing_checks": [
@@ -1128,7 +1155,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 43: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 44: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
@@ -1285,6 +1312,17 @@
       ],
       "problems": [
         "docs\\CELL-ADDON-DECISION.md: the owner's statement is no longer recorded verbatim in the addon decision"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_legacy_formats",
+      "expected_failure": "legacy_formats",
+      "failing_checks": [
+        "legacy_formats"
+      ],
+      "problems": [
+        "legacy-unregistered: `shploingus.recipe/33` at crates\\legacy-near\\src\\lib.rs"
       ],
       "pass": true
     }

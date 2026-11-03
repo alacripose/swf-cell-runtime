@@ -72,6 +72,7 @@ GOVERNANCE_FILES = (
     "config/cell-stream.json",
     "config/cell-addon.json",
     "config/ruling-index.json",
+    "config/legacy-formats.json",
     "tools/pre-commit",
 )
 
@@ -1330,6 +1331,74 @@ def check_addon_parity(root: Path) -> list[str]:
     return problems
 
 
+
+LEGACY_ID = re.compile(r"(?<![A-Za-z0-9_.-])([a-z][a-z0-9_.-]*)/([0-9]{1,4})(?![0-9A-Za-z_])")
+LEGACY_SUFFIXES = (".rs", ".py", ".mjs", ".js", ".ts", ".json")
+LEGACY_SKIP = {".git", "target", "generated", "inputs", "shell-private", "captures",
+              "node_modules", "artifacts", "logs", "reports"}
+
+
+def legacy_code_files(root: Path):
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.suffix not in LEGACY_SUFFIXES:
+            continue
+        parts = set(path.relative_to(root).parts)
+        if parts & LEGACY_SKIP:
+            continue
+        yield path
+
+
+def check_legacy_formats(root: Path) -> list[str]:
+    """Numeric format ids are registered legacy ids; an unregistered one is refused."""
+    manifest_path = root / "config" / "legacy-formats.json"
+    if not manifest_path.is_file():
+        return ["config/legacy-formats.json is missing"]
+    try:
+        manifest = json.loads(read_text(manifest_path))
+    except json.JSONDecodeError as exc:
+        return [f"config/legacy-formats.json is not valid JSON: {exc}"]
+
+    rows = manifest.get("ids")
+    if not isinstance(rows, list) or not rows:
+        return ["config/legacy-formats.json registers no legacy ids"]
+
+    problems: list[str] = []
+    registered: set[str] = set()
+    for row in rows:
+        ident = row.get("id") if isinstance(row, dict) else None
+        if not isinstance(ident, str) or not ident:
+            problems.append("a registry row has no id")
+            continue
+        registered.add(ident)
+        derived = row.get("derived")
+        upstream = row.get("upstream")
+        if derived is not True:
+            problems.append(
+                f"legacy-unprovenanced: `{ident}` is registered without derived: true"
+            )
+        elif upstream:
+            problems.append(
+                f"legacy-unprovenanced: `{ident}` is derived and names an upstream key it "
+                "cannot have observed"
+            )
+
+    probe = root / "config" / "legacy-formats.json"
+    self_file = root / "tools" / "port_gate.py"
+    seen: set[tuple[str, str]] = set()
+    for path in legacy_code_files(root):
+        if path in (probe, self_file):
+            continue
+        body = read_text(path)
+        rel = str(path.relative_to(root))
+        for match in LEGACY_ID.finditer(body):
+            ident = f"{match.group(1)}/{match.group(2)}"
+            if ident in registered or (ident, rel) in seen:
+                continue
+            seen.add((ident, rel))
+            problems.append(f"legacy-unregistered: `{ident}` at {rel}")
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1351,6 +1420,7 @@ CHECKS = (
     ("mcp_surface", check_mcp_surface, "PATCH-0006"),
     ("duplicate_reader", check_duplicate_reader, "PATCH-0005"),
     ("addon_parity", check_addon_parity, "PATCH-0005"),
+    ("legacy_formats", check_legacy_formats, "PATCH-0005"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1939,6 +2009,18 @@ def mutate_addon_statement_capitalised(root: Path) -> None:
     write_fixture_record(root)
 
 
+def mutate_legacy_unregistered(root: Path) -> None:
+    path = root / "crates" / "legacy-probe" / "src" / "lib.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const BOUND: &str = "probe.one/9";', encoding="utf-8")
+
+
+def mutate_legacy_near_miss(root: Path) -> None:
+    path = root / "crates" / "legacy-near" / "src" / "lib.rs"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('const BOUND: &str = "shploingus.recipe/33";', encoding="utf-8")
+
+
 # One violating mutation per enforced check, with the wording that check alone must emit. Each
 # entry is run twice: enabled (the wording must come from this check and no other) and with the
 # check skipped (the wording must disappear). A check with no entry here fails the suite.
@@ -1991,6 +2073,7 @@ SWEEP = (
         "parses the package frame outside the planet-package reader",
     ),
     ("addon_parity", mutate_addon_statement_altered, "no longer recorded verbatim"),
+    ("legacy_formats", mutate_legacy_unregistered, "legacy-unregistered: `probe.one/9`"),
 )
 
 
@@ -2017,6 +2100,7 @@ SILENCE = (
     ("mcp_surface", mutate_duplicate_reader_second_parser),
     ("duplicate_reader", mutate_mcp_forbidden_operation),
     ("addon_parity", mutate_governance_file_removed),
+    ("legacy_formats", mutate_addon_statement_altered),
 )
 
 
@@ -2160,6 +2244,13 @@ DECOY = (
         decoy_appended(
             "docs/CELL-ADDON-DECISION.md",
             "\nWhether parity is checked by the consumer is A-3.\n",
+        ),
+    ),
+    (
+        "legacy_formats",
+        decoy_file(
+            "crates/legacy-decoy/src/lib.rs",
+            'const BOTH: (&str, &str) = ("shploingus.recipe/9f3c2a1b", "DefineShape2/3");',
         ),
     ),
 )
@@ -2420,6 +2511,11 @@ NEAR_MISS = (
         "parses the package frame outside the planet-package reader",
     ),
     ("addon_parity", mutate_addon_statement_capitalised, "no longer recorded verbatim"),
+    (
+        "legacy_formats",
+        mutate_legacy_near_miss,
+        "legacy-unregistered: `shploingus.recipe/33`",
+    ),
 )
 
 

@@ -1,0 +1,1390 @@
+{
+  "schema": "legacy-formats/1",
+  "source": "secure-shell-audit/scan_stream.jsonl (2026-11-02 audit, 119,928 files)",
+  "ownerRuling": "Numeric ids are not refused; they are legacy formats awaiting update from the upstream secure-shell v2 store (owner, 2026-11-02).",
+  "derivation": "Every row is derived from the audit stream: the id, its occurrences, and the roots it was seen in. No row claims an upstream key.",
+  "ids": [
+    {
+      "id": "addons/2",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "axis-grant/1",
+      "kind": "unqualified",
+      "occurrences": 19,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "bg-black/60",
+      "kind": "unqualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus",
+        "C:\\Users\\ala\\Documents\\shploingus-game"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "bg-white/80",
+      "kind": "unqualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus",
+        "C:\\Users\\ala\\Documents\\shploingus-game"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "border-white/10",
+      "kind": "unqualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus",
+        "C:\\Users\\ala\\Documents\\shploingus-game"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "box.cols/2",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "build/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "cell/4",
+      "kind": "unqualified",
+      "occurrences": 6,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "cellframe/1",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "cells/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "civ-cities/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\agent_god_files"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "civ-cities/2",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\agent_god_files"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "civilian.axis-cells/1",
+      "kind": "qualified",
+      "occurrences": 9,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "civilian.decision/1",
+      "kind": "qualified",
+      "occurrences": 9,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "civilian.observation/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "civilian.ticket/1",
+      "kind": "qualified",
+      "occurrences": 6,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "compendium/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "day/4",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "dl-enclave.addon-store/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.addon/1",
+      "kind": "qualified",
+      "occurrences": 14,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.index/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.pkg/1",
+      "kind": "qualified",
+      "occurrences": 33,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.shell/1",
+      "kind": "qualified",
+      "occurrences": 27,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.shell/2",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.sig/1",
+      "kind": "qualified",
+      "occurrences": 12,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.stream/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.surface/0",
+      "kind": "zero-based",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "dl-enclave.surface/1",
+      "kind": "qualified",
+      "occurrences": 68,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "dl-enclave.surface/2",
+      "kind": "qualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.action/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.autopopulation/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.chat/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.client/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.frame/1",
+      "kind": "qualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.ingest-proof-snapshot/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.message/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.pdf-text/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.ping-wheel-expectations/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "ensouled.training/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "envelope/1",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "flow-specs/01",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-game"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "form/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "game/1",
+      "kind": "unqualified",
+      "occurrences": 4,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "gov/3",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "grant/1",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "layer/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "layout/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "layouts/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "level/32",
+      "kind": "unqualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "material-grade/2",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "<audit totals>"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "minecraft.cua-action/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "mount/2",
+      "kind": "unqualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "mount/3",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "openlock.addons/2",
+      "kind": "qualified",
+      "occurrences": 61,
+      "seen_in": [
+        "C:\\",
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.build/1",
+      "kind": "qualified",
+      "occurrences": 15,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.envelope/1",
+      "kind": "qualified",
+      "occurrences": 36,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.game/1",
+      "kind": "qualified",
+      "occurrences": 20,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.layout/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.layouts/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.observer/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "openlock.popit-elements/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "org/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "org/4",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "patch/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "pkg/1",
+      "kind": "unqualified",
+      "occurrences": 4,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "planet-shell.ledger/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "recipe/2",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "recipe/3",
+      "kind": "unqualified",
+      "occurrences": 24,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_package_designer",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "recipe/4",
+      "kind": "unqualified",
+      "occurrences": 16,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_package_designer",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "rr1/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "D:\\"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "secure-shell.admission/1",
+      "kind": "qualified",
+      "occurrences": 7,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.axis-meta/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "<audit totals>"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.axis/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.baseline/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.ingest/1",
+      "kind": "qualified",
+      "occurrences": 25,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.ledger-checkpoint/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.ledger/1",
+      "kind": "qualified",
+      "occurrences": 24,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.material-grade/1",
+      "kind": "qualified",
+      "occurrences": 4,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.mount/3",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.port-baseline/1",
+      "kind": "qualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.prompt-ledger/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "<audit totals>"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.served/0",
+      "kind": "zero-based",
+      "occurrences": 1,
+      "seen_in": [
+        "<audit totals>"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "secure-shell.served/1",
+      "kind": "qualified",
+      "occurrences": 48,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "secure-shell.served/2",
+      "kind": "qualified",
+      "occurrences": 6,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "served/1",
+      "kind": "unqualified",
+      "occurrences": 5,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "shell/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "shploingus.api-answer/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.api-field-values/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.ballot/1",
+      "kind": "qualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.cellframe/0",
+      "kind": "zero-based",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "shploingus.cellframe/1",
+      "kind": "qualified",
+      "occurrences": 57,
+      "seen_in": [
+        "C:\\",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.cells/0",
+      "kind": "zero-based",
+      "occurrences": 13,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "shploingus.cells/1",
+      "kind": "qualified",
+      "occurrences": 50,
+      "seen_in": [
+        "C:\\",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.chain-event/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.chain/1",
+      "kind": "qualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.compendium/1",
+      "kind": "qualified",
+      "occurrences": 7,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.deadlock/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.event/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.form/1",
+      "kind": "qualified",
+      "occurrences": 10,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.layer/1",
+      "kind": "qualified",
+      "occurrences": 12,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.material-registry/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.mesh/2",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.plan/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.receipt/0",
+      "kind": "zero-based",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "shploingus.receipt/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.receipt/2",
+      "kind": "qualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.recipe/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.recipe/2",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.recipe/3",
+      "kind": "qualified",
+      "occurrences": 72,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\agent_god_files",
+        "C:\\Users\\ala\\Documents\\ala_package_designer",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\shploingus-clean",
+        "C:\\Users\\ala\\Documents\\testport1",
+        "F:\\planet-shploingus"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.recipe/4",
+      "kind": "qualified",
+      "occurrences": 23,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_package_designer",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.resident/2",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.save/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.theme/1",
+      "kind": "qualified",
+      "occurrences": 14,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.world-residency/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "shploingus.world-truth/1",
+      "kind": "qualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "sig/1",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "specs/0",
+      "kind": "zero-based",
+      "occurrences": 2,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "numeric suffix 0; unversioned when emitted"
+    },
+    {
+      "id": "specs/005",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "specs/006",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "specs/009",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "specs/010",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\shploingus-clean"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "stack/4",
+      "kind": "unqualified",
+      "occurrences": 2,
+      "seen_in": [
+        "F:\\shploingus-mod-sources"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "surface.mount/1",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "surface.mount/2",
+      "kind": "qualified",
+      "occurrences": 91,
+      "seen_in": [
+        "C:\\",
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\openlock",
+        "C:\\Users\\ala\\Documents\\secure-shell",
+        "C:\\Users\\ala\\Documents\\testport1"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "surface.patch/1",
+      "kind": "qualified",
+      "occurrences": 45,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype",
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "surface.patch/2",
+      "kind": "qualified",
+      "occurrences": 1,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave"
+      ],
+      "derived": true,
+      "rule": "family.noun + numeric suffix; legacy, update from the v2 store"
+    },
+    {
+      "id": "surface/1",
+      "kind": "unqualified",
+      "occurrences": 7,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\dl-enclave",
+        "C:\\Users\\ala\\Documents\\secure-shell"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "system1-agent/1",
+      "kind": "unqualified",
+      "occurrences": 3,
+      "seen_in": [
+        "C:\\Users\\ala\\Documents\\ala_civ_bots_prototype"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    },
+    {
+      "id": "theme/1",
+      "kind": "unqualified",
+      "occurrences": 1,
+      "seen_in": [
+        "<audit totals>"
+      ],
+      "derived": true,
+      "rule": "no family prefix + numeric suffix; owner unresolved"
+    }
+  ],
+  "classification": "Counted by suffix first: 78 qualified, 45 unqualified, 6 zero-based. The 2026-11-02 audit split the same 129 as 83/46/5 because zero-based ids were counted inside the qualified and unqualified sets."
+}
