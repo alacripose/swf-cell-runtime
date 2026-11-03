@@ -29,6 +29,14 @@ routes what the package declares.
 | XML lowering, second surface format | closed | nobody | "No second package magic, package row grammar, asset archive, or window/surface format." |
 | Push to a remote | blocked | user | The repository has no configured remote; the owner must supply one before a push can exist. |
 
+## Working rules learned the hard way
+
+- Scratch scripts go under `target/`, which the gate skips, never under `tools/`, which the fixture
+  identity hashes. A scratch file left there makes a record that describes an uncommitted tree
+  (TICKET-0060).
+- `port_gate.py check` does not compare the record's identity with the tree; only a fresh `git worktree`
+  checkout does. Both are required evidence.
+
 ## Gates
 
 - `python tools/port_gate.py check` - repository invariants. `PASS`, `NOT-ENFORCED` (absent) and `FAIL`
