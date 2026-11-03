@@ -5,7 +5,7 @@
 //! rectangle; the label and table nodes carry the measured frame count, tag count, shape bounds,
 //! sprite structure and media inventory. No shape, timeline or script is lowered here.
 
-use planet_package::{Frame, Kind, Refusal as PackageRefusal, Surface, SURFACE_SCHEMA};
+use planet_package::{Frame, Kind, Refusal as PackageRefusal, Surface};
 
 use crate::content::{Inventory, MediaKind};
 use crate::header::{Header, Refusal};

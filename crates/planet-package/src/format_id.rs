@@ -30,7 +30,17 @@ use planet_shell_ledger::sha256;
 use crate::frame::Refusal;
 
 /// The format's family and noun. The id is this, a slash, and 32 hex characters.
-pub const FAMILY: &str = "dl-enclave.surface";
+///
+/// The family is this package layer's own. The plan's ownership table gives the row grammar and the
+/// `.decl` it frames to `planet-package`, so a document it emits names `planet.surface/<32 hex>`; the
+/// upstream family that named the same grammar with a counter is in [`LEGACY_FAMILIES`].
+pub const FAMILY: &str = "planet.surface";
+
+/// The families whose **numeric** ids name this grammar's predecessors. A document carrying one is
+/// read as the current format and is refused on emission, because a new document carries the hashed
+/// id. The set is part of the preimage: accepting another legacy head is a format change, not a
+/// reader detail.
+pub const LEGACY_FAMILIES: &[&str] = &["dl-enclave.surface"];
 
 /// The reader version: part of the preimage, so a reader that stops accepting a construct can change
 /// the id by saying so rather than by widening the grammar in place.
@@ -92,6 +102,9 @@ impl Outcome {
 pub fn preimage() -> String {
     let mut lines: Vec<String> = Vec::new();
     lines.push(format!("family\t{FAMILY}"));
+    for legacy in LEGACY_FAMILIES {
+        lines.push(format!("legacy-family\t{legacy}"));
+    }
     lines.push(format!("reader\t{READER_VERSION}"));
     for schema in SCHEMAS {
         lines.push(format!("schema\t{schema}"));
@@ -106,7 +119,7 @@ pub fn preimage() -> String {
     text
 }
 
-/// The hashed id: `dl-enclave.surface/<32 hex>`.
+/// The hashed id: `planet.surface/<32 hex>`.
 pub fn id() -> &'static str {
     static ID: OnceLock<String> = OnceLock::new();
     ID.get_or_init(|| {
@@ -116,24 +129,34 @@ pub fn id() -> &'static str {
     })
 }
 
-/// Whether `text` is a hashed id: the family, a slash, and 32 lowercase hex characters.
-pub fn is_hashed(text: &str) -> bool {
-    let Some((family, rest)) = text.rsplit_once('/') else {
+/// Whether the text after the last slash is 32 lowercase hex characters, whoever the family is.
+fn has_hex_suffix(text: &str) -> bool {
+    let Some((_, rest)) = text.rsplit_once('/') else {
         return false;
     };
-    family == FAMILY
-        && rest.len() == 32
+    rest.len() == 32
         && rest
             .chars()
             .all(|ch| ch.is_ascii_digit() || ('a'..='f').contains(&ch))
 }
 
-/// Whether `text` is a numeric id for this family: `dl-enclave.surface/1`, `/0`, `/2`.
+/// Whether `text` is this layer's hashed id: the family, a slash, and 32 lowercase hex characters.
+pub fn is_hashed(text: &str) -> bool {
+    let Some((family, _)) = text.rsplit_once('/') else {
+        return false;
+    };
+    family == FAMILY && has_hex_suffix(text)
+}
+
+/// Whether `text` is a numeric id: this family with a counter, or a legacy family with one. A counter
+/// is not a version — it names no grammar, which is why [`id`] hashes one instead.
 pub fn is_legacy(text: &str) -> bool {
     let Some((family, rest)) = text.rsplit_once('/') else {
         return false;
     };
-    family == FAMILY && !rest.is_empty() && rest.chars().all(|ch| ch.is_ascii_digit())
+    (family == FAMILY || LEGACY_FAMILIES.contains(&family))
+        && !rest.is_empty()
+        && rest.chars().all(|ch| ch.is_ascii_digit())
 }
 
 /// Reading: accept the computed id, accept a legacy id as an upgrade, refuse any other hash by name.
@@ -147,7 +170,7 @@ pub fn read(declared: &str) -> Result<Outcome, Refusal> {
     if is_legacy(declared) {
         return Ok(Outcome::UpgradedLegacy);
     }
-    if is_hashed(declared) {
+    if has_hex_suffix(declared) {
         return Err(Refusal::FormatHashMismatch {
             declared: declared.to_string(),
             found: id().to_string(),
@@ -183,8 +206,50 @@ mod tests {
     fn id_is_family_and_32_hex() {
         let id = id();
         assert!(is_hashed(id), "{id}");
-        assert!(id.starts_with("dl-enclave.surface/"));
+        assert_eq!(FAMILY, "planet.surface");
+        assert!(id.starts_with("planet.surface/"), "{id}");
         assert_eq!(id.len(), FAMILY.len() + 1 + 32);
+    }
+
+    #[test]
+    fn the_legacy_family_is_part_of_the_preimage() {
+        let text = preimage();
+        for family in LEGACY_FAMILIES {
+            assert!(text.contains(family), "preimage omits legacy family {family}");
+        }
+    }
+
+    #[test]
+    fn the_legacy_family_still_reads_as_an_upgrade() {
+        for legacy in ["dl-enclave.surface/0", "dl-enclave.surface/1"] {
+            assert_eq!(read(legacy), Ok(Outcome::UpgradedLegacy), "{legacy}");
+        }
+    }
+
+    #[test]
+    fn a_numeric_id_in_this_family_is_legacy_too() {
+        let numeric = format!("{FAMILY}/{}", 2);
+        assert!(is_legacy(&numeric), "{numeric}");
+        assert_eq!(read(&numeric), Ok(Outcome::UpgradedLegacy));
+        match emit(&numeric) {
+            Err(Refusal::FormatIdLegacyEmitted { found, current }) => {
+                assert_eq!(found, numeric);
+                assert_eq!(current, id());
+            }
+            other => panic!("expected format-id-legacy-emitted, found {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_hash_in_the_legacy_family_is_a_mismatch_not_a_schema_error() {
+        let foreign = format!("dl-enclave.surface/{}", "b".repeat(32));
+        match read(&foreign) {
+            Err(Refusal::FormatHashMismatch { declared, found }) => {
+                assert_eq!(declared, foreign);
+                assert_eq!(found, id());
+            }
+            other => panic!("expected format-hash-mismatch, found {other:?}"),
+        }
     }
 
     #[test]

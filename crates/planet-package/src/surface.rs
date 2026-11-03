@@ -14,6 +14,8 @@ use crate::format_id;
 use crate::frame::Refusal;
 use crate::vocabulary::{self, RoleClass, Vocabulary};
 
+/// The legacy head of this grammar: a family and a counter. A document carrying it still parses and
+/// is refused when a new document is emitted, which carries [`crate::format_id::id`] instead.
 pub const SURFACE_SCHEMA: &str = "dl-enclave.surface/1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

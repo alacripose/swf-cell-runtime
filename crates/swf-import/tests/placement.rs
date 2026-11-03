@@ -61,14 +61,17 @@ fn translate_only(x: i32, y: i32) -> Vec<u8> {
 
 /// A matrix with scale, rotation and translation.
 fn scaled(scale: f64, rotate: (f64, f64), x: i32, y: i32) -> Vec<u8> {
+    // The field width is declared, not implied: a scale of 2.0 is 131,072 in 16.16, which a signed
+    // 16-bit field cannot hold (its ceiling is 32,767, or 0.49998 of a pixel). A fixture that wrote it
+    // in 16 bits would be asking the reader to truncate and then blaming it for returning zero.
     let mut w = Writer::new();
     w.bit(1);
     w.bit(1);
-    w.bits(16, 5);
-    w.bits((scale * 65_536.0) as i32, 16);
-    w.bits((scale * 65_536.0) as i32, 16);
-    w.bits((rotate.0 * 65_536.0) as i32, 16);
-    w.bits((rotate.1 * 65_536.0) as i32, 16);
+    w.bits(19, 5);
+    w.bits((scale * 65_536.0) as i32, 19);
+    w.bits((scale * 65_536.0) as i32, 19);
+    w.bits((rotate.0 * 65_536.0) as i32, 19);
+    w.bits((rotate.1 * 65_536.0) as i32, 19);
     w.align();
     w.bits(17, 5);
     w.bits(x, 17);

@@ -285,7 +285,10 @@ impl Refusal {
                 format!("action {verb} is not grouped under the declared window {window}")
             }
             Refusal::SurfaceSchema { found } => {
-                format!("payload is not a dl-enclave.surface/1 document: {found}")
+                format!(
+                    "payload is not a {} document: {found}",
+                    crate::format_id::id()
+                )
             }
             Refusal::UnknownValue {
                 vocabulary,

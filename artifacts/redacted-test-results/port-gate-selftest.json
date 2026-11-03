@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:c77375cadc089f5604d6351c1958e23f34ca64f7907c4c1fb8f539ea3e057547",
+    "identity": "sha256:92a5efaf8457d7fbdbc76393cc1ec013ad14428500bc925804e3ec6d63f9d7ed",
     "inputs": 19
   },
   "python": "3.13.14",
   "scenarios": 123,
-  "passed": 121,
+  "passed": 123,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -1155,7 +1155,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 72: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 73: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
@@ -1206,20 +1206,25 @@
     {
       "scenario": "near_cell_schema",
       "expected_failure": "cell_schema",
-      "failing_checks": [],
-      "problems": [
-        "gate error: git add -A failed in C:\\Users\\ala\\Documents\\testport1\\target\\port-gate-selftest\\near-cell_schema: warning: in the working copy of '.github/ISSUE_TEMPLATE/ticket.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.github/pull_request_template.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.github/workflows/port-gate.yml', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it\nfatal: unable to stat 'config/cell-addon.json': No such file or directory"
+      "failing_checks": [
+        "cell_schema"
       ],
-      "pass": false
+      "problems": [
+        "I-2: the schema proposal does not account for this invariant"
+      ],
+      "pass": true
     },
     {
       "scenario": "near_cell_program",
       "expected_failure": "cell_program",
-      "failing_checks": [],
-      "problems": [
-        "gate error: git add -A failed in C:\\Users\\ala\\Documents\\testport1\\target\\port-gate-selftest\\near-cell_program: warning: in the working copy of '.github/ISSUE_TEMPLATE/ticket.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.github/pull_request_template.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.github/workflows/port-gate.yml', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/cell-addon.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/cell-media.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/cell-program.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/cell-schema.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/cell-stream.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/format-allowlist.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/legacy-formats.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/output-roots.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/plan-errata.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'config/ruling-index.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-ADDON-DECISION.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-MEDIA-DECISION.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-MODEL.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-PROGRAM-DECISION.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-SCHEMA.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/CELL-TRANSPORT-DECISION.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/PACKAGE-OWNERSHIP.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/PORT-BASELINE.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/RULING-INDEX.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/SCOPE-ACCOUNTING.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'ledger/README.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'ledger/ledger.jsonl', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0001-version-control.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0002-ticket-and-review-discipline.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0003-source-and-build-artifact-boundary.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0004-project-local-artifacts.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0005-one-cell-surface-and-format.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'patches/baselines/PATCH-0006-abstract-mcp-cua-axis.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TEMPLATE.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0001-port-scaffold-and-baselines.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0002-package-format-ownership-record.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0003-drift-gate.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0004-package-format-ownership.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0005-package-landscape.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0006-plan-errata.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0007-rulings.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0008-errata-guard.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0009-cell-model.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0010-cell-schema-proposal.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0011-cell-program-proposal.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0012-media-kind-proposal.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0013-transport-proposal.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0014-ruling-index.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0015-deterministic-selftest-record.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0016-ledger-commit-binding.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0017-mcp-surface.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0018-duplicate-reader.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0019-mutation-sweep.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0020-silence-fixtures.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0021-decoy-fixtures.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0022-near-misses.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0023-workspace-recovery.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0024-shell-addon-parity.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0025-plan-mount-v2-errata.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0026-shell-ledger.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0027-ledger-landing.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0028-plan-discipline.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0029-frame-mount.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0030-surface-grammar.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0031-ledger-mount-entry.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0032-vocabulary-tables.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0033-role-split.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0034-client-cell-mount.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tickets/TICKET-0035-swf-importer.md', LF will be replaced by CRLF the next time Git touches it\nfatal: unable to stat 'tickets/TICKET-0036-swf-content.md': No such file or directory"
+      "failing_checks": [
+        "cell_program",
+        "ruling_index"
       ],
-      "pass": false
+      "problems": [
+        "P-1: missing its 'Owner' part"
+      ],
+      "pass": true
     },
     {
       "scenario": "near_cell_media",
@@ -1322,5 +1327,5 @@
       "pass": true
     }
   ],
-  "exit_status": 1
+  "exit_status": 0
 }
