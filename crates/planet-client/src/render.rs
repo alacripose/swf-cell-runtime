@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use glyphon::{
     Attrs, Buffer, Cache, Color as TextColor, Family, FontSystem, Metrics, Shaping, SwashCache,
-    TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
+    Resolution, TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
 };
 use pollster::block_on;
 use winit::application::ApplicationHandler;
@@ -157,7 +157,14 @@ impl State {
         buffer.shape_until_scroll(&mut font_system, false);
         let cache = SwashCache::new();
         let atlas_cache = Cache::new(&device);
-        let viewport = Viewport::new(&device, &atlas_cache);
+        let mut viewport = Viewport::new(&device, &atlas_cache);
+        viewport.update(
+            &queue,
+            Resolution {
+                width: config.width,
+                height: config.height,
+            },
+        );
         let mut atlas = TextAtlas::new(&device, &queue, &atlas_cache, format);
         let renderer =
             TextRenderer::new(&mut atlas, &device, wgpu::MultisampleState::default(), None);
@@ -283,6 +290,10 @@ impl State {
             Some(height as f32 - 24.0),
         );
         self.buffer.shape_until_scroll(&mut self.font_system, false);
+        self.viewport.update(
+            &self.queue,
+            Resolution { width, height },
+        );
         self.upload();
     }
 
@@ -303,7 +314,12 @@ impl State {
                     left: 12.0,
                     top: 12.0,
                     scale: 1.0,
-                    bounds: TextBounds::default(),
+                    bounds: TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: self.config.width as i32,
+                        bottom: self.config.height as i32,
+                    },
                     default_color: TextColor::rgb(230, 232, 240),
                     custom_glyphs: &[],
                 }],
