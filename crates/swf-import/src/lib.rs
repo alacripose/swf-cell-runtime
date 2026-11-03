@@ -9,11 +9,13 @@
 pub mod content;
 pub mod emit;
 pub mod header;
+pub mod placement;
 pub mod stream;
 pub mod tags;
 
 pub use content::{survey, Inventory, Media, MediaKind, ShapeInfo, SpriteInfo};
 pub use emit::{package_frame, surface_document};
 pub use header::{read, Compression, Header, Rect, Refusal};
+pub use placement::{Matrix, Placement};
 pub use stream::{Read, Stream};
 pub use tags::{counts, walk, Tag, TagCounts};
