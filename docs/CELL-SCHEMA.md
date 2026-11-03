@@ -141,3 +141,45 @@ data-driven display, in which case deferring cells means building that surface t
 The family-B raster is not the target: its 8 × 16 paper/ink grid is rejected here as a model, and that
 family's grammar stays unadopted (PATCH-0005). A schema proposal that restates that raster as the thing
 to build toward has failed this document.
+
+## What the owner ruled, 2026-11-03
+
+The six questions above were put to the owner with this document in front of them. Where the owner
+answered, the answer is recorded here; the sections above stay as the proposal they were, so a later
+reader can see both the question and the answer. Two of the answers were checked against the trees
+rather than taken from this document, because the owner asked for that first.
+
+- **Q-1 — the cell is a frame, not a single row kind.** Read from the sources, not proposed here:
+  `shploingus.cellframe/1` (`openlock/shell/alpha-shell/frames/MAP-0001.frame`) is a grid of cells
+  addressed to one declared window's content space. It carries typed frame keys (`window`, `cols`,
+  `rows`, `order`, `requires`), declarative field bindings (`field elevation terrain::elevation_m`,
+  `field biome ecology::biome_at`), a shaper and a projection (`shaper profile32 32`,
+  `projection orthographic`), and typed draw rows (`fill`, `run`) whose colours are roles, never
+  literals. `package.cells` (`shploingus.cells/1`) is two lines and says which drawing of the shell a
+  package is a package of. **Ruled: several row kinds — frame keys, field bindings, typed draw rows —
+  not one cell kind.** A binding or a run with no frame is not a thing, which is the reason the
+  single-kind recommendation above was withdrawn rather than amended.
+- **Q-2 — a typed array of values per cell** (owner). It matches the `fill` and `run` columns the
+  trees already write: position, extent, role and text, each in its own field.
+- **Q-3 — the vocabulary is open, and it is streamed**, in a labelled section at the top of the
+  declaration (owner). A value the section does not declare is refused by name against that section,
+  not against a closed enumeration owned by this document.
+- **Q-4 — 4 GiB per package, 64-bit addressing** (owner, restated). That supersedes the ceilings
+  proposed above; the frame-level numbers the trees already carry stay as the frame's own bounds: a
+  512 KiB declaration, a 512 by 512 grid, 16 384 cells, so a frame is bounded even inside a package
+  that may grow to the package ceiling.
+- **Q-5 — still open.** "A binding names a declared field id and nothing else" is the recommendation;
+  the owner did not rule it, and nothing in this document may be read as a ruling on it. The lowering
+  may not depend on an answer here until one is recorded.
+- **Q-6 — cells in the first surface** (owner). It is consistent with the resynthesis answer Q9: the
+  windows' XML is converted into declared cells inside the package, never carried as a payload.
+
+### The XML reader this repository has, and the one it does not
+
+The Qt reader belongs to secure-shell v2; nothing here implements or lowers it. `testport1` has one
+XML reader, `crates/planet-client/src/xml.rs`, written as the second client format so the two
+formats are compared on one package. It is a declarative surface in the sense
+`docs/cellular_generativity_axis_civilian_expectations.md` §7.2 requires: an allowlist of elements
+and attributes, refusals by name for anything else, and no script or style path. The numeric
+containment bounds that document names are not yet wired into that reader, and that is a named gap
+rather than a claim.

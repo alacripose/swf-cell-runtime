@@ -1,7 +1,7 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:dde21ff617d318d55a3a6d947b712fa0030b42d244dedbe0f5f1590ac020a96c",
+    "identity": "sha256:b6ed9737ba3d161861d79a2b765ab15c49f7443b74b84a8fa343a64171b504f5",
     "inputs": 19
   },
   "python": "3.13.14",
@@ -164,7 +164,7 @@
         "selftest_record"
       ],
       "problems": [
-        "docs\\CELL-SCHEMA.md:145: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])",
+        "docs\\CELL-SCHEMA.md:187: names the family-B raster without rejecting it (expected one of ['reject', 'refus', 'superseded', 'family b'])",
         "artifacts/redacted-test-results/port-gate-selftest.json: the record describes fixture '<fixture-identity>', but this tree is '<fixture-identity>'; re-run selftest so the evidence matches what it certifies"
       ],
       "pass": true
@@ -1155,7 +1155,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 48: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 49: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
