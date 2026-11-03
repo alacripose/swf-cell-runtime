@@ -183,6 +183,12 @@ pub enum Refusal {
         frame: String,
         role: String,
     },
+    CellframeGlyph {
+        line: usize,
+        window: String,
+        frame: String,
+        glyph: char,
+    },
 }
 
 impl Refusal {
@@ -224,6 +230,7 @@ impl Refusal {
             Refusal::CellframeUnreferenced { .. } => "cellframe-unreferenced",
             Refusal::CellframeSurface { .. } => "cellframe-surface",
             Refusal::CellframeRole { .. } => "cellframe-role",
+            Refusal::CellframeGlyph { .. } => "cellframe-glyph",
         }
     }
 
@@ -366,6 +373,16 @@ impl Refusal {
             } => format!(
                 "cellframe line {line}: window {window} binds frame {frame:?}, whose paper or ink \
                  role {role:?} the drawing palette does not carry; a role is resolved or the frame \
+                 is not drawn"
+            ),
+            Refusal::CellframeGlyph {
+                line,
+                window,
+                frame,
+                glyph,
+            } => format!(
+                "cellframe line {line}: window {window} binds frame {frame:?}, whose run carries \
+                 {glyph:?} and the drawing font has no bitmap for it; a glyph is drawn or the frame \
                  is not drawn"
             ),
         }

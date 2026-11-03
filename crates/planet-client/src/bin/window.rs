@@ -1,15 +1,16 @@
 //! The wgpu client format: a window over a mounted package.
 //!
 //! Reads the newest `.pkg` in `generated/` and every `.frame` beside it, adopts and mounts them, then
-//! shows the scene the mount answers and the cells the palette resolved for it. Nothing here parses a
-//! frame, a surface or a package, and nothing here pairs a window with a frame: the mount did that.
+//! shows the scene the mount answers, the cells the palette resolved, and the offscreen picture those
+//! cells paint. Nothing here parses a frame, a surface or a package, and nothing here pairs a window
+//! with a frame: the mount did that.
 
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use planet_client::palette::Palette;
 use planet_client::render::{self, Scene};
-use planet_client::{draw, scene, CellMount};
+use planet_client::{draw, picture, scene, CellMount};
 
 fn newest(dir: &Path, extension: &str) -> Option<PathBuf> {
     let mut best: Option<(SystemTime, PathBuf)> = None;
@@ -77,6 +78,20 @@ fn opened() -> Scene {
                     "raster {} by {} cells from {}",
                     raster.raster.cols, raster.raster.rows, raster.frame
                 ));
+                match picture::paint(raster) {
+                    Ok(picture) => shown.lines.push(format!(
+                        "picture {} by {} {} (stride {})",
+                        picture.width,
+                        picture.height,
+                        picture::Picture::FORMAT,
+                        picture.stride
+                    )),
+                    Err(refusals) => shown.lines.push(format!(
+                        "not painted: {} — {}",
+                        refusals.code(),
+                        refusals.message()
+                    )),
+                }
             }
         }
         Err(refusals) => shown.lines.push(format!(
