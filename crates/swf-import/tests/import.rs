@@ -90,15 +90,29 @@ fn the_emitted_package_mounts_through_the_canonical_path() {
     let tags = tags::walk(&header).unwrap();
     let counts = tags::counts(&tags);
     let inventory = swf_import::content::survey(&header, &tags).expect("surveyed");
-    let frame = emit::package_frame("swf1", &header, &counts, tags.len(), &inventory)
-        .expect("an emitted frame");
+    let frame = emit::package_frame(
+        "swf1",
+        &header,
+        &counts,
+        tags.len(),
+        &inventory,
+        &emit::Lowering::default(),
+    )
+    .expect("an emitted frame");
 
     let receipt = mount(&frame, "swf1", 1, 0, 0).expect("the package mounts");
     assert_eq!(receipt.surface, "swf1");
     assert_eq!(receipt.windows, 1);
     assert_eq!(receipt.digest, frame.frame_digest_hex());
 
-    let doc = emit::surface_document("swf1", &header, &counts, tags.len(), &inventory);
+    let doc = emit::surface_document(
+        "swf1",
+        &header,
+        &counts,
+        tags.len(),
+        &inventory,
+        &emit::Lowering::default(),
+    );
     // The window's content space is the frame's grid, because a frame's extent must equal it exactly
     // and a frame counts in its own cells: 550 by 400 pixels is 69 by 25 cells, rounded up.
     assert!(doc.contains("\t69\t25\t"), "the stage is the measured cells, not the pixel count");

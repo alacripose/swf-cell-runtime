@@ -176,9 +176,15 @@ pub fn place_object(body: &[u8]) -> Result<Placement, Refusal> {
     }
     let character = u16::from_le_bytes([body[0], body[1]]);
     let depth = u16::from_le_bytes([body[2], body[3]]);
-    let (matrix, at) = matrix(body, 4)?;
+    let (matrix, mut at) = matrix(body, 4)?;
+    // A `PlaceObject` may carry a colour transform without alpha after its matrix. It is consumed
+    // exactly so the record ends where it says it does, and nothing is kept from it.
     if at < body.len() {
-        // A colour transform follows; it is not read here, and pretending it is absent would be wrong.
+        let mut bits = Bits::new(&body[at..]);
+        cxform(&mut bits, false)?;
+        at += bits.at();
+    }
+    if at != body.len() {
         return Err(Refusal::Unsupported { flags: 0xff });
     }
     Ok(Placement {
@@ -199,14 +205,39 @@ const HAS_MATRIX: u8 = 0x04;
 const HAS_CHARACTER: u8 = 0x02;
 const MOVE: u8 = 0x01;
 
+/// A colour transform, read far enough to know where it ends and no further.
+///
+/// Its extent has to be consumed exactly: the fields after it sit at offsets this reader would
+/// otherwise misread. It carries no geometry, so nothing is kept from it — that is a named gap, not
+/// a silent one.
+fn cxform(bits: &mut Bits, with_alpha: bool) -> Result<(), Refusal> {
+    let has_add = bits.bit()? == 1;
+    let has_mult = bits.bit()? == 1;
+    let nbits = bits.bits(4)? as usize;
+    let channels = if with_alpha { 4 } else { 3 };
+    if has_mult {
+        for _ in 0..channels {
+            let _ = bits.signed(nbits)?;
+        }
+    }
+    if has_add {
+        for _ in 0..channels {
+            let _ = bits.signed(nbits)?;
+        }
+    }
+    bits.align();
+    Ok(())
+}
+
 /// `PlaceObject2`: a flags byte, a depth, then the fields the flags name in the format's own order.
 pub fn place_object_2(body: &[u8]) -> Result<Placement, Refusal> {
     if body.len() < 3 {
         return Err(Refusal::Truncated { at: body.len() });
     }
     let flags = body[0];
-    let unread = flags & (HAS_CLIP_ACTIONS | HAS_CLIP_DEPTH | HAS_NAME | HAS_RATIO | HAS_CXFORM);
-    if unread != 0 {
+    // Clip actions are a nested, variable-length record with its own versioning; refusing them by
+    // name is honest, and it is counted by the caller rather than dropped.
+    if flags & HAS_CLIP_ACTIONS != 0 {
         return Err(Refusal::Unsupported { flags });
     }
     let depth = u16::from_le_bytes([body[1], body[2]]);
@@ -221,11 +252,35 @@ pub fn place_object_2(body: &[u8]) -> Result<Placement, Refusal> {
     } else {
         0
     };
-    let (matrix, at) = if flags & HAS_MATRIX != 0 {
+    let (matrix, mut at) = if flags & HAS_MATRIX != 0 {
         matrix(body, at)?
     } else {
         (None, at)
     };
+    // The optional fields follow the matrix in the format's own order, each self-delimiting.
+    if flags & HAS_CXFORM != 0 {
+        let mut bits = Bits::new(&body[at..]);
+        cxform(&mut bits, true)?;
+        at += bits.at();
+    }
+    if flags & HAS_RATIO != 0 {
+        if body.len() < at + 2 {
+            return Err(Refusal::Truncated { at });
+        }
+        at += 2;
+    }
+    if flags & HAS_NAME != 0 {
+        match body[at..].iter().position(|byte| *byte == 0) {
+            Some(end) => at += end + 1,
+            None => return Err(Refusal::Truncated { at }),
+        }
+    }
+    if flags & HAS_CLIP_DEPTH != 0 {
+        if body.len() < at + 2 {
+            return Err(Refusal::Truncated { at });
+        }
+        at += 2;
+    }
     if at < body.len() {
         return Err(Refusal::Unsupported { flags });
     }
@@ -255,6 +310,37 @@ pub fn survey(tags: &[Tag], body: &[u8]) -> Result<Vec<Placement>, Refusal> {
         }
     }
     Ok(placements)
+}
+
+/// Like [`survey`], but a record this reader cannot read is **counted** rather than aborting the
+/// import.
+///
+/// The distinction is the framing: a tag's length says where the next tag starts, so a record skipped
+/// whole costs nothing after it, while a field skipped *inside* a record would move every later field
+/// in that record — which is why `survey` keeps refusing. The count travels into the declaration, so
+/// a skipped record is declared rather than silently missing.
+pub fn survey_partial(tags: &[Tag], body: &[u8]) -> Result<(Vec<Placement>, usize), Refusal> {
+    let mut placements = Vec::new();
+    let mut unreadable = 0usize;
+    for tag in tags {
+        let end = tag.at + tag.length;
+        if end > body.len() {
+            return Err(Refusal::Truncated { at: body.len() });
+        }
+        let slice = &body[tag.at..end];
+        match tag.code {
+            4 => match place_object(slice) {
+                Ok(placement) => placements.push(placement),
+                Err(_) => unreadable += 1,
+            },
+            26 => match place_object_2(slice) {
+                Ok(placement) => placements.push(placement),
+                Err(_) => unreadable += 1,
+            },
+            _ => {}
+        }
+    }
+    Ok((placements, unreadable))
 }
 
 /// The placement in force at each depth: the last one in stream order wins, and a move that names no

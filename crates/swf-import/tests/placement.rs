@@ -235,12 +235,27 @@ fn a_truncated_matrix_is_refused_by_name() {
 }
 
 #[test]
-fn a_flag_this_reader_does_not_parse_is_refused_rather_than_skipped() {
-    let mut body = vec![0x22]; // has character + has name
+fn a_named_placement_is_read_to_its_end() {
+    // Name, ratio and clip depth are ordered, self-delimiting fields: reading them exactly keeps the
+    // fields after them at their own offsets, which is the rule a skip would break.
+    let mut body = vec![0x22 | 0x40]; // has character + has name + has clip depth
     body.extend_from_slice(&1u16.to_le_bytes());
     body.extend_from_slice(&8u16.to_le_bytes());
     body.extend_from_slice(b"n\0");
-    let refusal = placement::place_object_2(&body).expect_err("a named placement");
+    body.extend_from_slice(&4u16.to_le_bytes());
+    let placement = placement::place_object_2(&body).expect("a named placement");
+    assert_eq!((placement.character, placement.depth), (8, 1));
+}
+
+#[test]
+fn clip_actions_are_refused_rather_than_skipped() {
+    // Clip actions are a nested variable-length record; refusing them by name is counted by the
+    // caller, and a partial read would put every later field at a wrong offset.
+    let mut body = vec![0x02 | 0x80]; // has character + has clip actions
+    body.extend_from_slice(&1u16.to_le_bytes());
+    body.extend_from_slice(&8u16.to_le_bytes());
+    body.extend_from_slice(&[0, 0, 0, 0]);
+    let refusal = placement::place_object_2(&body).expect_err("clip actions");
     assert_eq!(refusal.code(), "placement-unsupported");
     assert!(refusal.message().contains("misread"));
 }

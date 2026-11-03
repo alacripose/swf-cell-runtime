@@ -158,12 +158,26 @@ fn a_sound_stream_head_has_no_definition_id() {
 fn the_emitted_package_carries_the_deeper_measurements() {
     let (header, tags, inventory) = survey(&fixture());
     let counts = swf_import::tags::counts(&tags);
-    let frame = swf_import::emit::package_frame("swf1", &header, &counts, tags.len(), &inventory)
+    let frame = swf_import::emit::package_frame(
+        "swf1",
+        &header,
+        &counts,
+        tags.len(),
+        &inventory,
+        &swf_import::emit::Lowering::default(),
+    )
         .expect("an emitted frame");
     let receipt = mount(&frame, "swf1", 1, 0, 0).expect("the package mounts");
     assert_eq!(receipt.windows, 1);
 
-    let doc = swf_import::emit::surface_document("swf1", &header, &counts, tags.len(), &inventory);
+    let doc = swf_import::emit::surface_document(
+        "swf1",
+        &header,
+        &counts,
+        tags.len(),
+        &inventory,
+        &swf_import::emit::Lowering::default(),
+    );
     assert!(doc.contains("shapes 1; union 100x50 px"), "{doc}");
     assert!(doc.contains("sprites 1; 3 nested tags"), "{doc}");
     assert!(doc.contains("bitmap 1 / 6 bytes"), "{doc}");

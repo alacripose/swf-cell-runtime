@@ -66,9 +66,27 @@ fn main() -> ExitCode {
         }
     }
 
+    // The display list, lowered to the frame's cells from the shape bounds the survey measured. A
+    // record the reader cannot parse is counted and declared; only a truncated stream aborts.
+    let (placements, unreadable) = match swf_import::placement::survey_partial(&tags, &header.body) {
+        Ok(found) => found,
+        Err(refusal) => return abort_stream(stream, refusal.code()),
+    };
+    let placements = swf_import::placement::by_depth(&placements);
+    let (grid_cols, grid_rows) = swf_import::emit::grid(&header);
+    let mut lowering = swf_import::emit::lower(&placements, &inventory, grid_cols, grid_rows);
+    lowering.refused = unreadable;
+    lowering.placements += unreadable;
+
     let counts = swf_import::tags::counts(&tags);
-    let frame =
-        match swf_import::emit::package_frame(&id, &header, &counts, tags.len(), &inventory) {
+    let frame = match swf_import::emit::package_frame(
+        &id,
+        &header,
+        &counts,
+        tags.len(),
+        &inventory,
+        &lowering,
+    ) {
             Ok(frame) => frame,
             Err(refusal) => {
                 return abort_stream(stream, refusal.code());
@@ -85,7 +103,7 @@ fn main() -> ExitCode {
     // The frame the stage window binds, beside the package: a package that declares a window and
     // ships nothing for it draws an empty stage, and that is a different claim from drawing it.
     let frame_path = out.with_extension("frame");
-    let frame_bytes = match swf_import::emit::frame_bytes(&header) {
+    let frame_bytes = match swf_import::emit::frame_bytes(&header, &lowering) {
         Ok(bytes) => bytes,
         Err(refusal) => return abort_stream(stream, refusal.code()),
     };
@@ -160,6 +178,7 @@ fn main() -> ExitCode {
             println!("seq {seq}");
             println!("package {}", out.display());
             println!("frame {}", frame_path.display());
+            println!("placements {}", lowering.summary());
             if let Some(stream) = stream.as_ref() {
                 println!("stream {}", stream.path().display());
             }
