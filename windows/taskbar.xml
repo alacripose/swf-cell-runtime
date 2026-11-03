@@ -1,0 +1,11 @@
+<window title="Taskbar" width="1920" height="48">
+  <heading>Pinned — 8 corners</heading>
+  <list>
+    <item>Explorer</item>
+    <item>Terminal</item>
+    <item>Store</item>
+  </list>
+  <separator/>
+  <label>Small-button mode shrinks window buttons to circles.</label>
+  <label>Every button pins to any of the eight corners.</label>
+</window>
