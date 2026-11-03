@@ -10,7 +10,7 @@ use std::time::SystemTime;
 
 use planet_client::palette::Palette;
 use planet_client::render::{self, Scene};
-use planet_client::{draw, picture, scene, CellMount};
+use planet_client::{batch, draw, picture, scene, CellMount};
 
 fn newest(dir: &Path, extension: &str) -> Option<PathBuf> {
     let mut best: Option<(SystemTime, PathBuf)> = None;
@@ -78,15 +78,22 @@ fn opened() -> Scene {
                     "raster {} by {} cells from {}",
                     raster.raster.cols, raster.raster.rows, raster.frame
                 ));
-                match picture::paint(raster) {
-                    Ok(picture) => shown.lines.push(format!(
-                        "picture {} by {} {} (stride {})",
-                        picture.width,
-                        picture.height,
-                        picture::Picture::FORMAT,
-                        picture.stride
-                    )),
-                    Err(refusals) => shown.lines.push(format!(
+                match (picture::paint(raster), batch::plan(raster)) {
+                    (Ok(picture), Ok(planned)) => {
+                        shown.lines.push(format!(
+                            "picture {} by {} {} (stride {})",
+                            picture.width,
+                            picture.height,
+                            picture::Picture::FORMAT,
+                            picture.stride
+                        ));
+                        shown.lines.push(format!(
+                            "batch {} quads for {}",
+                            planned.quads.len(),
+                            raster.frame
+                        ));
+                    }
+                    (Err(refusals), _) | (_, Err(refusals)) => shown.lines.push(format!(
                         "not painted: {} — {}",
                         refusals.code(),
                         refusals.message()

@@ -11,6 +11,7 @@
 //! Both client binaries consume the package crate's own receipt and parsed surface; neither
 //! re-implements a frame reader, a surface parser or a second transport (AGENTS.md §2).
 
+pub mod batch;
 pub mod cell_mount;
 pub mod draw;
 pub mod font;
@@ -21,6 +22,7 @@ pub mod render;
 pub mod scene;
 pub mod xml;
 
+pub use batch::{plan as batch_plan, Batch, Quad};
 pub use cell_mount::{Adopted, CellMount};
 pub use draw::{rasters, Cell, Raster, WindowRaster};
 pub use palette::{Palette, Rgba};
