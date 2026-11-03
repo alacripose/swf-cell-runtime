@@ -1,7 +1,7 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:c459848f50298ade1f40b6fdbd6864c5d8f23bbe1fc067f371c8a7ee834f72cf",
+    "identity": "sha256:b02644c25a64ba2c4f4c8c391077b9121cfed56b45672cb80be42a643b453b8b",
     "inputs": 19
   },
   "python": "3.13.14",
@@ -1155,7 +1155,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 63: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 64: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },

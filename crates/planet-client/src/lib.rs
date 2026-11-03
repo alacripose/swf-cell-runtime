@@ -14,7 +14,8 @@
 pub mod batch;
 pub mod cell_mount;
 pub mod draw;
-pub mod font;
+pub mod font;
+pub mod input;
 pub mod package_owner;
 pub mod palette;
 pub mod present;
@@ -25,7 +26,8 @@ pub mod xml;
 
 pub use batch::{plan as batch_plan, Batch, Quad};
 pub use cell_mount::{Adopted, CellMount};
-pub use draw::{rasters, Cell, Raster, WindowRaster};
+pub use draw::{rasters, Cell, Raster, WindowRaster};
+pub use input::Router;
 pub use palette::{Palette, Rgba};
 pub use present::Instance;
 pub use picture::Picture;
