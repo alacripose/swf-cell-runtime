@@ -1,74 +1,91 @@
+//! The importer: one measured movie becomes the canonical declaration package, and its measurement
+//! stages become a sealed stream when a key and a path are supplied.
+//!
+//! The stream is the proof Q7 asks for — a row per stage and per 1,000 measured records, flushed as
+//! written, and a row that names an abort so a killed import leaves evidence instead of nothing. It
+//! records the measurement, not the emission: the package and its ledger entry are the emission record.
+
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use planet_package::{mount_and_record, Recorded};
 use planet_shell_ledger::{landing, Ledger};
+use swf_import::stream::{Kind, Refusal as StreamRefusal, Stream};
+
+/// Records per sealed row inside a stage.
+const CADENCE: usize = 1_000;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.len() < 3 {
-        eprintln!("usage: swf-import <input.swf> <out.pkg> <ledger.tsv> [surface-id]");
+        eprintln!("usage: swf-import <input.swf> <out.pkg> <ledger.tsv> [surface-id] [stream.jsonl]");
+        eprintln!("       PLANET_STREAM_KEY=<64 hex> seals the stream when a path is given");
         return ExitCode::from(2);
     }
     let input = PathBuf::from(&args[0]);
     let out = PathBuf::from(&args[1]);
     let ledger_path = PathBuf::from(&args[2]);
     let id = args.get(3).cloned().unwrap_or_else(|| "swf1".to_string());
+    let stream_path = args.get(4).map(PathBuf::from);
+
+    let mut stream = match open_stream(stream_path.as_deref()) {
+        Ok(stream) => stream,
+        Err(refusal) => {
+            eprintln!("stream refused: {} {}", refusal.code(), refusal.message());
+            return ExitCode::FAILURE;
+        }
+    };
 
     let bytes = match std::fs::read(&input) {
         Ok(bytes) => bytes,
-        Err(error) => {
-            eprintln!("read {}: {error}", input.display());
-            return ExitCode::FAILURE;
-        }
+        Err(error) => return abort(stream, "stream-io", format!("read {}: {error}", input.display())),
     };
     let header = match swf_import::header::read(&bytes) {
         Ok(header) => header,
         Err(refusal) => {
-            eprintln!("refused {refusal}");
-            return ExitCode::FAILURE;
+            return abort_stream(stream, refusal.code());
         }
     };
     let tags = match swf_import::tags::walk(&header) {
         Ok(tags) => tags,
         Err(refusal) => {
-            eprintln!("refused {refusal}");
-            return ExitCode::FAILURE;
+            return abort_stream(stream, refusal.code());
         }
     };
     let inventory = match swf_import::content::survey(&header, &tags) {
         Ok(inventory) => inventory,
         Err(refusal) => {
-            eprintln!("refused {refusal}");
-            return ExitCode::FAILURE;
+            return abort_stream(stream, refusal.code());
         }
     };
+
+    if let Some(stream) = stream.as_mut() {
+        if let Err(refusal) = record_stage(stream, &tags) {
+            eprintln!("stream refused: {} {}", refusal.code(), refusal.message());
+            return ExitCode::FAILURE;
+        }
+    }
+
     let counts = swf_import::tags::counts(&tags);
     let frame =
         match swf_import::emit::package_frame(&id, &header, &counts, tags.len(), &inventory) {
             Ok(frame) => frame,
             Err(refusal) => {
-                eprintln!("refused {refusal}");
-                return ExitCode::FAILURE;
+                return abort_stream(stream, refusal.code());
             }
         };
     if let Some(parent) = out.parent() {
         if let Err(error) = std::fs::create_dir_all(parent) {
-            eprintln!("mkdir {}: {error}", parent.display());
-            return ExitCode::FAILURE;
+            return abort(stream, "stream-io", format!("mkdir {}: {error}", parent.display()));
         }
     }
     if let Err(error) = std::fs::write(&out, frame.encode()) {
-        eprintln!("write {}: {error}", out.display());
-        return ExitCode::FAILURE;
+        return abort(stream, "stream-io", format!("write {}: {error}", out.display()));
     }
 
     let mut ledger = match load(&ledger_path) {
         Ok(ledger) => ledger,
-        Err(why) => {
-            eprintln!("ledger {}: {why}", ledger_path.display());
-            return ExitCode::FAILURE;
-        }
+        Err(why) => return abort(stream, "import-aborted", format!("ledger {}: {why}", ledger_path.display())),
     };
     let sequence = ledger.head_seq() + 1;
     match mount_and_record(
@@ -132,13 +149,56 @@ fn main() -> ExitCode {
             println!("digest {}", receipt.digest);
             println!("seq {seq}");
             println!("package {}", out.display());
+            if let Some(stream) = stream.as_ref() {
+                println!("stream {}", stream.path().display());
+            }
             ExitCode::SUCCESS
         }
-        Err(refusal) => {
-            eprintln!("mount refused: {} {}", refusal.code(), refusal.message());
-            ExitCode::FAILURE
+        Err(refusal) => abort_stream(stream, &refusal.code()),
+    }
+}
+
+/// A row per 1,000 measured records inside the stage, then the row that closes it.
+fn record_stage(stream: &mut Stream, tags: &[swf_import::Tag]) -> Result<(), StreamRefusal> {
+    for (index, chunk) in tags.chunks(CADENCE).enumerate() {
+        let start = index * CADENCE;
+        let end = start + chunk.len() - 1;
+        stream.row(Kind::Record, &format!("tags {start}-{end}"))?;
+    }
+    stream.row(Kind::Stage, &format!("tags {} measured", tags.len()))?;
+    stream.finish()?;
+    Ok(())
+}
+
+/// The stream needs a path and a key together; one without the other is refused by name rather than
+/// silently dropping the proof.
+fn open_stream(path: Option<&Path>) -> Result<Option<Stream>, StreamRefusal> {
+    let Some(path) = path else {
+        return Ok(None);
+    };
+    let Some(hex) = std::env::var("PLANET_STREAM_KEY").ok().filter(|value| !value.is_empty()) else {
+        return Err(StreamRefusal::Order(
+            "PLANET_STREAM_KEY is not set, so the stream cannot be sealed".to_string(),
+        ));
+    };
+    let key = planet_aead::Key::from_hex(&hex).map_err(StreamRefusal::Seal)?;
+    Stream::create(path, key).map(Some)
+}
+
+/// Abort the stream with a named code, say why, and fail.
+fn abort_stream(stream: Option<Stream>, code: &str) -> ExitCode {
+    abort(stream, code, format!("refused: {code}"))
+}
+
+fn abort(mut stream: Option<Stream>, code: &str, why: String) -> ExitCode {
+    eprintln!("{why}");
+    if let Some(stream) = stream.as_mut() {
+        match stream.abort(code) {
+            Ok(row) => eprintln!("stream marked truncated at row {}", row.seq),
+            Err(refusal) => eprintln!("stream refused: {} {}", refusal.code(), refusal.message()),
         }
     }
+    ExitCode::FAILURE
 }
 
 fn load(path: &Path) -> Result<Ledger, String> {

@@ -2040,6 +2040,7 @@ name = "swf-import"
 version = "0.1.0"
 dependencies = [
  "flate2",
+ "planet-aead",
  "planet-package",
  "planet-shell-ledger",
 ]

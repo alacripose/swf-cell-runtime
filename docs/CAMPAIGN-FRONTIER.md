@@ -27,6 +27,8 @@ routes what the package declares.
 | §4.8 schema meaning, migration, destructive operations | shell | shell | "it cannot inspect live saves, decide migration semantics, initiate a live migration, or perform a destructive content operation." |
 | §9.2/§9.4 oracle and witness | shell, private | shell | Shell-private oracle runs; agents receive redacted results only. |
 | XML lowering, second surface format | closed | nobody | "No second package magic, package row grammar, asset archive, or window/surface format." |
+| Importer streaming (P4) | built | agent (done) | Q7: "Per stage, plus every 1,000 records inside a stage"; §7 refuses "a scan or import that holds its output until exit". Rows are sealed, flushed as written, and an unterminated stream reads back `import-truncated`. |
+| Importer lowering of shapes, timelines, scripts | shell | shell | D-7: the importer "lowers no shape, timeline or script"; `SCOPE-ACCOUNTING.md` assigns visual, timeline and interaction lowering to shell execution. |
 | Push to a remote | blocked | user | The repository has no configured remote; the owner must supply one before a push can exist. |
 
 ## Working rules learned the hard way
