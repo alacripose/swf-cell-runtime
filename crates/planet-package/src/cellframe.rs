@@ -895,6 +895,8 @@ pub struct Bound {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Loaded {
     pub receipt: crate::mount::Receipt,
+    /// The surface the declaration parsed into: the one the mount is for.
+    pub surface: Surface,
     pub frames: Vec<Bound>,
 }
 
@@ -986,14 +988,30 @@ pub fn load(
     previous_sequence: u64,
     at: u64,
 ) -> Result<Loaded, Refusals> {
+    let loaded = load_declared(frame, documents, sequence, previous_sequence, at)?;
+    if loaded.surface.id != surface {
+        let mut problems = Refusals::new();
+        problems.refuse(Refusal::SurfaceSchema {
+            found: format!("surface {:?}", loaded.surface.id),
+        });
+        return Err(problems);
+    }
+    Ok(loaded)
+}
+
+/// **Load a declaration that names its own surface.**
+///
+/// The same load as [`load`], for a caller that holds the package and not the surface's id: the id is
+/// written in the declaration, which is the only place it belongs. A client uses this so it never
+/// parses a declaration once to learn an id and again to mount it.
+pub fn load_declared(
+    frame: &crate::frame::Frame,
+    documents: &[&str],
+    sequence: u64,
+    previous_sequence: u64,
+    at: u64,
+) -> Result<Loaded, Refusals> {
     let mut problems = Refusals::new();
-    let receipt = match crate::mount::mount(frame, surface, sequence, previous_sequence, at) {
-        Ok(receipt) => receipt,
-        Err(refusal) => {
-            problems.refuse(refusal);
-            return Err(problems);
-        }
-    };
     let body = match Surface::parse(&frame.payload) {
         Ok(body) => body,
         Err(refusal) => {
@@ -1001,10 +1019,26 @@ pub fn load(
             return Err(problems);
         }
     };
+    let receipt = match crate::mount::mount(frame, &body.id, sequence, previous_sequence, at) {
+        Ok(receipt) => receipt,
+        Err(refusal) => {
+            problems.refuse(refusal);
+            return Err(problems);
+        }
+    };
+    let frames = resolve(&body, documents)?;
     Ok(Loaded {
         receipt,
-        frames: resolve(&body, documents)?,
+        surface: body,
+        frames,
     })
+}
+
+impl Loaded {
+    /// Mount the loaded package into the surface it declares, consuming these bindings.
+    pub fn mount(&self) -> Result<SurfaceMount, Refusals> {
+        mount_loaded(self, &self.surface)
+    }
 }
 
 /// One window of a mounted surface: the frame its declaration bound, already validated.

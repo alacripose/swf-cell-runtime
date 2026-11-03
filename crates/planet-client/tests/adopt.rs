@@ -119,3 +119,93 @@ fn the_package_owner_round_trips_the_frame_it_does_not_own() {
     assert_eq!(decoded.payload, frame.payload);
     assert_eq!(decoded.kind, Kind::Decl);
 }
+
+fn bound_document() -> String {
+    format!("{}frame\tmain\tMAP-0001\n", document("content-main"))
+}
+
+fn frame_document(id: &str, window: &str, cols: u32, rows: u32, glyphs: &str) -> String {
+    format!(
+        "shploingus.cellframe/1\n\
+         frame\t{id}\n\
+         \twindow\t{window}\n\
+         \tcols\t{cols}\n\
+         \trows\t{rows}\n\
+         \torder\t10\n\
+         \trequires\tnone\n\
+         fill\t0\t0\t{cols}\tsurface\n\
+         run\t0\t0\ttext\t{glyphs}\n"
+    )
+}
+
+#[test]
+fn a_client_adopts_a_mounted_extent_checked_surface() {
+    let bytes = Frame::new(Kind::Decl, bound_document().as_bytes())
+        .expect("a declaration frame")
+        .encode();
+    let alpha = frame_document("MAP-0001", "main", 42, 18, "ALPHA");
+    let mut mount = CellMount::new();
+    let adopted = mount
+        .adopt_frames(&bytes, &[&alpha], 42)
+        .expect("the reference resolves and the extents agree");
+
+    assert_eq!(adopted.receipt.windows, 1);
+    assert_eq!(adopted.mount.windows.len(), 1, "the mount carries the bound window");
+    assert_eq!(adopted.mount.windows[0].line, 6, "the binding row's line travels with the mount");
+    let frame = adopted.frame_of("main").expect("the client asks the mount");
+    assert_eq!(frame.id, "MAP-0001");
+    assert_eq!(frame.runs[0].text, "ALPHA");
+    assert_eq!(adopted.frame_of("absent"), None, "an unbound window has no frame");
+    assert_eq!(adopted.digest, planet_client::package_owner::digest(&package_owner::decode(&bytes).unwrap()));
+}
+
+#[test]
+fn a_client_refuses_a_package_whose_frame_disagrees_with_its_window() {
+    let bytes = Frame::new(Kind::Decl, bound_document().as_bytes())
+        .expect("a declaration frame")
+        .encode();
+    let wide = frame_document("MAP-0001", "main", 56, 18, "ALPHA");
+    let mut mount = CellMount::new();
+    let refusals = mount
+        .adopt_frames(&bytes, &[&wide], 42)
+        .expect_err("56 by 18 disagrees with the window's 42 by 18");
+    assert_eq!(refusals.code(), "cellframe-extent");
+    let message = refusals.message();
+    assert!(message.contains("line 6"), "the binding line is missing: {message}");
+    assert!(message.contains("MAP-0001"), "the frame id is missing: {message}");
+    assert!(message.contains("main"), "the window id is missing: {message}");
+    assert!(mount.adopted().is_empty(), "a refused package stores nothing");
+}
+
+#[test]
+fn a_client_refuses_a_frame_the_declaration_never_binds() {
+    let bytes = Frame::new(Kind::Decl, document("content-main").as_bytes())
+        .expect("a declaration frame")
+        .encode();
+    let alpha = frame_document("MAP-0001", "main", 42, 18, "ALPHA");
+    let mut mount = CellMount::new();
+    let refusals = mount
+        .adopt_frames(&bytes, &[&alpha], 42)
+        .expect_err("no frame row binds MAP-0001");
+    assert_eq!(refusals.code(), "cellframe-unreferenced");
+    assert!(mount.adopted().is_empty());
+}
+
+#[test]
+fn adopting_the_same_mounted_package_twice_answers_the_first() {
+    let bytes = Frame::new(Kind::Decl, bound_document().as_bytes())
+        .expect("a declaration frame")
+        .encode();
+    let alpha = frame_document("MAP-0001", "main", 42, 18, "ALPHA");
+    let mut mount = CellMount::new();
+    {
+        let first = mount.adopt_frames(&bytes, &[&alpha], 7).expect("first");
+        assert_eq!(first.receipt.sequence, 1);
+    }
+    let second = mount.adopt_frames(&bytes, &[&alpha], 99).expect("retry");
+    assert_eq!(second.receipt.sequence, 1);
+    assert_eq!(second.receipt.at, 7);
+    assert!(second.frame_of("main").is_some());
+    let adopted = mount.adopted().len();
+    assert_eq!(adopted, 1);
+}
