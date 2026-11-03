@@ -64,6 +64,15 @@ pub struct Action {
     pub target: String,
 }
 
+/// A frame a declaration binds to a window, and the line it bound it on.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DeclaredFrame {
+    /// The frame id the package declares and this window loads with.
+    pub id: String,
+    /// The one-based line of the `frame` row that bound it.
+    pub line: usize,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Window {
     pub id: String,
@@ -82,6 +91,8 @@ pub struct Window {
     pub moves: String,
     pub theme_role: String,
     pub content: String,
+    /// The frame this window loads with, when the declaration binds one.
+    pub frame: Option<DeclaredFrame>,
     pub nodes: Vec<Node>,
     pub actions: Vec<Action>,
 }
@@ -187,7 +198,8 @@ impl Surface {
         let mut requires: Option<Requirement> = None;
         let mut windows: Vec<Window> = Vec::new();
 
-        for line in lines {
+        for (index, line) in lines.enumerate() {
+            let number = index + 2;
             if line.starts_with('#') {
                 continue;
             }
@@ -263,6 +275,7 @@ impl Surface {
                         moves: declared_list(Vocabulary::Moves, fields[14])?,
                         theme_role: declared(Vocabulary::ThemeRole, fields[15])?,
                         content: non_empty(&row, "content", fields[16])?,
+                        frame: None,
                         nodes: Vec::new(),
                         actions: Vec::new(),
                     });
@@ -323,6 +336,40 @@ impl Surface {
                         tool: non_empty(&row, "tool", fields[3])?,
                         target: non_empty(&row, "target", fields[4])?,
                     });
+                }
+                "frame" => {
+                    columns(key, &fields, 3)?;
+                    let window_id = fields[1].to_string();
+                    let index = windows
+                        .len()
+                        .checked_sub(1)
+                        .ok_or_else(|| Refusal::SurfaceOrder {
+                            row: "frame".to_string(),
+                        })?;
+                    if windows[index].id != window_id {
+                        return Err(Refusal::SurfaceOrder {
+                            row: format!("frame under window {window_id}"),
+                        });
+                    }
+                    let frame_id = non_empty(key, "frame", fields[2])?;
+                    if windows[index].frame.is_some() {
+                        return Err(Refusal::CellframeDuplicate {
+                            line: number,
+                            key: format!("frame for window {window_id}"),
+                        });
+                    }
+                    if windows.iter().any(|window| {
+                        window
+                            .frame
+                            .as_ref()
+                            .map_or(false, |bound| bound.id == frame_id)
+                    }) {
+                        return Err(Refusal::CellframeDuplicate {
+                            line: number,
+                            key: frame_id,
+                        });
+                    }
+                    windows[index].frame = Some(DeclaredFrame { id: frame_id, line: number });
                 }
                 other => {
                     return Err(Refusal::SurfaceRow {

@@ -163,6 +163,14 @@ pub enum Refusal {
         found: [u32; 2],
         allowed: [u32; 2],
     },
+    CellframeReference {
+        line: usize,
+        window: String,
+        frame: String,
+    },
+    CellframeUnreferenced {
+        frame: String,
+    },
 }
 
 impl Refusal {
@@ -200,6 +208,8 @@ impl Refusal {
             Refusal::CellframeBound { .. } => "cellframe-bound",
             Refusal::CellframeVocabulary { .. } => "cellframe-vocabulary",
             Refusal::CellframeExtent { .. } => "cellframe-extent",
+            Refusal::CellframeReference { .. } => "cellframe-reference",
+            Refusal::CellframeUnreferenced { .. } => "cellframe-unreferenced",
         }
     }
 
@@ -310,6 +320,18 @@ impl Refusal {
                 "frame {frame} is {} by {} and window {window} has {} by {} of content space; a \
                  frame fits its window or it is refused, never drawn through the chrome",
                 found[0], found[1], allowed[0], allowed[1]
+            ),
+            Refusal::CellframeReference {
+                line,
+                window,
+                frame,
+            } => format!(
+                "cellframe line {line}: window {window} binds frame {frame:?}, which this package \
+                 does not declare"
+            ),
+            Refusal::CellframeUnreferenced { frame } => format!(
+                "frame {frame:?} is declared by the package and bound by no declaration; an \
+                 unreachable frame is stated deliberately or it is not shipped"
             ),
         }
     }

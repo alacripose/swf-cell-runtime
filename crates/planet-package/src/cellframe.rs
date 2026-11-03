@@ -42,6 +42,7 @@
 //! is a refusal, not a truncation.
 
 use crate::frame::Refusal;
+use crate::surface::Surface;
 
 /// The pin. A different grammar is a different file, and an older one is refused rather than read.
 pub const HEADER: &str = "shploingus.cellframe/1";
@@ -876,6 +877,120 @@ fn read_vocabulary(
     } else {
         None
     }
+}
+
+
+/// A frame resolved to the window whose declaration binds it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Bound {
+    /// The window the declaration binds this frame to.
+    pub window: String,
+    /// The one-based line of the `frame` row that bound it.
+    pub line: usize,
+    /// The frame, read through this module's own grammar.
+    pub frame: CellFrame,
+}
+
+/// A package that loaded: its mount receipt and the frame each declaration resolves to.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Loaded {
+    pub receipt: crate::mount::Receipt,
+    pub frames: Vec<Bound>,
+}
+
+/// **Resolve every frame a package declares against the declarations that name them.**
+///
+/// `frames` is the package's frame artifacts, in the order the package lists them. Each is read
+/// through [`CellFrame::parse`] first, so a malformed frame is refused by its own grammar rather than
+/// by its reference. Then:
+///
+/// * a declaration naming an id the package does not declare is refused `cellframe-reference` with
+///   the line of the `frame` row — a reference that resolves to nothing is a window with no cells;
+/// * a frame no declaration names is refused `cellframe-unreferenced` — an unreachable frame looks
+///   mounted and is not;
+/// * the frame a window loads with is the frame its id names and nothing else, which is what each
+///   returned [`Bound`] records.
+pub fn resolve(surface: &Surface, frames: &[&str]) -> Result<Vec<Bound>, Refusals> {
+    let mut problems = Refusals::new();
+    let mut parsed: Vec<CellFrame> = Vec::new();
+    for source in frames {
+        match CellFrame::parse(source) {
+            Ok(frame) => parsed.push(frame),
+            Err(refusals) => {
+                for refusal in refusals.problems() {
+                    problems.refuse(refusal.clone());
+                }
+            }
+        }
+    }
+
+    let mut bound: Vec<Bound> = Vec::new();
+    for window in &surface.windows {
+        let Some(reference) = &window.frame else {
+            continue;
+        };
+        match parsed.iter().find(|frame| frame.id == reference.id) {
+            Some(frame) => bound.push(Bound {
+                window: window.id.clone(),
+                line: reference.line,
+                frame: frame.clone(),
+            }),
+            None => problems.refuse(Refusal::CellframeReference {
+                line: reference.line,
+                window: window.id.clone(),
+                frame: reference.id.clone(),
+            }),
+        }
+    }
+
+    for frame in &parsed {
+        if !bound.iter().any(|entry| entry.frame.id == frame.id) {
+            problems.refuse(Refusal::CellframeUnreferenced {
+                frame: frame.id.clone(),
+            });
+        }
+    }
+
+    if problems.is_empty() {
+        Ok(bound)
+    } else {
+        Err(problems)
+    }
+}
+
+/// **Load a package: mount the declaration, then resolve its frames.**
+///
+/// The reference is resolved here rather than deferred to a renderer, so a package whose declaration
+/// names a frame it does not declare is refused at load. The mount receipt is the surface's own, and
+/// the frames are the ones each declaration named.
+#[allow(clippy::too_many_arguments)]
+pub fn load(
+    frame: &crate::frame::Frame,
+    surface: &str,
+    documents: &[&str],
+    sequence: u64,
+    previous_sequence: u64,
+    at: u64,
+) -> Result<Loaded, Refusals> {
+    let mut problems = Refusals::new();
+    let receipt = match crate::mount::mount(frame, surface, sequence, previous_sequence, at) {
+        Ok(receipt) => receipt,
+        Err(refusal) => {
+            problems.refuse(refusal);
+            return Err(problems);
+        }
+    };
+    let body = match Surface::parse(&frame.payload) {
+        Ok(body) => body,
+        Err(refusal) => {
+            problems.refuse(refusal);
+            return Err(problems);
+        }
+    };
+    Ok(Loaded {
+        receipt,
+        frames: resolve(&body, documents)?,
+    })
 }
 
 /// **A frame is addressed to one window's content space**, so it must fit it.

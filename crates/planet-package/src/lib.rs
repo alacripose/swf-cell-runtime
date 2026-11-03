@@ -18,12 +18,17 @@ pub mod record;
 pub mod surface;
 pub mod vocabulary;
 
-pub use cellframe::{check_extent, CellFrame, FieldRef, Fill, MapView, Refusals, Run};
+pub use cellframe::{
+    check_extent, load, resolve, Bound, CellFrame, FieldRef, Fill, Loaded, MapView, Refusals,
+    Run,
+};
 pub use format_id::{id as schema_id, Outcome as FormatOutcome};
 pub use frame::{Frame, Kind, Refusal, DOMAIN, HEADER, MAGIC, PAYLOAD_LIMIT, SCHEMA};
 pub use mount::{mount, Receipt};
 pub use record::{ledger_code, mount_and_record, operation_id, MountRefusal, Recorded};
-pub use surface::{Action, Node, Requirement, Surface, Window, SURFACE_SCHEMA};
+pub use surface::{
+    Action, DeclaredFrame, Node, Requirement, Surface, Window, SURFACE_SCHEMA,
+};
 pub use vocabulary::{
     capability_rank, classify_role, RoleClass, CAPABILITIES, CHROME, LANES, MOVES, NODE_KINDS, RULES,
     THEME_ROLES, TYPE_ROLES, Vocabulary,
