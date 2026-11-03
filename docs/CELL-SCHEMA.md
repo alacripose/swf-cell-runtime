@@ -104,6 +104,12 @@ computation belongs in the code kind under its budgets, not in the binding, so t
 only while bindings stay declarative — which is the point.
 
 **Owner:** format owner.
+**Narrowed by the owning reader, 2026-11-03:** `cellframe.rs` refuses a field name it does not
+sample, refuses a second source for the same field, and refuses prose where a law token belongs,
+so the declarative form is the format's, not this proposal's preference. The recommendation above
+stands unchanged; what changes is that it is the reader's own refusal set rather than only a
+design choice.
+
 
 ## Q-6 — Does the first surface use cells at all?
 
@@ -183,3 +189,45 @@ formats are compared on one package. It is a declarative surface in the sense
 and attributes, refusals by name for anything else, and no script or style path. The numeric
 containment bounds that document names are not yet wired into that reader, and that is a named gap
 rather than a claim.
+
+### The v2 addendum's rule, and the reader that answers Q-1 and Q-5
+
+`docs/cellular_generativity_axis_civilian_expectations_prototype_rechecked.md` section 13 binds this
+port to the v2 streamed inventory, and it states its own precondition in CGA-21: a cellframe and a
+cell set use their owning versioned readers, and a guessed grammar is a refusal condition. Section
+13.10 lists the reads that must happen first. So the frame grammar is recorded here from the owning
+source rather than from a sample frame:
+
+- `shploingus-clean/crates/voxel-package/src/cellframe.rs` — the reader for `shploingus.cellframe/1`.
+  A header, then `frame<TAB>id`; the required keys `window`, `cols`, `rows`, `order` and `requires`;
+  the optional key `feature`; the draw rows `fill<TAB>col<TAB>row<TAB>cols<TAB>paper` and
+  `run<TAB>col<TAB>row<TAB>ink<TAB>text`, whose paper and ink are roles and never colours; and,
+  optional together, the sampling rows `field`, `shaper`, `projection`, `centre`, `cell`, `extent` and
+  `pitch`. The bounds are the format's: a 512 KiB declaration, a 512 by 512 grid, 16 384 cells, and a
+  cell size the format states. An unknown key, a duplicate key, a missing key, a row past the grid and
+  a frame that draws nothing are each refused by name in one pass.
+- `shploingus-clean/crates/voxel-package/src/cells.rs` — `package.cells` is a header and one `cells`
+  line selecting which drawing the package is a package of. The older declaration header is refused
+  at its file and line instead of being read under the newer rules, a declaration with no drawing
+  line is refused, and a package carrying no such file at all is an absence the caller states.
+
+**Q-1 is answered by that grammar**: several row kinds inside one frame — typed keys, field bindings
+and typed draw rows — not one cell row kind. **Q-5 is answered as far as the format answers it**: a
+binding is a declared field name plus a qualified law token (`elevation` answered by
+`terrain::elevation_m`). The reader refuses a field name it does not sample and refuses a second
+source for one field, so a path or an expression has nothing to bind to, and there is no second
+syntax to refuse because the grammar admits none.
+
+**What this document does not settle, and will not invent:** the exact contracts of `V4PKG002`,
+`SHPKG009`, `secure-shell.served/2`, `secure-shell.ingest/1`, `secure-shell.admission/1`,
+`civilian.axis-cells/1`, `civilian.decision/1`, `civilian.ticket/1`, `system1-agent/1`,
+`minecraft.cua-action/1`, `ensouled.frame/1` and `ensouled.action/1`. Section 13.10 names those as
+reads that precede implementation. Until they are read in this repository they are integration
+anchors, not permission to invent a schema, and no unit may cite them as an implemented contract.
+
+**Two gaps this record names rather than closes.** The numeric containment bounds the earlier
+expectations doc asks of a declarative surface — bytes, node count, depth, text length — are still
+not wired into `crates/planet-client/src/xml.rs`, which has named refusals but no budgets. And the
+format id reader upgrades a legacy numeric id to the computed one; CGA-21 refuses a *silent* version
+conversion, so that upgrade has to stay visible in the record it produces, not only in the value it
+returns.
