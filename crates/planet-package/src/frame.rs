@@ -172,6 +172,11 @@ pub enum Refusal {
     CellframeUnreferenced {
         frame: String,
     },
+    CellframeSurface {
+        line: usize,
+        window: String,
+        frame: String,
+    },
 }
 
 impl Refusal {
@@ -211,6 +216,7 @@ impl Refusal {
             Refusal::CellframeExtent { .. } => "cellframe-extent",
             Refusal::CellframeReference { .. } => "cellframe-reference",
             Refusal::CellframeUnreferenced { .. } => "cellframe-unreferenced",
+            Refusal::CellframeSurface { .. } => "cellframe-surface",
         }
     }
 
@@ -335,6 +341,15 @@ impl Refusal {
             Refusal::CellframeUnreferenced { frame } => format!(
                 "frame {frame:?} is declared by the package and bound by no declaration; an \
                  unreachable frame is stated deliberately or it is not shipped"
+            ),
+            Refusal::CellframeSurface {
+                line,
+                window,
+                frame,
+            } => format!(
+                "cellframe line {line}: window {window} binds frame {frame:?}, and the surface being \
+                 mounted declares no such window; a mount carries frames addressed at windows that \
+                 exist"
             ),
         }
     }

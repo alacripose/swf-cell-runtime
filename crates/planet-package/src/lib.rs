@@ -19,8 +19,8 @@ pub mod surface;
 pub mod vocabulary;
 
 pub use cellframe::{
-    check_extent, load, resolve, Bound, CellFrame, FieldRef, Fill, Loaded, MapView, Refusals,
-    Run,
+    check_extent, load, mount_loaded, resolve, Bound, CellFrame, FieldRef, Fill, Loaded, MapView,
+    Refusals, Run, SurfaceMount, WindowMount,
 };
 pub use format_id::{id as schema_id, Outcome as FormatOutcome};
 pub use frame::{Frame, Kind, Refusal, DOMAIN, HEADER, MAGIC, PAYLOAD_LIMIT, SCHEMA};

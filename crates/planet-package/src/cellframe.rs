@@ -1007,6 +1007,76 @@ pub fn load(
     })
 }
 
+/// One window of a mounted surface: the frame its declaration bound, already validated.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WindowMount {
+    /// The window the declaration binds this frame to.
+    pub window: String,
+    /// The one-based line of the `frame` row that bound it.
+    pub line: usize,
+    /// The frame resolved and extent-checked at load.
+    pub frame: CellFrame,
+}
+
+/// **A package mounted into one surface**: the surface's receipt and the frame each window carries.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SurfaceMount {
+    /// The mount receipt the surface produced, unchanged by the frame work.
+    pub receipt: crate::mount::Receipt,
+    /// The bound windows, in declaration order.
+    pub windows: Vec<WindowMount>,
+}
+
+impl SurfaceMount {
+    /// The frame a window carries, or `None` when its declaration bound none.
+    pub fn frame_of(&self, window: &str) -> Option<&CellFrame> {
+        self.windows
+            .iter()
+            .find(|entry| entry.window == window)
+            .map(|entry| &entry.frame)
+    }
+}
+
+/// **Mount a loaded package into the surface it was loaded for.**
+///
+/// The bindings arrive resolved and extent-checked, so this consumes them as they are: nothing is
+/// re-resolved, nothing is re-measured, and nothing is drawn. The one question the mount asks of its
+/// own pairing is whether every bound window is a window this surface declares — otherwise the mount
+/// would carry a frame addressed at a window that does not exist. A refusal names the window, the
+/// frame and the line of the binding row that made the claim.
+pub fn mount_loaded(loaded: &Loaded, surface: &Surface) -> Result<SurfaceMount, Refusals> {
+    let mut problems = Refusals::new();
+    let mut windows: Vec<WindowMount> = Vec::new();
+    for entry in &loaded.frames {
+        if !surface
+            .windows
+            .iter()
+            .any(|window| window.id == entry.window)
+        {
+            problems.refuse(Refusal::CellframeSurface {
+                line: entry.line,
+                window: entry.window.clone(),
+                frame: entry.frame.id.clone(),
+            });
+            continue;
+        }
+        windows.push(WindowMount {
+            window: entry.window.clone(),
+            line: entry.line,
+            frame: entry.frame.clone(),
+        });
+    }
+    if problems.is_empty() {
+        Ok(SurfaceMount {
+            receipt: loaded.receipt.clone(),
+            windows,
+        })
+    } else {
+        Err(problems)
+    }
+}
+
+
 /// **A frame is addressed to one window's content space, and the two extents agree.**
 ///
 /// The owning reader refuses a frame that does not fit its window by cell count rather than drawing

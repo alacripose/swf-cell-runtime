@@ -1,5 +1,7 @@
 use planet_package::cellframe::HEADER as CELLFRAME_HEADER;
-use planet_package::{load, resolve, Frame, Kind, Refusal, Surface, SURFACE_SCHEMA};
+use planet_package::{
+    load, mount_loaded, resolve, Frame, Kind, Refusal, Surface, SURFACE_SCHEMA,
+};
 
 const WINDOW_COLS: usize = 17;
 
@@ -272,6 +274,72 @@ fn a_frame_addressed_to_another_window_is_refused() {
     let package = Frame::new(Kind::Decl, surface.as_bytes()).expect("a declaration frame");
     let refusals = load(&package, "alpha-shell", &[&elsewhere], 1, 0, 100)
         .expect_err("the frame names a window the binding does not");
+    assert_eq!(refusals.code(), "cellframe-extent");
+    assert!(refusals.message().contains("line 5"), "{}", refusals.message());
+}
+
+#[test]
+fn a_loaded_package_mounts_into_the_surface_it_was_loaded_for() {
+    let surface = parse(&surface_document(&[("main", "MAP-0001"), ("plan", "MAP-0002")]));
+    let alpha = frame_document("MAP-0001", "main", "ALPHA");
+    let beta = frame_document("MAP-0002", "plan", "BETA");
+    let package = Frame::new(Kind::Decl, surface_document(&[("main", "MAP-0001"), ("plan", "MAP-0002")]).as_bytes())
+        .expect("a declaration frame");
+    let loaded = load(&package, "alpha-shell", &[&alpha, &beta], 1, 0, 100).expect("it loads");
+    let mounted = mount_loaded(&loaded, &surface).expect("both windows are declared");
+
+    assert_eq!(mounted.windows.len(), 2);
+    assert_eq!(mounted.receipt, loaded.receipt);
+    assert_eq!(mounted.frame_of("main").map(|frame| frame.runs[0].text.as_str()), Some("ALPHA"));
+    assert_eq!(mounted.frame_of("plan").map(|frame| frame.runs[0].text.as_str()), Some("BETA"));
+    assert_eq!(mounted.windows[0].line, 5);
+    assert_eq!(mounted.windows[1].line, 7);
+    assert_eq!(mounted.frame_of("absent"), None);
+}
+
+#[test]
+fn mounting_into_a_surface_that_lacks_the_bound_window_is_refused() {
+    let source = parse(&surface_document(&[("main", "MAP-0001")]));
+    let alpha = frame_document("MAP-0001", "main", "ALPHA");
+    let package = Frame::new(Kind::Decl, surface_document(&[("main", "MAP-0001")]).as_bytes())
+        .expect("a declaration frame");
+    let loaded = load(&package, "alpha-shell", &[&alpha], 1, 0, 100).expect("it loads");
+
+    // A surface that declares a different window: the binding has nowhere to mount.
+    let elsewhere = parse(&surface_document(&[("rail", "MAP-0001")]));
+    let refusals = mount_loaded(&loaded, &elsewhere).expect_err("rail is not the bound window");
+    assert_eq!(refusals.code(), "cellframe-surface");
+    let message = refusals.message();
+    assert!(message.contains("cellframe line 5"), "the binding line is missing: {message}");
+    assert!(message.contains("main"), "the window id is missing: {message}");
+    assert!(message.contains("MAP-0001"), "the frame id is missing: {message}");
+    assert!(mount_loaded(&loaded, &source).is_ok(), "the surface it was loaded for still mounts");
+}
+
+#[test]
+fn mounting_consumes_the_validated_bindings_rather_than_rechecking_them() {
+    let surface = parse(&surface_document(&[("main", "MAP-0001")]));
+    let alpha = frame_document("MAP-0001", "main", "ALPHA");
+    let package = Frame::new(Kind::Decl, surface_document(&[("main", "MAP-0001")]).as_bytes())
+        .expect("a declaration frame");
+    let loaded = load(&package, "alpha-shell", &[&alpha], 1, 0, 100).expect("it loads");
+
+    let first = mount_loaded(&loaded, &surface).expect("it mounts");
+    let second = mount_loaded(&loaded, &surface).expect("mounting again is the same mount");
+    assert_eq!(first, second, "a mount is a function of the validated bindings");
+    assert_eq!(first.windows[0].frame, loaded.frames[0].frame, "the frame is carried, not rebuilt");
+    assert_eq!(first.receipt.digest, loaded.receipt.digest);
+    // The mount adds no extent refusal of its own: the extent question was answered at load.
+    assert!(first.frame_of("main").is_some());
+}
+
+#[test]
+fn a_frame_smaller_than_its_window_never_reaches_a_mount() {
+    let surface_text = surface_document(&[("main", "MAP-0001")]);
+    let narrow = frame_document_sized("MAP-0001", "main", "ALPHA", 40, 18);
+    let package = Frame::new(Kind::Decl, surface_text.as_bytes()).expect("a declaration frame");
+    let refusals = load(&package, "alpha-shell", &[&narrow], 1, 0, 100)
+        .expect_err("40 by 18 disagrees with 42 by 18");
     assert_eq!(refusals.code(), "cellframe-extent");
     assert!(refusals.message().contains("line 5"), "{}", refusals.message());
 }
