@@ -51,6 +51,9 @@ under it; a mouse capture also carries a touch move.
 
 ## Closing
 
-- Commit: this unit's commit, fast-forwarded onto `master`; nothing pushed
+- Commit: `43463fb`, which carries this unit together with TICKET-0059; the first commit for this unit
+  was refused by the pre-commit gate and its staged files were swept into that one. Recorded as
+  TICKET-0061 / LEDGER-0067 rather than rewritten.
+- Push: none - the repository has no configured remote
 - Shell gate state: unassigned — only the shell assigns held/absent/refused
 - Ledger entry: LEDGER-0064

@@ -36,6 +36,12 @@ routes what the package declares.
   (TICKET-0060).
 - `port_gate.py check` does not compare the record's identity with the tree; only a fresh `git worktree`
   checkout does. Both are required evidence.
+- `tickets/` and `ledger/` are fixture inputs, so writing a ticket or a ledger row invalidates the record
+  before the commit. Regenerate the record after the ticket and row exist, then commit once with an
+  explicit pathspec: a refused commit leaves its index staged, and the next plain `git commit` will carry
+  it (TICKET-0061).
+- One unit is one commit. Two units stacked in one commit cannot be cited by both ledger rows, and the
+  gate does not catch that today.
 
 ## Gates
 
