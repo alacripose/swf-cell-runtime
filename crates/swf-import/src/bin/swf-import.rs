@@ -82,6 +82,16 @@ fn main() -> ExitCode {
     if let Err(error) = std::fs::write(&out, frame.encode()) {
         return abort(stream, "stream-io", format!("write {}: {error}", out.display()));
     }
+    // The frame the stage window binds, beside the package: a package that declares a window and
+    // ships nothing for it draws an empty stage, and that is a different claim from drawing it.
+    let frame_path = out.with_extension("frame");
+    let frame_bytes = match swf_import::emit::frame_bytes(&header) {
+        Ok(bytes) => bytes,
+        Err(refusal) => return abort_stream(stream, refusal.code()),
+    };
+    if let Err(error) = std::fs::write(&frame_path, frame_bytes) {
+        return abort(stream, "stream-io", format!("write {}: {error}", frame_path.display()));
+    }
 
     let mut ledger = match load(&ledger_path) {
         Ok(ledger) => ledger,
@@ -149,6 +159,7 @@ fn main() -> ExitCode {
             println!("digest {}", receipt.digest);
             println!("seq {seq}");
             println!("package {}", out.display());
+            println!("frame {}", frame_path.display());
             if let Some(stream) = stream.as_ref() {
                 println!("stream {}", stream.path().display());
             }

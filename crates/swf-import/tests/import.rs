@@ -99,9 +99,14 @@ fn the_emitted_package_mounts_through_the_canonical_path() {
     assert_eq!(receipt.digest, frame.frame_digest_hex());
 
     let doc = emit::surface_document("swf1", &header, &counts, tags.len(), &inventory);
-    assert!(doc.contains("550"), "the stage width is the measured one");
-    assert!(doc.contains("400"), "the stage height is the measured one");
+    // The window's content space is the frame's grid, because a frame's extent must equal it exactly
+    // and a frame counts in its own cells: 550 by 400 pixels is 69 by 25 cells, rounded up.
+    assert!(doc.contains("\t69\t25\t"), "the stage is the measured cells, not the pixel count");
     assert!(doc.contains("12 frames at 40 fps"), "the frame count is measured");
+    assert!(
+        doc.contains(&format!("frame\tstage\t{}\n", emit::FRAME_ID)),
+        "the stage window binds the frame the package ships"
+    );
 }
 
 #[test]
