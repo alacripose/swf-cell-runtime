@@ -2,7 +2,7 @@
 //! declared window rectangles, focus from a press, capture across a drag, key repeat, and the shapes
 //! that route to nothing. No window is opened and no live input is produced.
 
-use planet_client::input::{Button, Cell, Event, Key, Routed, Router};
+use planet_client::input::{Button, Cell, Event, Key, Routed, Router, TouchPhase};
 use planet_package::Surface;
 
 fn surface() -> Surface {
@@ -203,4 +203,100 @@ fn a_press_outside_every_window_routes_nothing_and_keeps_the_focus() {
     );
     assert_eq!(router.focus(), Some("main"), "a press on nothing moves no focus");
     assert_eq!(router.captured(), None);
+}
+
+
+#[test]
+fn a_touch_down_focuses_and_captures_and_its_move_survives_leaving_the_window() {
+    let mut router = router();
+    assert_eq!(
+        router.handle(Event::TouchDown { id: 7, x: 17, y: 17 }),
+        Routed::Touch {
+            window: Some("main".to_string()),
+            cell: cell(2, 1),
+            id: 7,
+            phase: TouchPhase::Down,
+        }
+    );
+    assert_eq!(router.focus(), Some("main"));
+    assert_eq!(router.captured(), Some("main"));
+    assert_eq!(
+        router.handle(Event::TouchMoved { id: 7, x: 900, y: 900 }),
+        Routed::Touch {
+            window: Some("main".to_string()),
+            cell: None,
+            id: 7,
+            phase: TouchPhase::Moved,
+        },
+        "the finger left the window and the capture still names it"
+    );
+    assert_eq!(
+        router.handle(Event::TouchUp { id: 7 }),
+        Routed::Touch {
+            window: Some("main".to_string()),
+            cell: None,
+            id: 7,
+            phase: TouchPhase::Up,
+        }
+    );
+    assert_eq!(router.captured(), None);
+}
+
+#[test]
+fn a_touch_outside_every_window_names_no_window_and_moves_no_focus() {
+    let mut router = router();
+    assert_eq!(
+        router.handle(Event::TouchDown { id: 1, x: 500, y: 500 }),
+        Routed::Touch {
+            window: None,
+            cell: None,
+            id: 1,
+            phase: TouchPhase::Down,
+        }
+    );
+    assert_eq!(router.focus(), None);
+    assert_eq!(router.captured(), None);
+    assert_eq!(
+        router.handle(Event::TouchUp { id: 1 }),
+        Routed::Touch {
+            window: None,
+            cell: None,
+            id: 1,
+            phase: TouchPhase::Up,
+        }
+    );
+}
+
+#[test]
+fn a_touch_move_without_a_down_still_reports_the_window_under_it() {
+    let mut router = router();
+    assert_eq!(
+        router.handle(Event::TouchMoved { id: 3, x: 340, y: 8 }),
+        Routed::Touch {
+            window: Some("dock".to_string()),
+            cell: cell(0, 0),
+            id: 3,
+            phase: TouchPhase::Moved,
+        }
+    );
+}
+
+#[test]
+fn a_mouse_capture_also_carries_a_touch_move() {
+    let mut router = router();
+    router.handle(Event::PointerMoved { x: 340, y: 8 });
+    router.handle(Event::PointerPressed {
+        button: Button::Primary,
+    });
+    assert_eq!(
+        router.handle(Event::TouchMoved { id: 9, x: 4, y: 4 }),
+        Routed::Touch {
+            window: Some("dock".to_string()),
+            cell: None,
+            id: 9,
+            phase: TouchPhase::Moved,
+        },
+        "one capture, whichever hand is on it"
+    );
+    assert_eq!(router.focus(), Some("dock"));
 }

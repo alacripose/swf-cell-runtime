@@ -110,6 +110,13 @@ NOT_ENFORCED = (
         "blockedBy": "no client, no shell-declared tests",
         "note": "No repository-local test can witness a mounted client surface.",
     },
+    {
+        "check": "client_run_h9",
+        "patch": "PATCH-0005",
+        "owner": "user",
+        "blockedBy": "manual window run",
+        "note": "A human runs the client and reports what appears; H9 stays unclaimed until then.",
+    },
 )
 
 

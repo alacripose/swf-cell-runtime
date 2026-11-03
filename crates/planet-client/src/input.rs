@@ -1,4 +1,4 @@
-//! The input router: pointer and key events turned into intents against the declared surface.
+//! The input router: pointer, touch and key events turned into intents against the declared surface.
 //!
 //! `docs/SWF_CELL_PACKAGE_IMPLEMENTATION_PLAN_v3.md` §4.7 puts this in the client: *"Focus, key repeat,
 //! pointer capture, dragging, wheel behavior, touch (when present), and event propagation are
@@ -11,6 +11,16 @@
 //! `h` in cells) and the format's own cell size; a pointer outside every window is outside, and a
 //! pointer over no focused window routes to no window rather than to a guess. What a press *means*, and
 //! the source game's hit areas and button semantics, are compiled by the shell and stay the shell's.
+//!
+//! Touch is folded onto the pointer path rather than given a second state machine: a touch down sets
+//! focus and captures exactly as a press does, a touch move is hit-tested through the same capture, and
+//! a touch up ends it. The routed shape still says `Touch`, so a caller can tell a finger from a mouse
+//! without either having to re-derive the geometry.
+//!
+//! Event propagation into the surface's node tree is deliberately absent: nodes declare an id, a
+//! parent, a kind, a role and a value, and no geometry, while the frame's drawn rectangles carry no node
+//! identity. Routing a press into a node would mean inventing the rectangle it lands in, so the
+//! window-and-cell route is the most the declaration can decide today.
 
 use planet_package::Surface;
 
@@ -46,6 +56,14 @@ pub enum Key {
     ArrowDown,
 }
 
+/// Which phase a touch reports.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TouchPhase {
+    Down,
+    Moved,
+    Up,
+}
+
 /// One event, as the window layer hands it over. Synthetic in every test here.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Event {
@@ -62,6 +80,19 @@ pub enum Event {
     PointerLeft,
     Wheel {
         delta: i64,
+    },
+    TouchDown {
+        id: u64,
+        x: i64,
+        y: i64,
+    },
+    TouchMoved {
+        id: u64,
+        x: i64,
+        y: i64,
+    },
+    TouchUp {
+        id: u64,
     },
     KeyPressed(Key),
     KeyReleased(Key),
@@ -95,6 +126,13 @@ pub enum Routed {
         window: String,
         cell: Option<Cell>,
         delta: i64,
+    },
+    /// A touch, folded onto the pointer path. `window` is `None` for a touch that began on nothing.
+    Touch {
+        window: Option<String>,
+        cell: Option<Cell>,
+        id: u64,
+        phase: TouchPhase,
     },
     /// `repeat` is true when the key was already held: the client's own key-repeat bookkeeping.
     Key {
@@ -178,6 +216,19 @@ impl Router {
         self.pointer
     }
 
+    /// The declared window rectangles the router hit-tests, in cells, in declaration order.
+    pub fn window_cells(&self) -> Vec<(String, [i64; 4])> {
+        self.windows
+            .iter()
+            .map(|window| {
+                (
+                    window.id.clone(),
+                    [window.left, window.top, window.right, window.bottom],
+                )
+            })
+            .collect()
+    }
+
     fn window_at(&self, x: i64, y: i64) -> Option<&Placed> {
         self.windows.iter().find(|window| window.contains(x, y))
     }
@@ -186,22 +237,28 @@ impl Router {
         self.windows.iter().find(|window| window.id == id)
     }
 
+    fn window_under_capture(&self, x: i64, y: i64) -> (Option<String>, Option<Cell>) {
+        match self.captured.clone() {
+            Some(window) => {
+                let cell = self.placed(&window).and_then(|placed| placed.cell(x, y));
+                (Some(window), cell)
+            }
+            None => match self.window_at(x, y) {
+                Some(placed) => (Some(placed.id.clone()), placed.cell(x, y)),
+                None => (None, None),
+            },
+        }
+    }
+
     /// One event in, one routing decision out. State changes only where the plan names it: focus from a
-    /// press, capture from a press and release, key-repeat from the held set.
+    /// press or a touch down, capture from a press and release, key-repeat from the held set.
     pub fn handle(&mut self, event: Event) -> Routed {
         match event {
             Event::PointerMoved { x, y } => {
                 self.pointer = Some((x, y));
-                if let Some(window) = self.captured.clone() {
-                    let cell = self.placed(&window).and_then(|placed| placed.cell(x, y));
-                    return Routed::Hover { window, cell };
-                }
-                match self.window_at(x, y) {
-                    Some(placed) => Routed::Hover {
-                        window: placed.id.clone(),
-                        cell: placed.cell(x, y),
-                    },
-                    None => Routed::Nothing,
+                match self.window_under_capture(x, y) {
+                    (Some(window), cell) => Routed::Hover { window, cell },
+                    (None, _) => Routed::Nothing,
                 }
             }
             Event::PointerPressed { .. } => {
@@ -257,6 +314,55 @@ impl Router {
                     window,
                     cell,
                     delta,
+                }
+            }
+            Event::TouchDown { id, x, y } => {
+                self.pointer = Some((x, y));
+                match self.window_at(x, y) {
+                    Some(placed) => {
+                        let window = placed.id.clone();
+                        let cell = placed.cell(x, y);
+                        self.captured = Some(window.clone());
+                        self.focus = Some(window.clone());
+                        Routed::Touch {
+                            window: Some(window),
+                            cell,
+                            id,
+                            phase: TouchPhase::Down,
+                        }
+                    }
+                    None => Routed::Touch {
+                        window: None,
+                        cell: None,
+                        id,
+                        phase: TouchPhase::Down,
+                    },
+                }
+            }
+            Event::TouchMoved { id, x, y } => {
+                self.pointer = Some((x, y));
+                let (window, cell) = self.window_under_capture(x, y);
+                Routed::Touch {
+                    window,
+                    cell,
+                    id,
+                    phase: TouchPhase::Moved,
+                }
+            }
+            Event::TouchUp { id } => {
+                let window = self.captured.clone();
+                let cell = match (window.as_deref(), self.pointer) {
+                    (Some(window), Some((x, y))) => {
+                        self.placed(window).and_then(|placed| placed.cell(x, y))
+                    }
+                    _ => None,
+                };
+                self.captured = None;
+                Routed::Touch {
+                    window,
+                    cell,
+                    id,
+                    phase: TouchPhase::Up,
                 }
             }
             Event::KeyPressed(key) => {

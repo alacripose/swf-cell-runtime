@@ -22,7 +22,10 @@ use glyphon::{
 };
 use pollster::block_on;
 use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
+use crate::font::CELL_H;
+use crate::input::{Button, Event, Key, Router};
+use winit::event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase as WinitTouchPhase, WindowEvent};
+use winit::keyboard::{Key as LogicalKey, NamedKey};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::{Window, WindowId};
 
@@ -350,6 +353,7 @@ struct App {
     scene: Scene,
     quads: Vec<Quad>,
     state: Option<State>,
+    router: Option<Router>,
 }
 
 impl ApplicationHandler for App {
@@ -375,6 +379,7 @@ impl ApplicationHandler for App {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        self.route(&event);
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
@@ -404,6 +409,89 @@ impl ApplicationHandler for App {
     }
 }
 
+impl App {
+    /// One window event in, one routing decision logged. The router is the same code the headless tests
+    /// exercise; this only translates winit's vocabulary into it and prints what came back.
+    fn route(&mut self, event: &WindowEvent) {
+        let Some(router) = self.router.as_mut() else {
+            return;
+        };
+        let routed = match event {
+            WindowEvent::CursorMoved { position, .. } => router.handle(Event::PointerMoved {
+                x: position.x.round() as i64,
+                y: position.y.round() as i64,
+            }),
+            WindowEvent::CursorLeft { .. } => router.handle(Event::PointerLeft),
+            WindowEvent::MouseInput { state, button, .. } => {
+                let button = match button {
+                    MouseButton::Left => Button::Primary,
+                    MouseButton::Right => Button::Secondary,
+                    MouseButton::Middle => Button::Middle,
+                    _ => return,
+                };
+                match state {
+                    ElementState::Pressed => router.handle(Event::PointerPressed { button }),
+                    ElementState::Released => router.handle(Event::PointerReleased { button }),
+                }
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let delta = match delta {
+                    MouseScrollDelta::LineDelta(_, lines) => *lines as i64,
+                    MouseScrollDelta::PixelDelta(at) => (at.y / CELL_H as f64) as i64,
+                };
+                router.handle(Event::Wheel { delta })
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let Some(key) = logical_key(&event.logical_key) else {
+                    return;
+                };
+                match event.state {
+                    ElementState::Pressed => {
+                        if let Some(glyph) = event.text.as_ref().and_then(|text| text.chars().next()) {
+                            eprintln!("routed {:?}", router.handle(Event::Text(glyph)));
+                        }
+                        router.handle(Event::KeyPressed(key))
+                    }
+                    ElementState::Released => router.handle(Event::KeyReleased(key)),
+                }
+            }
+            WindowEvent::Touch(touch) => {
+                let x = touch.location.x.round() as i64;
+                let y = touch.location.y.round() as i64;
+                match touch.phase {
+                    WinitTouchPhase::Started => router.handle(Event::TouchDown { id: touch.id, x, y }),
+                    WinitTouchPhase::Moved => router.handle(Event::TouchMoved { id: touch.id, x, y }),
+                    WinitTouchPhase::Ended | WinitTouchPhase::Cancelled => {
+                        router.handle(Event::TouchUp { id: touch.id })
+                    }
+                }
+            }
+            _ => return,
+        };
+        eprintln!("routed {routed:?}");
+    }
+}
+
+/// The router's key vocabulary, read from the logical key the platform reported.
+fn logical_key(key: &LogicalKey) -> Option<Key> {
+    match key {
+        LogicalKey::Character(text) => text.chars().next().map(Key::Character),
+        LogicalKey::Named(named) => Some(match named {
+            NamedKey::Enter => Key::Enter,
+            NamedKey::Escape => Key::Escape,
+            NamedKey::Tab => Key::Tab,
+            NamedKey::Space => Key::Space,
+            NamedKey::Backspace => Key::Backspace,
+            NamedKey::ArrowLeft => Key::ArrowLeft,
+            NamedKey::ArrowRight => Key::ArrowRight,
+            NamedKey::ArrowUp => Key::ArrowUp,
+            NamedKey::ArrowDown => Key::ArrowDown,
+            _ => return None,
+        }),
+        _ => None,
+    }
+}
+
 /// Open one window over `scene` and run its event loop until the window closes.
 pub fn run(scene: Scene) -> Result<(), Box<dyn Error>> {
     run_with_batch(scene, Vec::new())
@@ -414,12 +502,29 @@ pub fn run(scene: Scene) -> Result<(), Box<dyn Error>> {
 /// The batch is projected for the surface's own size by [`crate::present`] — twice, once here and
 /// again on every resize — so a resize never draws a stale projection.
 pub fn run_with_batch(scene: Scene, quads: Vec<Quad>) -> Result<(), Box<dyn Error>> {
+    run_app(scene, quads, None)
+}
+
+/// Open one window over `scene`, the frame's draw batch and an input router, and run until it closes.
+///
+/// The router arrives built from the adopted surface, so this layer still parses nothing and
+/// re-measures nothing: it forwards what the platform reports and prints the routed shape.
+pub fn run_with_input(
+    scene: Scene,
+    quads: Vec<Quad>,
+    router: Router,
+) -> Result<(), Box<dyn Error>> {
+    run_app(scene, quads, Some(router))
+}
+
+fn run_app(scene: Scene, quads: Vec<Quad>, router: Option<Router>) -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Wait);
     let mut app = App {
         scene,
         quads,
         state: None,
+        router,
     };
     event_loop.run_app(&mut app)?;
     Ok(())

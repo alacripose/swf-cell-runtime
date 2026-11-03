@@ -4,12 +4,15 @@
 //! shows the scene the mount answers, the cells the palette resolved, the picture those cells paint
 //! and the batch that picture projects into. The batch is handed to the window: the one device path in
 //! the client draws it as coloured instances before the text. Nothing here parses a frame, a surface
-//! or a package, and nothing here pairs a window with a frame: the mount did that.
+//! or a package, and nothing here pairs a window with a frame: the mount did that. It takes one thing
+//! from the surface, the declared window rectangles, to build the input router, which then receives
+//! the platform's events and prints the routed shape.
 
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use planet_client::batch::Quad;
+use planet_client::input::Router;
 use planet_client::palette::Palette;
 use planet_client::render::{self, Scene};
 use planet_client::{batch, draw, picture, scene, CellMount};
@@ -49,8 +52,8 @@ fn frame_documents() -> Vec<String> {
         .collect()
 }
 
-/// The scene to show, and the batch the window should present over it.
-fn opened() -> (Scene, Vec<Quad>) {
+/// The scene to show, the batch the window should present over it, and the router over its windows.
+fn opened() -> (Scene, Vec<Quad>, Option<Router>) {
     let Some(path) = newest(Path::new("generated"), "pkg") else {
         return (
             Scene::new(
@@ -58,6 +61,7 @@ fn opened() -> (Scene, Vec<Quad>) {
                 vec!["run the importer first: swf-import <input.swf> generated/swf1.pkg generated/mount-ledger.tsv swf1".to_string()],
             ),
             Vec::new(),
+            None,
         );
     };
     let bytes = match std::fs::read(&path) {
@@ -66,6 +70,7 @@ fn opened() -> (Scene, Vec<Quad>) {
             return (
                 Scene::new(format!("{}: {error}", path.display()), Vec::new()),
                 Vec::new(),
+                None,
             )
         }
     };
@@ -81,9 +86,11 @@ fn opened() -> (Scene, Vec<Quad>) {
                     vec![refusals.message()],
                 ),
                 Vec::new(),
+                None,
             )
         }
     };
+    let router = Router::new(&adopted.surface);
     let mut shown = scene::from_adopted(adopted);
     let mut quads: Vec<Quad> = Vec::new();
     match draw::rasters(adopted, &Palette::declared()) {
@@ -123,10 +130,13 @@ fn opened() -> (Scene, Vec<Quad>) {
             refusals.message()
         )),
     }
-    (shown, quads)
+    (shown, quads, Some(router))
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (shown, quads) = opened();
-    render::run_with_batch(shown, quads)
+    let (shown, quads, router) = opened();
+    match router {
+        Some(router) => render::run_with_input(shown, quads, router),
+        None => render::run_with_batch(shown, quads),
+    }
 }
