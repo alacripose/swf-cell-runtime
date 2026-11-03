@@ -41,7 +41,7 @@ impl Kind {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Refusal {
     FrameMagic {
         found: String,
@@ -119,6 +119,50 @@ pub enum Refusal {
         found: String,
         current: String,
     },
+    CellframeSchema {
+        found: String,
+        supported: &'static str,
+    },
+    CellframeRow {
+        line: usize,
+        row: String,
+    },
+    CellframeKey {
+        line: usize,
+        key: String,
+    },
+    CellframeDuplicate {
+        line: usize,
+        key: String,
+    },
+    CellframeMissing {
+        key: String,
+    },
+    CellframeGrid {
+        row: String,
+    },
+    CellframeEmpty {
+        id: String,
+    },
+    CellframeBinding {
+        line: usize,
+        field: String,
+    },
+    CellframeBound {
+        bound: &'static str,
+        limit: u64,
+        found: u64,
+    },
+    CellframeVocabulary {
+        vocabulary: &'static str,
+        found: String,
+    },
+    CellframeExtent {
+        frame: String,
+        window: String,
+        found: [u32; 2],
+        allowed: [u32; 2],
+    },
 }
 
 impl Refusal {
@@ -145,6 +189,17 @@ impl Refusal {
             Refusal::SurfaceWindows { .. } => "surface-windows",
             Refusal::FormatHashMismatch { .. } => "format-hash-mismatch",
             Refusal::FormatIdLegacyEmitted { .. } => "format-id-legacy-emitted",
+            Refusal::CellframeSchema { .. } => "cellframe-schema",
+            Refusal::CellframeRow { .. } => "cellframe-row",
+            Refusal::CellframeKey { .. } => "cellframe-key",
+            Refusal::CellframeDuplicate { .. } => "cellframe-duplicate",
+            Refusal::CellframeMissing { .. } => "cellframe-missing",
+            Refusal::CellframeGrid { .. } => "cellframe-grid",
+            Refusal::CellframeEmpty { .. } => "cellframe-empty",
+            Refusal::CellframeBinding { .. } => "cellframe-binding",
+            Refusal::CellframeBound { .. } => "cellframe-bound",
+            Refusal::CellframeVocabulary { .. } => "cellframe-vocabulary",
+            Refusal::CellframeExtent { .. } => "cellframe-extent",
         }
     }
 
@@ -217,6 +272,45 @@ impl Refusal {
             Refusal::FormatIdLegacyEmitted { found, current } => {
                 format!("format id {found} is legacy; a new document carries {current}")
             }
+            Refusal::CellframeSchema { found, supported } => {
+                format!(
+                    "declaration header {found:?} is not {supported}; a different grammar is a \
+                     different file, and an older one is refused rather than read"
+                )
+            }
+            Refusal::CellframeRow { line, row } => format!("cellframe line {line}: {row}"),
+            Refusal::CellframeKey { line, key } => {
+                format!("cellframe line {line}: {key:?} is not a key this grammar defines")
+            }
+            Refusal::CellframeDuplicate { line, key } => {
+                format!("cellframe line {line}: {key:?} is declared twice; a key appears once")
+            }
+            Refusal::CellframeMissing { key } => {
+                format!("the frame declares no {key:?}; every listed key is required")
+            }
+            Refusal::CellframeGrid { row } => row.clone(),
+            Refusal::CellframeEmpty { id } => {
+                format!("frame {id:?} draws nothing; an erased window has to be stated as one")
+            }
+            Refusal::CellframeBinding { line, field } => format!("cellframe line {line}: {field}"),
+            Refusal::CellframeBound {
+                bound,
+                limit,
+                found,
+            } => format!("{bound} {found} exceeds the format's ceiling of {limit}"),
+            Refusal::CellframeVocabulary { vocabulary, found } => {
+                format!("{vocabulary} {found:?} is not declared by this package's vocabulary section")
+            }
+            Refusal::CellframeExtent {
+                frame,
+                window,
+                found,
+                allowed,
+            } => format!(
+                "frame {frame} is {} by {} and window {window} has {} by {} of content space; a \
+                 frame fits its window or it is refused, never drawn through the chrome",
+                found[0], found[1], allowed[0], allowed[1]
+            ),
         }
     }
 }
