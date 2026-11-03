@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/planet-aead", "crates/planet-client", "crates/planet-package", "crates/planet-shell-ledger",
+members = ["crates/planet-aead", "crates/planet-client", "crates/planet-package", "crates/planet-save", "crates/planet-shell-ledger",
     "crates/swf-import",
 ]
 

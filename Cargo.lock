@@ -1545,6 +1545,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "planet-save"
+version = "0.1.0"
+dependencies = [
+ "planet-shell-ledger",
+]
+
+[[package]]
 name = "planet-shell-ledger"
 version = "0.1.0"
 

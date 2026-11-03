@@ -1,0 +1,11 @@
+[package]
+name = "planet-save"
+description = "The generic save/recovery transaction machinery the shell calls; mechanics only, no live state."
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+planet-shell-ledger = { path = "../planet-shell-ledger" }
+
+[dev-dependencies]
+planet-shell-ledger = { path = "../planet-shell-ledger" }
