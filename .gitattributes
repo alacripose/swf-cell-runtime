@@ -1,0 +1,13 @@
+# The gate's fixture inputs are hashed byte for byte (tools/port_gate.py, fixture_identity), so their
+# line endings are pinned: a checkout must reproduce exactly the bytes the committed selftest record
+# was generated against. Without this, core.autocrlf rewrites these files to CRLF on checkout and the
+# record silently certifies a tree that no longer exists.
+/AGENTS.md text eol=lf
+/.gitignore text eol=lf
+/.github/** text eol=lf
+/config/** text eol=lf
+/docs/** text eol=lf
+/ledger/** text eol=lf
+/patches/** text eol=lf
+/tickets/** text eol=lf
+/tools/** text eol=lf
