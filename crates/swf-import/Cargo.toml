@@ -8,3 +8,8 @@ planet-aead = { path = "../planet-aead" }
 planet-package = { path = "../planet-package" }
 planet-shell-ledger = { path = "../planet-shell-ledger" }
 flate2 = "1"
+
+[dev-dependencies]
+# The end-to-end test paints the imported package through the client's own path, so "the frames
+# carry real pixel data" is asserted by the code that draws rather than by a second renderer.
+planet-client = { path = "../planet-client" }

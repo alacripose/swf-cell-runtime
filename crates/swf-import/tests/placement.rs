@@ -50,12 +50,13 @@ fn translate_only(x: i32, y: i32) -> Vec<u8> {
     let mut w = Writer::new();
     w.bit(0); // no scale
     w.bit(0); // no rotation
-    w.bits(0, 5);
-    w.align();
+    // No alignment and no padding field: the format packs the matrix continuously, so the translate
+    // width follows the rotation group bit-immediately. Both were defects this fixture encoded.
     w.bits(16, 5); // translation uses 16 bits
     w.bits(x, 16);
     w.bits(y, 16);
-    w.align();
+    // The matrix ends at the last translate bit; the trailing bits of the final byte are padding,
+    // not an aligned field, so no padding is written here.
     w.take()
 }
 
@@ -73,11 +74,9 @@ fn scaled(scale: f64, rotate: (f64, f64), x: i32, y: i32) -> Vec<u8> {
     w.bits(19, 5);
     w.bits((rotate.0 * 65_536.0) as i32, 19);
     w.bits((rotate.1 * 65_536.0) as i32, 19);
-    w.align();
     w.bits(17, 5);
     w.bits(x, 17);
     w.bits(y, 17);
-    w.align();
     w.take()
 }
 
@@ -125,7 +124,6 @@ fn a_matrix_may_carry_a_scale_with_no_rotation() {
     w.bits((2.0 * 65_536.0) as i32, 19);
     w.bits((2.0 * 65_536.0) as i32, 19);
     w.bit(0);
-    w.align();
     w.bits(17, 5);
     w.bits(300, 17);
     w.bits(-200, 17);
@@ -153,7 +151,6 @@ fn a_matrix_may_carry_a_rotation_with_no_scale() {
     w.bits(19, 5);
     w.bits(16_384, 19);
     w.bits(0, 19);
-    w.align();
     w.bits(17, 5);
     w.bits(0, 17);
     w.bits(0, 17);
@@ -178,6 +175,8 @@ fn a_move_without_a_character_keeps_the_character_at_that_depth() {
     let first = Placement {
         character: 12,
         depth: 4,
+        clip_depth: None,
+        transparent: false,
         matrix: Some(Matrix::IDENTITY),
         moved: false,
         code: 4,
@@ -199,6 +198,8 @@ fn depths_are_ordered_and_the_last_placement_wins() {
     let low = Placement {
         character: 1,
         depth: 2,
+        clip_depth: None,
+        transparent: false,
         matrix: None,
         moved: false,
         code: 26,
@@ -206,6 +207,8 @@ fn depths_are_ordered_and_the_last_placement_wins() {
     let high = Placement {
         character: 2,
         depth: 9,
+        clip_depth: None,
+        transparent: false,
         matrix: None,
         moved: false,
         code: 26,
@@ -213,6 +216,8 @@ fn depths_are_ordered_and_the_last_placement_wins() {
     let replaced = Placement {
         character: 5,
         depth: 2,
+        clip_depth: None,
+        transparent: false,
         matrix: Some(Matrix::IDENTITY),
         moved: false,
         code: 26,
@@ -223,11 +228,25 @@ fn depths_are_ordered_and_the_last_placement_wins() {
 }
 
 #[test]
+fn a_clip_depth_is_read_rather_than_skipped() {
+    // flags: has clip depth (0x40) and has character (0x02), no matrix. The clip depth is the last
+    // field of the record, and it states the depths this placement masks.
+    let mut body = vec![0x42];
+    body.extend_from_slice(&7u16.to_le_bytes());
+    body.extend_from_slice(&9u16.to_le_bytes());
+    body.extend_from_slice(&12u16.to_le_bytes());
+    let placement = placement::place_object_2(&body).expect("a masked placement");
+    assert_eq!(placement.clip_depth, Some(12));
+    assert_eq!(placement.character, 9);
+    assert_eq!(placement.depth, 7);
+}
+
+#[test]
 fn a_truncated_matrix_is_refused_by_name() {
     let mut body = Vec::new();
     body.extend_from_slice(&7u16.to_le_bytes());
     body.extend_from_slice(&1u16.to_le_bytes());
-    body.extend(translate_only(400, 200)[..3].to_vec());
+    body.extend(translate_only(400, 200)[..1].to_vec());
 
     let refusal = placement::place_object(&body).expect_err("a cut matrix");
     assert_eq!(refusal.code(), "placement-truncated");

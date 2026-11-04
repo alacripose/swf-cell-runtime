@@ -57,6 +57,8 @@ fn shape(id: u16, x: i32, y: i32, w: i32, h: i32) -> ShapeInfo {
         },
         code: 2,
         bytes: 0,
+        fill: None,
+        geometry: None,
     }
 }
 
@@ -72,15 +74,37 @@ fn sprite(id: u16, bounds: Rect) -> swf_import::content::SpriteInfo {
         id,
         frames: 1,
         nested: 1,
+        codes: vec![26, 1],
+        draws: true,
         bounds: Some(bounds),
         bytes: 0,
+        fill: None,
+        first: Vec::new(),
+        frames_list: Vec::new(),
     }
 }
 
 #[test]
-fn a_sprite_character_is_lowered_from_the_bounds_it_defines() {
-    // The sprite's extent is the union of the shapes nested in it, measured by the survey; the
-    // placement's own translation and scale then put it where the display list put it.
+fn a_placement_that_declares_a_clip_depth_is_a_mask_and_is_not_drawn() {
+    // A mask states the depths it clips, not a picture. Painting its shape is how a full-stage mask
+    // turns the whole frame into one colour, so no cell is drawn for it and the fact is counted.
+    let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
+    let mut placement = placed(7, 4, (0, 0), 0x1_0000);
+    placement.clip_depth = Some(10);
+    let lowering = lower(&[placement], &shapes, 69, 25, 0);
+    assert!(
+        lowering.cells.is_empty(),
+        "a mask is a region, not a colour"
+    );
+    assert_eq!(lowering.masked, 1);
+    assert_eq!(lowering.proof[0].1, "mask");
+}
+
+#[test]
+fn a_sprite_with_no_first_frame_is_stated_absent_not_boxed() {
+    // The sprite states an extent (the union of its nested shapes) and its first frame places
+    // nothing. A rectangle around that extent is a grid standing where the picture should be, so no
+    // cell is drawn for it and the frame states the absence instead.
     let mut world = inventory(vec![]);
     world.sprites.push(sprite(
         21,
@@ -92,22 +116,106 @@ fn a_sprite_character_is_lowered_from_the_bounds_it_defines() {
         },
     ));
     let placements = vec![placed(21, 6, (0, 0), 0x1_0000)];
-    let lowering = lower(&placements, &world, 69, 25);
-    assert_eq!(lowering.cells.len(), 1, "the sprite is drawn, not counted as unmeasured");
-    let cell = lowering.cells[0];
-    assert_eq!(
-        (cell.col, cell.row),
-        (5, 2),
-        "800 twips is 40 pixels: five cells right, and 2.5 cells down floors to row 2"
+    let lowering = lower(&placements, &world, 69, 25, 0);
+    assert!(
+        lowering.cells.is_empty(),
+        "a sprite is never drawn as its bounding box"
     );
-    assert_eq!((cell.cols, cell.rows), (10, 10), "80 by 160 pixels is 10 by 10 cells");
-    assert_eq!(lowering.unmeasured, 0);
+    assert_eq!(lowering.absent, 1, "the fact is stated, not silently dropped");
+    assert_eq!(lowering.unmeasured, 0, "the extent was measured; the art is absent");
+    assert_eq!(lowering.proof[0].1, "absent");
+}
+
+#[test]
+fn a_sprite_draws_its_own_frame_of_the_movie() {
+    // **The movie's frame n draws the sprite's frame n.** A loading bar advances because the sprite
+    // inside the movie advances; re-reading the first frame for every tick is what made all twelve
+    // frames identical and left the bar motionless.
+    let mut world = inventory(vec![shape(7, 0, 0, 160, 320)]);
+    let mut bar = sprite(
+        9,
+        Rect {
+            x_min: 0,
+            x_max: 160,
+            y_min: 0,
+            y_max: 3_200,
+        },
+    );
+    bar.frames_list = vec![
+        vec![placed(7, 1, (0, 0), 0x1_0000)],
+        vec![placed(7, 1, (0, 2_400), 0x1_0000)],
+    ];
+    world.sprites.push(bar);
+    let stage = vec![placed(9, 5, (0, 0), 0x1_0000)];
+    let first = lower(&stage, &world, 69, 25, 0);
+    let second = lower(&stage, &world, 69, 25, 1);
+    assert!(!first.cells.is_empty(), "the sprite's first frame draws");
+    assert!(!second.cells.is_empty(), "the sprite's second frame draws");
+    assert_ne!(
+        first.cells[0].row, second.cells[0].row,
+        "frame 2 draws the sprite's second frame, not its first again"
+    );
+}
+
+#[test]
+fn a_sprite_without_art_is_stated_in_the_frame_document() {
+    // A frameless sprite body: the file declares no display list, so the frame states the absence
+    // with the reason and the owning rule rather than leaving the client to guess.
+    let header = header();
+    let mut world = inventory(vec![]);
+    let mut empty = sprite(
+        204,
+        Rect {
+            x_min: 0,
+            x_max: 0,
+            y_min: 0,
+            y_max: 0,
+        },
+    );
+    empty.frames = 0;
+    empty.draws = false;
+    empty.bounds = None;
+    world.sprites.push(empty);
+    let frame = CellFrame::parse(&emit::frame_document(
+        &header,&Lowering::default(), &[], &world.sprites, &[], &[],
+    ))
+    .expect("the grammar accepts the absence section");
+    assert_eq!(frame.absences.len(), 1);
+    assert_eq!(frame.absences[0].kind, "sprite");
+    assert_eq!(frame.absences[0].id, "204");
+    assert_eq!(frame.absences[0].reason, "no-display-list");
+    assert_eq!(frame.absences[0].rule, "cellframe::malformed-record");
+    assert!(frame.fills.len() >= 1, "the stage paper still stands under it");
+}
+
+#[test]
+fn a_sprite_whose_record_could_not_be_read_says_so() {
+    let header = header();
+    let mut world = inventory(vec![]);
+    let mut unread = sprite(
+        209,
+        Rect {
+            x_min: 0,
+            x_max: 1_600,
+            y_min: 0,
+            y_max: 3_200,
+        },
+    );
+    unread.first.clear();
+    unread.draws = true;
+    world.sprites.push(unread);
+    let states = emit::sprite_absences(&world.sprites);
+    assert_eq!(states.len(), 1);
+    assert_eq!(states[0].reason, "undecoded-display-record");
+    assert_eq!(states[0].rule, "cellframe::malformed-record");
 }
 
 fn placed(character: u16, depth: u16, translate: (i32, i32), scale: i32) -> Placement {
     Placement {
         character,
         depth,
+        clip_depth: None,
+        transparent: false,
         matrix: Some(Matrix {
             translate_x: translate.0,
             translate_y: translate.1,
@@ -135,20 +243,63 @@ fn window_extent(document: &str) -> (u32, u32) {
 }
 
 #[test]
+fn a_sprites_children_stack_by_their_own_depth_inside_the_sprites_slot() {
+    // The sprite's first frame places the depth-5 child before the depth-1 child, which is a stream
+    // order the painter must not follow: inside the sprite, the depth-1 child is behind.
+    let mut world = inventory(vec![shape(7, 0, 0, 160, 320), shape(8, 0, 0, 160, 320)]);
+    let mut group = sprite(
+        30,
+        Rect {
+            x_min: 0,
+            x_max: 1_600,
+            y_min: 0,
+            y_max: 3_200,
+        },
+    );
+    group.first = vec![
+        placed(7, 5, (0, 0), 0x1_0000),
+        placed(8, 1, (0, 0), 0x1_0000),
+    ];
+    world.sprites.push(group);
+    let placements = vec![placed(30, 3, (0, 0), 0x1_0000)];
+    let lowering = lower(&placements, &world, 69, 25, 0);
+    let drawn: Vec<u16> = lowering.cells.iter().map(|cell| cell.character).collect();
+    assert_eq!(
+        drawn,
+        vec![8, 7],
+        "the depth-1 child is painted before the depth-5 child"
+    );
+    assert_eq!(
+        lowering.cells[0].depth, 3,
+        "both children still sit at the sprite's own stage depth"
+    );
+    assert_eq!(
+        lowering.cells[0].order,
+        vec![3, 1],
+        "the painter's path is the sprite's depth, then the child's"
+    );
+}
+
+#[test]
 fn the_frame_parses_and_binds_the_stage_window() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default()))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     assert_eq!(frame.window, "stage");
     assert_eq!(frame.id, emit::FRAME_ID);
     assert!(frame.cols * frame.rows <= MAX_CELLS, "the grid fits the ceiling");
-    assert_eq!(frame.fills.len(), 1, "an empty display list draws the stage alone");
+    assert_eq!(
+        frame.fills.len(),
+        frame.rows as usize,
+        "an empty display list draws the stage alone, one row per content line"
+    );
+    assert!(frame.runs.is_empty(), "the frame carries no annotation of its own");
 }
 
 #[test]
 fn the_frame_extent_is_the_extent_the_window_declares() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default()))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     let tags = tags::walk(&header).expect("tags");
     let inventory = survey(&header, &tags).expect("survey");
@@ -199,7 +350,7 @@ fn the_declaration_binds_the_frame_it_ships() {
 #[test]
 fn the_stage_is_measured_in_the_frames_own_cells() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default()))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     assert_eq!(
         (frame.cols, frame.rows),
@@ -211,7 +362,7 @@ fn the_stage_is_measured_in_the_frames_own_cells() {
 #[test]
 fn a_frame_the_grammar_refuses_is_never_returned() {
     let header = header();
-    let bytes = emit::frame_bytes(&header, &Lowering::default()).expect("a valid frame");
+    let bytes = emit::frame_bytes(&header, &Lowering::default(), &[], &[], &[], &[]).expect("a valid frame");
     let text = String::from_utf8(bytes).expect("utf-8");
     assert!(CellFrame::parse(&text).is_ok());
 }
@@ -222,9 +373,9 @@ fn a_placement_is_lowered_to_the_cells_its_shape_covers() {
     let mut shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     shapes.sprites.clear();
     let placements = vec![placed(7, 1, (0, 0), 0x1_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
     assert_eq!(lowering.cells.len(), 1);
-    let cell = lowering.cells[0];
+    let cell = &lowering.cells[0];
     assert_eq!((cell.col, cell.row, cell.cols, cell.rows), (0, 0, 1, 1));
     assert_eq!((cell.character, cell.depth), (7, 1));
     assert_eq!(lowering.placements, 1);
@@ -235,9 +386,10 @@ fn a_scaled_placement_covers_the_cells_its_scale_makes() {
     // Twice the size is twice the cells in each direction, from the same measured bounds.
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     let placements = vec![placed(7, 2, (0, 0), 0x2_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
-    let cell = lowering.cells[0];
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
+    let cell = &lowering.cells[0];
     assert_eq!((cell.cols, cell.rows), (2, 2));
+    assert_eq!(lowering.painted, 4, "the run covers four cells");
 }
 
 #[test]
@@ -245,8 +397,8 @@ fn a_translated_placement_lands_in_the_cells_its_translation_names() {
     // 1,600 twips is 80 pixels: ten cells right, five down.
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     let placements = vec![placed(7, 3, (1_600, 1_600), 0x1_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
-    let cell = lowering.cells[0];
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
+    let cell = &lowering.cells[0];
     assert_eq!((cell.col, cell.row), (10, 5));
 }
 
@@ -256,7 +408,7 @@ fn a_placement_outside_the_stage_is_counted_not_drawn() {
     // so the fact is recorded and the frame is not widened.
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     let placements = vec![placed(7, 4, (-2_000, 0), 0x1_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
     assert!(lowering.cells.is_empty());
     assert_eq!(lowering.outside, 1);
     assert_eq!(lowering.placements, 1);
@@ -266,7 +418,7 @@ fn a_placement_outside_the_stage_is_counted_not_drawn() {
 fn a_character_with_no_measured_shape_is_not_invented() {
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     let placements = vec![placed(999, 5, (0, 0), 0x1_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
     assert!(lowering.cells.is_empty());
     assert_eq!(lowering.unmeasured, 1);
 }
@@ -279,7 +431,7 @@ fn the_summary_agrees_with_the_cells_the_frame_draws() {
         placed(7, 2, (1_600, 1_600), 0x1_0000),
         placed(999, 3, (0, 0), 0x1_0000),
     ];
-    let lowering = lower(&placements, &shapes, 69, 25);
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
     assert_eq!(lowering.cells.len(), 2, "one cell per measured placement");
     assert_eq!(lowering.unmeasured, 1);
     assert_eq!(lowering.placements, 3);
@@ -294,15 +446,34 @@ fn the_frame_draws_one_fill_per_lowered_placement_over_the_stage() {
     let header = header();
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320), shape(8, 1_600, 1_600, 320, 640)]);
     let placements = vec![placed(7, 1, (0, 0), 0x1_0000), placed(8, 2, (0, 0), 0x1_0000)];
-    let lowering = lower(&placements, &shapes, 69, 25);
-    let frame = CellFrame::parse(&emit::frame_document(&header, &lowering))
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
+    let frame = CellFrame::parse(&emit::frame_document(&header, &lowering, &[], &[], &[], &[]))
         .expect("the grammar accepts the lowered frame");
     assert_eq!(
         frame.fills.len(),
-        1 + lowering.cells.len(),
+        frame.rows as usize + lowering.cells.len(),
         "the stage paper plus one fill per placement"
     );
     assert_eq!(frame.fills[0].cols, frame.cols, "the stage stands under them");
+}
+
+#[test]
+fn a_higher_depth_is_painted_after_a_lower_one() {
+    // The display list is not in depth order: the last placed character is the lowest depth here.
+    // The frame must carry the cells back to front, or a late low-depth rectangle paints over the
+    // scene and the picture collapses to one colour.
+    let shapes = inventory(vec![shape(7, 0, 0, 160, 320), shape(8, 0, 0, 160, 320)]);
+    let placements = vec![
+        placed(8, 9, (0, 0), 0x1_0000),
+        placed(7, 1, (0, 0), 0x1_0000),
+    ];
+    let lowering = lower(&placements, &shapes, 69, 25, 0);
+    let depths: Vec<u16> = lowering.cells.iter().map(|cell| cell.depth).collect();
+    assert_eq!(
+        depths,
+        vec![1, 9],
+        "the surface (1) is carried before the figure drawn in front of it (9)"
+    );
 }
 
 #[test]
@@ -329,7 +500,7 @@ fn an_unreadable_record_is_counted_while_the_rest_is_lowered() {
 fn the_summary_declares_the_records_it_could_not_read() {
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320)]);
     let placements = vec![placed(7, 1, (0, 0), 0x1_0000)];
-    let mut lowering = lower(&placements, &shapes, 69, 25);
+    let mut lowering = lower(&placements, &shapes, 69, 25, 0);
     lowering.refused = 2;
     lowering.placements += 2;
     let summary = lowering.summary();

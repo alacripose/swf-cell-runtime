@@ -10,6 +10,7 @@ pub mod content;
 pub mod emit;
 pub mod header;
 pub mod placement;
+pub mod shape;
 pub mod stream;
 pub mod tags;
 
