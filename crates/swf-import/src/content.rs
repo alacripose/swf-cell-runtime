@@ -205,6 +205,14 @@ pub struct Inventory {
     /// carried byte for byte, so the package holds the script the file states, and executing it
     /// remains the canonical program lane's decision (`AGENTS.md` §12) rather than this reader's.
     pub actions: Vec<(u16, Vec<u8>)>,
+    /// **Every lossless bitmap payload, decoded to pixels.** A `DefineBitsLossless` body states a
+    /// colour table or packed channels and a zlib stream; this is what those bytes say, so a client
+    /// can draw the file's own texels instead of a stand-in colour.
+    pub bitmaps: Vec<crate::bitmap::Bitmap>,
+    /// Lossless payloads this reader could not decode, each named by code and message. A bitmap
+    /// that is refused here is not silently dropped: the count and the reason travel with the
+    /// inventory.
+    pub bitmap_refusals: Vec<(u16, String, String)>,
 }
 
 impl Inventory {
@@ -439,6 +447,17 @@ pub fn survey(header: &Header, tags: &[Tag]) -> Result<Inventory, Refusal> {
                 )?;
             }
             code => {
+                if code == 20 || code == 36 {
+                    let end = tag.at + tag.length.min(body.len().saturating_sub(tag.at));
+                    match crate::bitmap::decode(code, &body[tag.at..end]) {
+                        Ok(bitmap) => inventory.bitmaps.push(bitmap),
+                        Err(refusal) => inventory.bitmap_refusals.push((
+                            code,
+                            refusal.code.to_string(),
+                            refusal.message,
+                        )),
+                    }
+                }
                 if let Some(sound) = sound_clip(body, tag) {
                     inventory.sounds.push(sound);
                 }
@@ -454,6 +473,30 @@ pub fn survey(header: &Header, tags: &[Tag]) -> Result<Inventory, Refusal> {
                         id,
                         bytes: tag.length,
                     });
+                }
+            }
+        }
+    }
+    // **A bitmap fill is drawn in the bitmap's own colour.** The payloads are decoded in this pass, so
+    // a fill that references one of them carries the mean of its opaque texels instead of the
+    // neutral stand-in. A fill whose character was not decoded keeps `None`, which is the reader
+    // saying it does not know the colour rather than guessing one.
+    let averages: Vec<(u16, (u8, u8, u8))> = inventory
+        .bitmaps
+        .iter()
+        .map(|bitmap| (bitmap.id, bitmap.average()))
+        .collect();
+    for character in inventory.shapes.iter_mut().chain(inventory.texts.iter_mut()) {
+        let Some(geometry) = character.geometry.as_mut() else {
+            continue;
+        };
+        for region in geometry.regions.iter_mut() {
+            if let crate::shape::Fill::Bitmap {
+                character, colour, ..
+            } = &mut region.fill
+            {
+                if let Some((_, rgb)) = averages.iter().find(|(id, _)| id == character) {
+                    *colour = Some(*rgb);
                 }
             }
         }

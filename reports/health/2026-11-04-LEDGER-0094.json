@@ -1,0 +1,28 @@
+{
+  "unit": "LEDGER-0094",
+  "at": "2026-11-04T08:40:35+00:00",
+  "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+  "failing": [],
+  "regressions": [],
+  "new_debts": [],
+  "not_enforced": [
+    "source_access_isolation",
+    "alternate_surface_or_runtime",
+    "branch_and_pr_review",
+    "client_witness",
+    "client_run_h9"
+  ],
+  "metrics": [
+    {
+      "project": "C:\\Users\\ala\\Documents\\testport1",
+      "changed": 10,
+      "insertions": 91,
+      "deletions": 7,
+      "work_span_seconds": 985.0,
+      "tests_touched": 13
+    }
+  ],
+  "proposals": [],
+  "debts": {},
+  "result": "RESULT: PASS (LEDGER-0094 held; 0 debt(s) open, 5 not enforceable)"
+}

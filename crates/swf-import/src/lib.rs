@@ -7,6 +7,7 @@
 //! timeline or behaviour, because those representations are not declared.
 
 pub mod avm1;
+pub mod bitmap;
 pub mod content;
 pub mod emit;
 pub mod header;

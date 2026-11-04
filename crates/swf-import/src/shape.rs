@@ -112,7 +112,14 @@ pub enum Fill {
     /// A bitmap fill keeps the character it references and its placement; the rasteriser draws the
     /// region in the bitmap's own average is not available, so the region is carried and drawn in a
     /// neutral colour rather than dropped.
-    Bitmap { character: u16, matrix: Map },
+    Bitmap {
+        character: u16,
+        matrix: Map,
+        /// The mean of the referenced bitmap's decoded pixels, once the payload has been decoded.
+        /// `None` until then, and drawn in the neutral stand-in if it stays `None`: the colour is
+        /// the file's own when it is known, never an invention.
+        colour: Option<(u8, u8, u8)>,
+    },
 }
 
 impl Fill {
@@ -132,7 +139,7 @@ impl Fill {
                 let radius = (x * x + y * y).sqrt();
                 Some(gradient.colour_at((radius / 16_384.0).clamp(0.0, 1.0))?)
             }
-            Fill::Bitmap { .. } => Some((128, 128, 128)),
+            Fill::Bitmap { colour, .. } => Some(colour.unwrap_or((128, 128, 128))),
         }
     }
 
@@ -723,7 +730,11 @@ fn read_fill(
         0x40..=0x43 => {
             let character = word(bits)?;
             let matrix = read_matrix(bits, matrix_align)?;
-            Some(Fill::Bitmap { character, matrix })
+            Some(Fill::Bitmap {
+                character,
+                matrix,
+                colour: None,
+            })
         }
         other => {
             if std::env::var("SWF_SHAPE_DEBUG").is_ok() {

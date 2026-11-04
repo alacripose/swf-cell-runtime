@@ -346,6 +346,34 @@ fn main() -> ExitCode {
                 refused_records,
                 op_counts.len()
             );
+            println!(
+                "bitmaps {} decoded {} refused",
+                inventory.bitmaps.len(),
+                inventory.bitmap_refusals.len()
+            );
+            for bitmap in &inventory.bitmaps {
+                let (red, green, blue) = bitmap.average();
+                let first = bitmap
+                    .first_opaque()
+                    .map(|(r, g, b)| format!("{r} {g} {b}"))
+                    .unwrap_or_else(|| "none".to_string());
+                println!(
+                    "bitmap {} {}x{} format {} texels {} colours {} first {} average {} {} {}",
+                    bitmap.id,
+                    bitmap.width,
+                    bitmap.height,
+                    bitmap.format,
+                    bitmap.pixels.len(),
+                    bitmap.distinct_colours(),
+                    first,
+                    red,
+                    green,
+                    blue
+                );
+            }
+            for (code, refusal_code, message) in &inventory.bitmap_refusals {
+                println!("bitmap_refused tag {} {} {}", code, refusal_code, message);
+            }
             println!("placements {}", lowering.summary());
             // Which frame the package ships, and what the rest of the timeline holds that it does
             // not: a named gap, so "the client draws frame 1" is a statement about the package.
