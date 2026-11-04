@@ -377,6 +377,23 @@
         "client_run_h9"
       ],
       "result": "RESULT: PASS (LEDGER-0095 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0096",
+      "unit": "LEDGER-0096",
+      "at": "2026-11-04T09:18:58+00:00",
+      "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0096 held; 0 debt(s) open, 5 not enforceable)"
     }
   ],
   "ever_held": [
@@ -406,15 +423,15 @@
     "unit_kind"
   ],
   "debts": {},
-  "ledger_rows": 95,
+  "ledger_rows": 96,
   "metrics": [
     {
       "project": "C:\\Users\\ala\\Documents\\testport1",
-      "changed": 17,
-      "insertions": 125,
-      "deletions": 55,
-      "work_span_seconds": 1527.1,
-      "tests_touched": 41
+      "changed": 2,
+      "insertions": 4,
+      "deletions": 4,
+      "work_span_seconds": 0.0,
+      "tests_touched": 0
     }
   ],
   "proposals": [
@@ -585,6 +602,12 @@
       "unit": "LEDGER-0093",
       "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
       "evidence": "no ledger row was added since the previous health run for LEDGER-0093"
+    },
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0096",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "2 files changed and no test function moved with them"
     }
   ]
 }
