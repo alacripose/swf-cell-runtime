@@ -63,3 +63,15 @@ Two rulings would each unblock a real step, and both are content decisions:
 
 Until one of those lands, the honest statement is: the imported package carries the art, the lowering
 produces it, and an opaque container child covers it.
+
+## Update: the root is a loader, and its script is now carried
+
+The user's reading is confirmed by the file's structure: the root timeline places one container and
+**37 action records (57 259 bytes)** — 2 `DoAction`, 35 `DoInitAction` — which is where the game is
+named and loaded. No display-list change can paint the game, because the game is not on the root's
+timeline.
+
+The importer now lowers those records into the package as `script/action-<n>-tag<code>.bin` artifacts
+with digests (`script_records 37 bytes 57259`). The package still mounts, the 12-frame evidence run
+still passes, and the axis still reports `refused` / `frame-kind-reserved` for code frames, untouched.
+Executing the carried script remains the shell's §4.6 compile and §12 admission decision.

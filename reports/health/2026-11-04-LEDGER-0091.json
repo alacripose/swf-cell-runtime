@@ -1,0 +1,35 @@
+{
+  "unit": "LEDGER-0091",
+  "at": "2026-11-04T07:49:30+00:00",
+  "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+  "failing": [],
+  "regressions": [],
+  "new_debts": [],
+  "not_enforced": [
+    "source_access_isolation",
+    "alternate_surface_or_runtime",
+    "branch_and_pr_review",
+    "client_witness",
+    "client_run_h9"
+  ],
+  "metrics": [
+    {
+      "project": "C:\\Users\\ala\\Documents\\testport1",
+      "changed": 7,
+      "insertions": 44,
+      "deletions": 3,
+      "work_span_seconds": 366.5,
+      "tests_touched": 0
+    }
+  ],
+  "proposals": [
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0091",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "7 files changed and no test function moved with them"
+    }
+  ],
+  "debts": {},
+  "result": "RESULT: PASS (LEDGER-0091 held; 0 debt(s) open, 5 not enforceable)"
+}

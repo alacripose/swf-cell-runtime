@@ -199,6 +199,12 @@ pub struct Inventory {
     /// The sounds this file states, payload included. A sound measured only by its tag length is a
     /// count of audio; these are the bytes a player can consume.
     pub sounds: Vec<SoundInfo>,
+    /// **The file's own action records, payload included, in stream order.** Tag 12 (`DoAction`)
+    /// and tag 59 (`DoInitAction`) are where a movie states its behaviour; the root timeline of a
+    /// loader names the game it will load here rather than in its display list. The payload is
+    /// carried byte for byte, so the package holds the script the file states, and executing it
+    /// remains the canonical program lane's decision (`AGENTS.md` §12) rather than this reader's.
+    pub actions: Vec<(u16, Vec<u8>)>,
 }
 
 impl Inventory {
@@ -384,6 +390,16 @@ pub fn survey(header: &Header, tags: &[Tag]) -> Result<Inventory, Refusal> {
         let body = &header.body;
         match tag.code {
             1 => inventory.show_frames += 1,
+            // A movie's behaviour is a record like any other: it is carried, whole, with the tag
+            // it arrived on. Nothing here reads the bytecode; a record whose length is zero or
+            // absurd is skipped by length, so a malformed record cannot swallow the next tag.
+            12 | 59 if tag.length > 0 && tag.length <= 1_048_576 && tag.at + tag.length <= body.len() => {
+                if inventory.actions.len() < 4_096 {
+                    inventory
+                        .actions
+                        .push((tag.code, body[tag.at..tag.at + tag.length].to_vec()));
+                }
+            }
             // Every definition that states an identifier and then a bounds rectangle is a character
             // the display list can place: shapes, morph shapes, buttons and edit-text fields.
             2 | 22 | 32 | 83 | 34 | 37 | 46 | 84 => shape_into(body, tag, &mut inventory)?,

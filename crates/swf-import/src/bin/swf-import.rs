@@ -181,6 +181,7 @@ fn main() -> ExitCode {
         &inventory.sprites,
         &later,
         &events,
+           &inventory.actions,
     ) {
         Ok(bytes) => bytes,
         Err(refusal) => {
@@ -305,6 +306,8 @@ fn main() -> ExitCode {
             println!("frame {}", frame_path.display());
             println!("timeline_documents {}", later.len() + 1);
             println!("audio_events {}", events.len());
+            let script_bytes: usize = inventory.actions.iter().map(|(_, bytes)| bytes.len()).sum();
+            println!("script_records {} bytes {}", inventory.actions.len(), script_bytes);
             println!("placements {}", lowering.summary());
             // Which frame the package ships, and what the rest of the timeline holds that it does
             // not: a named gap, so "the client draws frame 1" is a statement about the package.

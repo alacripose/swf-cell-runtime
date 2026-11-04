@@ -718,6 +718,7 @@ pub fn frame_document(
     sprites: &[crate::content::SpriteInfo],
     later_frames: &[(u32, String)],
     events: &[(u32, String)],
+    actions: &[(u16, Vec<u8>)],
 ) -> String {
     let (cols, rows) = grid(header);
     // **The package's files first, then what the frame names.** The payload bytes live in the
@@ -769,6 +770,13 @@ pub fn frame_document(
             event_section.push_str(&format!("sound\t{frame}\t{sound}\n"));
         }
         event_section.push('\n');
+    }
+    // **The root's own script, carried the same way its sounds are.** One artifact row per action
+    // record, named by its position and the tag it came on, with its digest and its bytes: a client
+    // can then say the package holds this script, and executing it is the code lane's decision.
+    for (index, (code, bytes)) in actions.iter().enumerate() {
+        let path = format!("script/action-{}-tag{code}.bin", index + 1);
+        artifact_rows.push_str(&artifact_row(&path, bytes));
     }
     let artifact_section = if artifact_rows.is_empty() {
         String::new()
@@ -940,8 +948,9 @@ pub fn frame_bytes(
     sprites: &[crate::content::SpriteInfo],
     later_frames: &[(u32, String)],
     events: &[(u32, String)],
+    actions: &[(u16, Vec<u8>)],
 ) -> Result<Vec<u8>, Refusal> {
-    let doc = frame_document(header, lowering, sounds, sprites, later_frames, events);
+    let doc = frame_document(header, lowering, sounds, sprites, later_frames, events, actions);
     let parsed = CellFrame::parse(&doc)
         .map_err(|refusals| Refusal::Frame(format!("{} {}", refusals.code(), refusals.message())))?;
     // **The payload the frame carries is the payload the file states.** The frame is re-read through
