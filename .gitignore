@@ -24,3 +24,9 @@ Thumbs.db
 # NOTE: artifacts/, reports/ and logs/ are intentionally NOT ignored. Only redacted,
 # source-safe material may be written there, and it is versioned as reproducibility
 # evidence (see config/output-roots.json).
+
+# Evidence pictures: the client writes one PPM per tick beside the JSON; the JSON is the record.
+artifacts/evidence/*.ppm
+
+# Evidence pictures: one PPM per tick beside the JSON; the JSON is the record.
+artifacts/evidence/*.ppm

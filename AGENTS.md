@@ -7,14 +7,6 @@ sequence and its exit tests are in `docs/PORT-BASELINE.md`.
 Read this file before touching anything. It is not style guidance: every rule below is
 a hard gate (`patches/baselines/`), and `tools/port_gate.py` enforces the parts that are
 mechanically decidable today.
-## Build the maximal system now; trim API surface later
-
-Implement the full contract while the system is being built: every state, every refusal, every
-store and every path the design names. Do not pre-trim surfaces, options or commands to keep the
-first pass small, and do not leave a named state unimplemented because the common path does not
-reach it. Cutting API surface is a later, deliberate pass with its own ticket; it is not a reason
-to ship a thinner system now. When the full shape is in place, name what is missing rather than
-silently omitting it.
 
 ## 1. The source movie is not agent-readable
 
@@ -157,3 +149,103 @@ the length in the preimage so a truncated payload cannot collide with a longer o
 newer frame **by name** (`frame-schema` with `found` and `supported`) instead of converting it; and
 treats `kind` as the closed set `decl`/`code`, where a `code` frame packs and is refused
 `frame-kind-reserved` at mount.
+
+
+## 13. Build the maximal system now; trim API surface later
+
+Implement the full contract while the system is being built: every state, every refusal, every
+store and every path the design names. Do not pre-trim surfaces, options or commands to keep the
+first pass small, and do not leave a named state unimplemented because the common path does not
+reach it. Cutting API surface is a later, deliberate pass with its own ticket; it is not a reason
+to ship a thinner system now. When the full shape is in place, name what is missing rather than
+silently omitting it.
+
+## 14. Track work through tickets and pull requests
+
+Every non-trivial change has a ticket naming the problem and the acceptance evidence, and lands as
+a pull request rather than a direct commit to the shared branch. The ticket is where the refusal or
+the requirement is stated; the pull request carries the diff, the checks that were run and the
+evidence they produced. Small drive-by fixes may go straight in, but anything that changes a
+contract, a store, a gate or a game system gets a ticket first. Reference the ticket in the commitsubject.
+
+## 15. A run reports, or it did not run: waiting is not polling
+
+A long check is one **waitable command**, not a log to watch. Run it with a bounded timeout and read
+its exit status and its body; do not loop over its log waiting for a marker. A marker that is absent
+is `absent`, not `pending`: read the log and say why it is missing.
+
+The refusal that produced this rule, 2026-11-04: a `selftest` run was started while an earlier run
+still held `target/port-gate-selftest`. The second run refused in 203 bytes — "No record was written
+and no checks were run" — and printed no `RESULT:` line. A `grep -E "^RESULT:"` loop then waited
+minutes for a line that could not appear, spending the session's time on a conclusion the log had
+already stated. Both sides are refused: the tool, for refusing below its own marker grammar, and the
+agent, for polling instead of reading.
+
+Rules, from that refusal:
+
+- Every command that can refuse prints `RESULT: REFUSED (<code>)` (or `REFUSED <code>: ...`) and exits
+  non-zero. A refusal that reaches only stderr, or arrives as a traceback, is the tool's defect and
+  gets a ticket.
+- Match markers with carriage returns stripped (`tr -d '\r'`, or `grep -a`): this shell writes CRLF,
+  and `^RESULT:` against CR-framed output is a coin toss.
+- Never start a second run of a tool that holds a staging directory or a lock. One at a time; a
+  refused second run is reported as `refused`, never retried blindly.
+- A waiter states its own bound. When the bound expires, report the last real line and stop; do not
+  re-enter the wait.
+
+Landed with this rule (`TICKET-0082`): `port_gate.py selftest` waits a bounded 30 s for the staging
+directory, then refuses `selftest-staging-in-use` and prints `RESULT: REFUSED (selftest did not run; 0
+scenarios)`; refusal and result lines are flushed, so a redirected log shows them when they happen.
+
+**Polling a secondary log is allowed only with liveness evidence in the same command.** A redirected
+run may be waited on only by a command that also proves, in that invocation, that the log is the
+run's live stream:
+
+- Wait on the run's **exit status** (an exit file written by the same shell command), not on a hope
+  that a marker appears.
+- Every report states the log's **byte count and last streamed line**, so growth is evidence rather
+  than assumption. Two reads that both show zero bytes, or a size that never changes while the
+  process is supposedly working, mean the run refused before streaming or nothing was redirected.
+- A log that never grows past zero within its first bound is `log-not-streaming`: refused, reported
+  with the bound and the path, and never waited on further. `absent` is not `pending`.
+- `tools/wait_run.py` is that command: `python tools/wait_run.py --log <file> --exit <file>
+  [--seconds N]` waits the bound, prints `alive: <bytes> bytes, last: <line>` while it goes, refuses
+  `RESULT: REFUSED (log-not-streaming; …)` on a silent log, refuses `RESULT: REFUSED (wait-expired;
+  …)` at its bound, and prints the exit code and last line when the run finishes. Every path prints a
+  `RESULT:` line.
+- **Maximize per-response work instead of waiting across turns.** Batch the reads, edits and checks
+  that do not depend on the run into the same response; a wait that occupies a whole turn must have
+  the run it waits on, the liveness evidence, and the follow-up check in that one command.
+
+Proposed, not yet landed (each needs its own ticket):
+
+- `port_gate.py selftest --wait <seconds>` to state the lock bound instead of accepting 30 s.
+- A per-scenario heartbeat line with `flush=True`, so a long run's log shows it is alive rather than
+  silent between the header and the result.
+- An output-framing check whose subject is the gate's own commands: each refusal path must print a
+  `RESULT:` line, so a script or an agent can never mistake `absent` for `pending`.
+
+## 16. Every test turn reports health, and the ratchet only tightens
+
+`python tools/health.py` is the test-turn check. It runs the gate, compares the result with the
+durable ratchet in `artifacts/health/state.json`, writes the unit's report to
+`reports/health/<date>-<ledger>.md` and `.json`, and prints a `RESULT:` line.
+
+- A check that has **ever been held** may not fail again: that is a ratchet regression and exits 2.
+- A check that has never been held and fails is a **debt**, recorded with an owner and the unit that
+  opened it, not a pass. `selftest_record` is the one evidence debt: any edit stales the record and
+  the repair is one complete `selftest` run, never a rewritten digest.
+- The ratchet tightens only: a later green run never clears the list of checks that were once held.
+- The state is written atomically, so an interrupted or disconnected run cannot leave a half-written
+  ratchet behind.
+
+It also **measures the turn** — files changed, insertions and deletions, the observed development
+span from the changed files' own timestamps, test functions touched, and ledger rows added — and
+turns what it measures into `AGENTS.md` proposals recorded in `artifacts/health/proposals.jsonl` and
+listed in the unit report: an over-budget commit, a behaviour change with no test, a unit with no
+ledger row, or an open evidence debt. A proposal is a proposal: it becomes a rule only when a ticket
+lands it here.
+
+Projects: the ratchet observes this checkout, plus any path the user has listed in
+`config/health-projects.json`. Another checkout is never inferred, and nothing outside the current
+repository is read unless the user named it.

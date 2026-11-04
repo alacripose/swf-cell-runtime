@@ -1406,6 +1406,61 @@ def check_legacy_formats(root: Path) -> list[str]:
     return problems
 
 
+DEBUG_CONSOLE_MODULE = "crates/planet-client/src/console.rs"
+DEBUG_CONSOLE_LIBRARY = "crates/planet-client/src/lib.rs"
+DEBUG_CONSOLE_ENTRY = "crates/planet-client/src/bin/window.rs"
+DEBUG_CONSOLE_MODULE_MARKERS = (
+    "pub fn require()",
+    "GetConsoleWindow",
+    "AllocConsole",
+    '"debug-console-absent"',
+)
+DEBUG_CONSOLE_ENTRY_MARKER = "console::DebugConsole::require()?"
+DEBUG_CONSOLE_OPEN = "render::run_with_timeline("
+
+
+def check_debug_console(root: Path) -> list[str]:
+    """The game window is refused unless the debug console is held before it opens."""
+    problems: list[str] = []
+
+    module = root / DEBUG_CONSOLE_MODULE
+    if not module.is_file():
+        problems.append(f"{DEBUG_CONSOLE_MODULE} is missing: the debug console has no owner")
+    else:
+        text = read_text(module)
+        for marker in DEBUG_CONSOLE_MODULE_MARKERS:
+            if marker not in text:
+                problems.append(
+                    f"{DEBUG_CONSOLE_MODULE}: no {marker!r}; the console cannot be acquired "
+                    "and its absence refused by name"
+                )
+
+    library = root / DEBUG_CONSOLE_LIBRARY
+    if not library.is_file():
+        problems.append(f"{DEBUG_CONSOLE_LIBRARY} is missing")
+    elif "pub mod console;" not in read_text(library):
+        problems.append(f"{DEBUG_CONSOLE_LIBRARY}: the console module is not part of the client")
+
+    entry = root / DEBUG_CONSOLE_ENTRY
+    if not entry.is_file():
+        problems.append(f"{DEBUG_CONSOLE_ENTRY} is missing: the game has no entry point")
+    else:
+        text = read_text(entry)
+        if DEBUG_CONSOLE_ENTRY_MARKER not in text:
+            problems.append(
+                f"{DEBUG_CONSOLE_ENTRY}: the game entry point does not require the debug "
+                "console; opening the window without it is a refusal"
+            )
+        else:
+            opened = text.find(DEBUG_CONSOLE_OPEN)
+            if opened != -1 and text.index(DEBUG_CONSOLE_ENTRY_MARKER) > opened:
+                problems.append(
+                    f"{DEBUG_CONSOLE_ENTRY}: the debug console is acquired after the game "
+                    "window is opened"
+                )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1428,6 +1483,7 @@ CHECKS = (
     ("duplicate_reader", check_duplicate_reader, "PATCH-0005"),
     ("addon_parity", check_addon_parity, "PATCH-0005"),
     ("legacy_formats", check_legacy_formats, "PATCH-0005"),
+    ("debug_console", check_debug_console, "PATCH-0001"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1480,9 +1536,12 @@ def report(results: list[tuple[str, str, list[str]]], root: Path | None = None) 
         print(f"      {item['note']}")
     print()
     if failed:
-        print(f"RESULT: FAIL ({failed} of {len(results)} checks)")
+        print(f"RESULT: FAIL ({failed} of {len(results)} checks)", flush=True)
         return 1
-    print(f"RESULT: PASS ({len(results)} checks, {len(NOT_ENFORCED)} not enforceable)")
+    print(
+        f"RESULT: PASS ({len(results)} checks, {len(NOT_ENFORCED)} not enforceable)",
+        flush=True,
+    )
     return 0
 
 
@@ -1512,6 +1571,9 @@ FIXTURE_PATHS = (
     "tickets",
     "ledger",
     "tools",
+    "crates/planet-client/src/lib.rs",
+    "crates/planet-client/src/console.rs",
+    "crates/planet-client/src/bin/window.rs",
 )
 
 FIXTURE_COMMIT = "TICKET-0001 LEDGER-0001 fixture baseline"
@@ -1950,6 +2012,42 @@ def mutate_scope_block_dropped(root: Path) -> None:
     path.write_text(pattern.sub(r"\1done\3", text, count=1), encoding="utf-8")
 
 
+def _rewrite(root: Path, relative: str, old: str, new: str) -> None:
+    path = root / relative
+    text = read_text(path)
+    if old not in text:
+        raise GateError(f"fixture: {relative} does not carry {old!r} before mutation")
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+    write_fixture_record(root)
+
+
+def mutate_debug_console_dropped(root: Path) -> None:
+    _rewrite(
+        root,
+        DEBUG_CONSOLE_ENTRY,
+        "    let _console = planet_client::console::DebugConsole::require()?;\n",
+        "",
+    )
+
+
+def decoy_debug_console_absent_note(root: Path) -> None:
+    (root / "docs" / "debug-console.md").write_text(
+        "A note recording the wording: the game entry point does not require the debug "
+        "console. This file states the sentence; it does not drop the requirement.\n",
+        encoding="utf-8",
+    )
+    write_fixture_record(root)
+
+
+def near_debug_console_refusal_discarded(root: Path) -> None:
+    _rewrite(
+        root,
+        DEBUG_CONSOLE_ENTRY,
+        "planet_client::console::DebugConsole::require()?;",
+        "planet_client::console::DebugConsole::require().ok();",
+    )
+
+
 SELFTEST_SCENARIOS = (
     ("valid_fixture", None, None),
     ("tracked_movie_refused", mutate_tracked_movie, "source_exclusion"),
@@ -1989,6 +2087,7 @@ SELFTEST_SCENARIOS = (
     ("duplicate_reader_second_parser_refused", mutate_duplicate_reader_second_parser, "duplicate_reader"),
     ("duplicate_reader_second_owner_refused", mutate_duplicate_reader_second_owner, "duplicate_reader"),
     ("duplicate_reader_permitted_parser_passes", mutate_duplicate_reader_permitted_parser, None),
+    ("debug_console_dropped_refused", mutate_debug_console_dropped, "debug_console"),
 )
 
 
@@ -2081,6 +2180,11 @@ SWEEP = (
     ),
     ("addon_parity", mutate_addon_statement_altered, "no longer recorded verbatim"),
     ("legacy_formats", mutate_legacy_unregistered, "legacy-unregistered: `probe.one/9`"),
+    (
+        "debug_console",
+        mutate_debug_console_dropped,
+        "does not require the debug console",
+    ),
 )
 
 
@@ -2108,6 +2212,7 @@ SILENCE = (
     ("duplicate_reader", mutate_mcp_forbidden_operation),
     ("addon_parity", mutate_governance_file_removed),
     ("legacy_formats", mutate_addon_statement_altered),
+    ("debug_console", mutate_governance_file_removed),
 )
 
 
@@ -2175,6 +2280,7 @@ def decoy_commit_body(root: Path) -> None:
 
 
 DECOY = (
+    ("debug_console", decoy_debug_console_absent_note),
     (
         "baselines_present",
         decoy_file(
@@ -2523,38 +2629,69 @@ NEAR_MISS = (
         mutate_legacy_near_miss,
         "legacy-unregistered: `shploingus.recipe/33`",
     ),
+    (
+        "debug_console",
+        near_debug_console_refusal_discarded,
+        "does not require the debug console",
+    ),
 )
 
 
+SELFTEST_LOCK_WAIT_SECONDS = 30
+SELFTEST_LOCK_ATTEMPTS = 7
+
+
 def prepare_workspace(work: Path) -> None:
-    """Clear a leftover workspace, or stop with a named error instead of a traceback.
+    """Clear a leftover workspace, or refuse **by name** instead of waiting for a marker.
 
     An interrupted run can leave the directory behind, and removal can fail while another
-    process holds a file inside it. Retry once, then report the path rather than letting
-    mkdir raise FileExistsError into the interpreter.
+    process holds a file inside it. This waits a bounded time for the holder to let go, then
+    refuses with a code a caller can match on: a refusal is an answer, and an absent `RESULT:`
+    line must never be mistaken for a run still in progress. No record is written and no
+    scenario is run when this refuses, and the refusal says exactly that.
     """
-    for _attempt in range(2):
+    import time
+
+    for attempt in range(SELFTEST_LOCK_ATTEMPTS):
         if not work.exists():
             break
         remove_tree(work)
+        if not work.exists():
+            break
+        if attempt + 1 < SELFTEST_LOCK_ATTEMPTS:
+            print(
+                f"  waiting for {work} to be released "
+                f"({attempt + 1} of {SELFTEST_LOCK_ATTEMPTS - 1}, "
+                f"up to {SELFTEST_LOCK_WAIT_SECONDS} s)",
+                flush=True,
+            )
+            time.sleep(SELFTEST_LOCK_WAIT_SECONDS // (SELFTEST_LOCK_ATTEMPTS - 1))
     if work.exists():
         raise GateError(
-            f"selftest workspace could not be cleared: {work}; another run may still hold a "
-            "file inside it. No record was written and no checks were run"
+            f"selftest-staging-in-use: {work} is still held; another selftest is running or an "
+            "interrupted one left the directory behind. No record was written and no checks "
+            "were run"
         )
     try:
         work.mkdir(parents=True)
     except OSError as exc:
-        raise GateError(f"selftest workspace could not be created: {work}: {exc}") from exc
+        raise GateError(f"selftest-staging-unwritable: {work}: {exc}") from exc
 
 
 def command_selftest(project_root: Path) -> int:
     work = project_root / "target" / "port-gate-selftest"
-    prepare_workspace(work)
+    try:
+        prepare_workspace(work)
+    except GateError as exc:
+        # **A refusal prints a marker.** A run that did nothing must never look like a run still
+        # in progress to a waiter: the code is matchable and the count is zero.
+        print(f"REFUSED selftest_did_not_run: {exc}")
+        print("RESULT: REFUSED (selftest did not run; 0 scenarios)")
+        return 2
 
     failures: list[str] = []
     records: list[dict] = []
-    print(f"port_gate selftest: fixtures under {work}")
+    print(f"port_gate selftest: fixtures under {work}", flush=True)
 
     try:
         for name, mutate, expected_failure in SELFTEST_SCENARIOS:
@@ -2820,11 +2957,14 @@ def command_selftest(project_root: Path) -> int:
     print()
     for failure in failures:
         print(f"  - {failure}")
-    print(f"record: {out.relative_to(project_root)} (fixture {identity})")
+    print(f"record: {out.relative_to(project_root)} (fixture {identity})", flush=True)
     if failures:
-        print(f"RESULT: FAIL ({len(failures)} scenarios)")
+        print(f"RESULT: FAIL ({len(failures)} scenarios)", flush=True)
         return 1
-    print(f"RESULT: PASS ({record['passed']} of {record['scenarios']} scenarios)")
+    print(
+        f"RESULT: PASS ({record['passed']} of {record['scenarios']} scenarios)",
+        flush=True,
+    )
     return 0
 
 
