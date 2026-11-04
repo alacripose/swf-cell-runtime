@@ -1,7 +1,7 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:b486ef8ff77df9e5069fe78a700f55315a50f01050edfa5553ff9b817ebdea8b",
+    "identity": "sha256:ed5ba3c95a5f5803a659c6257a8b5620c2f41c4f76de88811317cd2e43117024",
     "inputs": 23
   },
   "python": "3.13.14",
@@ -769,7 +769,7 @@
         "unit_kind"
       ],
       "problems": [
-        "unit-is-analysis: ledger line 97: LEDGER-0100 declares unit_kind 'analysis'; diagnosis and scoping are not units, they are part of the unit that changes the artifact: implementation, refusal, gate"
+        "unit-is-analysis: ledger line 98: LEDGER-0100 declares unit_kind 'analysis'; diagnosis and scoping are not units, they are part of the unit that changes the artifact: implementation, refusal, gate"
       ],
       "pass": true
     },
@@ -1252,7 +1252,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 97: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 98: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
@@ -1442,7 +1442,7 @@
         "unit_kind"
       ],
       "problems": [
-        "unit-kind-missing: ledger line 97: LEDGER-0100 has no unit_kind; a unit states whether it implements, refuses, or changes the gate"
+        "unit-kind-missing: ledger line 98: LEDGER-0100 has no unit_kind; a unit states whether it implements, refuses, or changes the gate"
       ],
       "pass": true
     },

@@ -394,6 +394,40 @@
         "client_run_h9"
       ],
       "result": "RESULT: PASS (LEDGER-0096 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0097",
+      "unit": "LEDGER-0097",
+      "at": "2026-11-04T09:31:16+00:00",
+      "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0097 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0097",
+      "unit": "LEDGER-0097",
+      "at": "2026-11-04T09:37:24+00:00",
+      "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0097 held; 0 debt(s) open, 5 not enforceable)"
     }
   ],
   "ever_held": [
@@ -423,14 +457,14 @@
     "unit_kind"
   ],
   "debts": {},
-  "ledger_rows": 96,
+  "ledger_rows": 97,
   "metrics": [
     {
       "project": "C:\\Users\\ala\\Documents\\testport1",
-      "changed": 2,
+      "changed": 3,
       "insertions": 4,
-      "deletions": 4,
-      "work_span_seconds": 0.0,
+      "deletions": 3,
+      "work_span_seconds": 343.0,
       "tests_touched": 0
     }
   ],
@@ -608,6 +642,24 @@
       "unit": "LEDGER-0096",
       "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
       "evidence": "2 files changed and no test function moved with them"
+    },
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0097",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "14 files changed and no test function moved with them"
+    },
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0097",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "3 files changed and no test function moved with them"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0097",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0097"
     }
   ]
 }
