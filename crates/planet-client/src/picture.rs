@@ -39,6 +39,18 @@ impl Picture {
             .get(offset..offset + 4)
             .map(|bytes| [bytes[0], bytes[1], bytes[2], bytes[3]])
     }
+
+    /// Write one pixel. A position outside the picture is ignored, so a placement that reaches past
+    /// the stage paints what fits instead of failing the frame.
+    pub fn set(&mut self, x: u32, y: u32, pixel: [u8; 4]) {
+        if x >= self.width || y >= self.height {
+            return;
+        }
+        let offset = (y * self.stride + x * 4) as usize;
+        if let Some(slot) = self.pixels.get_mut(offset..offset + 4) {
+            slot.copy_from_slice(&pixel);
+        }
+    }
 }
 
 fn fill_rect(

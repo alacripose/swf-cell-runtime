@@ -174,6 +174,8 @@ fn main() -> ExitCode {
             events.push((order, id));
         }
     }
+    let texels: Vec<planet_package::texels::Texels> =
+        inventory.bitmaps.iter().map(|bitmap| bitmap.texels()).collect();
     let frame_bytes = match swf_import::emit::frame_bytes(
         &header,
         &lowering,
@@ -182,6 +184,7 @@ fn main() -> ExitCode {
         &later,
         &events,
            &inventory.actions,
+            &texels,
     ) {
         Ok(bytes) => bytes,
         Err(refusal) => {
@@ -369,6 +372,22 @@ fn main() -> ExitCode {
                     red,
                     green,
                     blue
+                );
+            }
+            println!(
+                "bitmap_texels {} bytes {}",
+                texels.len(),
+                texels.iter().map(|block| block.pixels.len() * 4).sum::<usize>()
+            );
+            for block in &texels {
+                println!(
+                    "bitmap_texel {} {}x{} format {} layout {} digest {}",
+                    block.id,
+                    block.width,
+                    block.height,
+                    block.format,
+                    block.layout,
+                    block.digest()
                 );
             }
             for (code, refusal_code, message) in &inventory.bitmap_refusals {

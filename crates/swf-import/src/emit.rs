@@ -719,6 +719,7 @@ pub fn frame_document(
     later_frames: &[(u32, String)],
     events: &[(u32, String)],
     actions: &[(u16, Vec<u8>)],
+    bitmaps: &[planet_package::texels::Texels],
 ) -> String {
     let (cols, rows) = grid(header);
     // **The package's files first, then what the frame names.** The payload bytes live in the
@@ -727,6 +728,11 @@ pub fn frame_document(
     // bytes spliced into a drawing row. A frame with no sound carries neither section.
     let mut artifact_rows = String::new();
     let mut audio_section = String::new();
+    // **The bitmaps' own pixels.** One artifact per decoded payload, named by its character, so a
+    // client reads the same texels the importer decoded instead of a colour standing in for them.
+    for bitmap in bitmaps {
+        artifact_rows.push_str(&artifact_row(&bitmap.artifact_path(), &bitmap.encode()));
+    }
     if !sounds.is_empty() {
         audio_section.push_str("[audio]\n");
         for sound in sounds {
@@ -956,8 +962,11 @@ pub fn frame_bytes(
     later_frames: &[(u32, String)],
     events: &[(u32, String)],
     actions: &[(u16, Vec<u8>)],
+    bitmaps: &[planet_package::texels::Texels],
 ) -> Result<Vec<u8>, Refusal> {
-    let doc = frame_document(header, lowering, sounds, sprites, later_frames, events, actions);
+    let doc = frame_document(
+        header, lowering, sounds, sprites, later_frames, events, actions, bitmaps,
+    );
     let parsed = CellFrame::parse(&doc)
         .map_err(|refusals| Refusal::Frame(format!("{} {}", refusals.code(), refusals.message())))?;
     // **The payload the frame carries is the payload the file states.** The frame is re-read through

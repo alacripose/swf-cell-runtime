@@ -25,6 +25,7 @@ pub mod present;
 pub mod picture;
 pub mod render;
 pub mod scene;
+pub mod texel;
 pub mod script;
 pub mod timeline;
 pub mod xml;

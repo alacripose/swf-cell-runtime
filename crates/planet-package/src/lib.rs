@@ -31,6 +31,7 @@ pub mod palette;
 pub mod program;
 pub mod record;
 pub mod surface;
+pub mod texels;
 pub mod vocabulary;
 
 pub use cadence::{

@@ -177,7 +177,7 @@ fn a_sprite_without_art_is_stated_in_the_frame_document() {
     empty.bounds = None;
     world.sprites.push(empty);
     let frame = CellFrame::parse(&emit::frame_document(
-        &header,&Lowering::default(), &[], &world.sprites, &[], &[], &[],
+        &header,&Lowering::default(), &[], &world.sprites, &[], &[], &[], &[],
     ))
     .expect("the grammar accepts the absence section");
     assert_eq!(frame.absences.len(), 1);
@@ -283,7 +283,7 @@ fn a_sprites_children_stack_by_their_own_depth_inside_the_sprites_slot() {
 #[test]
 fn the_frame_parses_and_binds_the_stage_window() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[]))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     assert_eq!(frame.window, "stage");
     assert_eq!(frame.id, emit::FRAME_ID);
@@ -299,7 +299,7 @@ fn the_frame_parses_and_binds_the_stage_window() {
 #[test]
 fn the_frame_extent_is_the_extent_the_window_declares() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[]))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     let tags = tags::walk(&header).expect("tags");
     let inventory = survey(&header, &tags).expect("survey");
@@ -350,7 +350,7 @@ fn the_declaration_binds_the_frame_it_ships() {
 #[test]
 fn the_stage_is_measured_in_the_frames_own_cells() {
     let header = header();
-    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[]))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &Lowering::default(), &[], &[], &[], &[], &[], &[]))
         .expect("the grammar accepts it");
     assert_eq!(
         (frame.cols, frame.rows),
@@ -362,7 +362,7 @@ fn the_stage_is_measured_in_the_frames_own_cells() {
 #[test]
 fn a_frame_the_grammar_refuses_is_never_returned() {
     let header = header();
-    let bytes = emit::frame_bytes(&header, &Lowering::default(), &[], &[], &[], &[], &[]).expect("a valid frame");
+    let bytes = emit::frame_bytes(&header, &Lowering::default(), &[], &[], &[], &[], &[], &[]).expect("a valid frame");
     let text = String::from_utf8(bytes).expect("utf-8");
     assert!(CellFrame::parse(&text).is_ok());
 }
@@ -447,7 +447,7 @@ fn the_frame_draws_one_fill_per_lowered_placement_over_the_stage() {
     let shapes = inventory(vec![shape(7, 0, 0, 160, 320), shape(8, 1_600, 1_600, 320, 640)]);
     let placements = vec![placed(7, 1, (0, 0), 0x1_0000), placed(8, 2, (0, 0), 0x1_0000)];
     let lowering = lower(&placements, &shapes, 69, 25, 0);
-    let frame = CellFrame::parse(&emit::frame_document(&header, &lowering, &[], &[], &[], &[], &[]))
+    let frame = CellFrame::parse(&emit::frame_document(&header, &lowering, &[], &[], &[], &[], &[], &[]))
         .expect("the grammar accepts the lowered frame");
     assert_eq!(
         frame.fills.len(),

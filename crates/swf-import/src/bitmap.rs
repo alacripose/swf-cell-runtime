@@ -44,6 +44,24 @@ impl Bitmap {
         ((red / count) as u8, (green / count) as u8, (blue / count) as u8)
     }
 
+    /// The block the package carries: the same pixels, with the identity and the source's own
+    /// encoding, so a reader can read them back without the importer.
+    pub fn texels(&self) -> planet_package::texels::Texels {
+        let layout = match self.colormap {
+            "counted" => 0,
+            "full-256" => 1,
+            _ => 2,
+        };
+        planet_package::texels::Texels {
+            id: self.id,
+            width: self.width,
+            height: self.height,
+            format: self.format,
+            layout,
+            pixels: self.pixels.clone(),
+        }
+    }
+
     /// The first opaque texel in stream order, for a diagnostic that names one real pixel.
     pub fn first_opaque(&self) -> Option<(u8, u8, u8)> {
         self.pixels

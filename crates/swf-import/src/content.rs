@@ -447,6 +447,15 @@ pub fn survey(header: &Header, tags: &[Tag]) -> Result<Inventory, Refusal> {
                 )?;
             }
             code => {
+                if matches!(code, 6 | 21 | 35) {
+                    inventory.bitmap_refusals.push((
+                        code,
+                        "bitmap-tag-unimplemented".to_string(),
+                        format!(
+                            "tag {code} carries JPEG bytes, which this decoder does not read; the payload is counted and left undecoded"
+                        ),
+                    ));
+                }
                 if code == 20 || code == 36 {
                     let end = tag.at + tag.length.min(body.len().saturating_sub(tag.at));
                     match crate::bitmap::decode(code, &body[tag.at..end]) {
