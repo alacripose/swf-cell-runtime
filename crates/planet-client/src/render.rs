@@ -29,6 +29,9 @@ use winit::keyboard::{Key as LogicalKey, NamedKey};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::{Window, WindowId};
 
+use planet_package::cadence::TickStream;
+use planet_package::CellFrame;
+
 use crate::batch::Quad;
 use crate::present::{self, Instance};
 
@@ -91,6 +94,22 @@ impl Scene {
         format!("{}\n{}", self.title, self.lines.join("\n"))
     }
 }
+
+/// One carried frame as the window draws it: the frame's id and the batch it plans.
+#[derive(Clone, Debug, PartialEq)]
+pub struct FrameBatch {
+    /// The frame document's id, as the package named it.
+    pub id: String,
+    /// The frame's draw batch, in picture pixels.
+    pub quads: Vec<Quad>,
+}
+
+/// **The frame plan: one carried frame in, its batch out.** The loader plans a frame when a tick
+/// first lands on it, not all of them at startup: a package may carry any number of frames, a full
+/// game far more than a movie's first dozen, and the loader serves whichever the tick asks for —
+/// wrapping over the carried length, so every tick has a frame. Nothing here invents one between
+/// carried frames.
+pub type FramePlan = Box<dyn FnMut(&CellFrame) -> Result<FrameBatch, String>>;
 
 struct State {
     window: Arc<Window>,
@@ -277,6 +296,13 @@ impl State {
         self.queue.write_buffer(&self.instances, 0, &bytes);
     }
 
+    /// Swap the drawn frame, keeping the device and the pipeline: the picture changes, the window
+    /// does not. The cost is one upload, and the draw pass is already per frame.
+    fn set_frame(&mut self, quads: Vec<Quad>) {
+        self.quads = quads;
+        self.upload();
+    }
+
     fn resize(&mut self, width: u32, height: u32) {
         if width == 0 || height == 0 {
             return;
@@ -370,6 +396,24 @@ struct App {
     quads: Vec<Quad>,
     state: Option<State>,
     router: Option<Router>,
+    /// **Every carried frame, in the order the package advances them**, and the plan that turns one
+    /// into a batch on demand. Empty for a single-picture run.
+    carried: Vec<CellFrame>,
+    plan: Option<FramePlan>,
+    /// **The cadence, owned by the package layer.** Elapsed nanoseconds in, exact movie ticks out,
+    /// at the source's own frame rate.
+    stream: TickStream,
+    /// **The script driver**: the code lane's execution, run on the tick the clock earned before any
+    /// picture is chosen. With no admitted program it hands back the clock's own tick and states that
+    /// the tick was not scripted, rather than inventing a goto, a stop or a sound to fill the gap.
+    script: crate::script::Driver,
+    /// The carried frame currently uploaded, so a tick that lands on the same frame costs no upload
+    /// and no plan.
+    shown: usize,
+    /// When the previous opportunity was offered.
+    last: std::time::Instant,
+    /// Opportunities offered, printed so a run can show the stream rate independently of the tick.
+    draws: u64,
 }
 
 impl ApplicationHandler for App {
@@ -391,6 +435,21 @@ impl ApplicationHandler for App {
             self.scene.body(),
             self.quads.clone(),
         ));
+        // **The first frame is planned, the rest when a tick asks for them.** A full game carries
+        // many more frames than a movie's first dozen; planning them all at startup would spend the
+        // loader's time on pictures the run may never reach.
+        if let (Some(plan), Some(frame)) = (self.plan.as_mut(), self.carried.first()) {
+            match plan(frame) {
+                Ok(batch) => {
+                    if let Some(state) = self.state.as_mut() {
+                        state.set_frame(batch.quads);
+                    }
+                    self.shown = 0;
+                }
+                Err(why) => eprintln!("frame {} not planned: {why}", frame.id),
+            }
+        }
+        self.last = std::time::Instant::now();
         window.request_redraw();
     }
 
@@ -405,11 +464,66 @@ impl ApplicationHandler for App {
                 }
             }
             WindowEvent::RedrawRequested => {
+                // **One tick opportunity, as fast as the process is scheduled.** Nothing here waits
+                // for a frame rate: the loop runs until the compositor or the scheduler says stop,
+                // and the package manager decides from elapsed time which ticks that opportunity
+                // bought. A deprioritised process therefore shows the same ticks late (`dropped`
+                // says how many it refused); it never shows them at a slower rate.
+                if !self.carried.is_empty() {
+                    let now = std::time::Instant::now();
+                    let seconds = now.duration_since(self.last);
+                    self.last = now;
+                    let due = self.stream.offer(seconds.as_nanos());
+                    // **The code lane runs before the picture is chosen.** A compiled program may
+                    // move the shown tick away from the clock's, stop the timeline, or announce a
+                    // sound; the driver is the only path from a program to this loop.
+                    let step = self.script.run(due.tick);
+                    if !step.sounds.is_empty() {
+                        eprintln!("movie tick {} sounds {:?}", step.tick, step.sounds);
+                    }
+                    let tick = step.tick;
+                    let ran: Vec<&str> =
+                        due.ran().iter().map(|horizon| horizon.name()).collect();
+                    let dropped = self.stream.dropped();
+                    let offers = self.stream.opportunities();
+                    self.draws += 1;
+                    // **Any tick lands on a carried frame.** The index wraps over however many
+                    // frames the package carries, so the loader serves a game's whole timeline over
+                    // the tick rather than stopping at the first dozen.
+                    let index = (tick % self.carried.len() as u64) as usize;
+                    if index != self.shown {
+                        self.shown = index;
+                        let plan = self.plan.as_mut();
+                        let frame = self.carried.get(index);
+                        if let (Some(plan), Some(frame)) = (plan, frame) {
+                            match plan(frame) {
+                                Ok(batch) => {
+                                    eprintln!(
+                                        "movie tick {tick} frame {} ran [{}] dropped {dropped} draw {} of {offers} carried {} scripted {} playing {}",
+                                        batch.id,
+                                        ran.join(","),
+                                        self.draws,
+                                        self.carried.len(),
+                                        step.scripted,
+                                        step.playing
+                                    );
+                                    if let Some(state) = self.state.as_mut() {
+                                        state.set_frame(batch.quads);
+                                    }
+                                }
+                                Err(why) => eprintln!(
+                                    "movie tick {tick} frame {} not planned: {why}",
+                                    frame.id
+                                ),
+                            }
+                        }
+                    }
+                }
                 let Some(state) = self.state.as_mut() else {
                     return;
                 };
                 match state.render() {
-                    Ok(()) => {}
+                    Ok(()) => state.window.request_redraw(),
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
                         state.surface.configure(&state.device, &state.config);
                         state.window.request_redraw();
@@ -518,7 +632,21 @@ pub fn run(scene: Scene) -> Result<(), Box<dyn Error>> {
 /// The batch is projected for the surface's own size by [`crate::present`] — twice, once here and
 /// again on every resize — so a resize never draws a stale projection.
 pub fn run_with_batch(scene: Scene, quads: Vec<Quad>) -> Result<(), Box<dyn Error>> {
-    run_app(scene, quads, None)
+    run_app(scene, quads, None, Vec::new(), None, 0.0, None)
+}
+
+/// **Run the window on the movie's cadence.** `frames` are the carried frames in package order and
+/// `fps` is the rate the package declares; the loop offers an opportunity per turn and draws
+/// whichever frame the tick selects. Zero frames keeps the single-picture behaviour above.
+pub fn run_with_timeline(
+    scene: Scene,
+    carried: Vec<CellFrame>,
+    plan: FramePlan,
+    fps: f32,
+    router: Option<Router>,
+    script: Option<planet_package::Program>,
+) -> Result<(), Box<dyn Error>> {
+    run_app(scene, Vec::new(), router, carried, Some(plan), fps, script)
 }
 
 /// Open one window over `scene`, the frame's draw batch and an input router, and run until it closes.
@@ -530,17 +658,35 @@ pub fn run_with_input(
     quads: Vec<Quad>,
     router: Router,
 ) -> Result<(), Box<dyn Error>> {
-    run_app(scene, quads, Some(router))
+    run_app(scene, quads, Some(router), Vec::new(), None, 0.0, None)
 }
 
-fn run_app(scene: Scene, quads: Vec<Quad>, router: Option<Router>) -> Result<(), Box<dyn Error>> {
+fn run_app(
+    scene: Scene,
+    quads: Vec<Quad>,
+    router: Option<Router>,
+    carried: Vec<CellFrame>,
+    plan: Option<FramePlan>,
+    fps: f32,
+    script: Option<planet_package::Program>,
+) -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
-    event_loop.set_control_flow(ControlFlow::Wait);
+    // **Poll, not Wait.** The loop's rate is the process's share of the CPU, not a frame clock: a
+    // Wait loop would hand the tick rate to whatever the platform decided to wake on, which is the
+    // coupling this exists to remove. The package manager converts the resulting time into ticks.
+    event_loop.set_control_flow(ControlFlow::Poll);
     let mut app = App {
         scene,
         quads,
         state: None,
         router,
+        carried,
+        plan,
+        stream: TickStream::at_rate(f64::from(fps)),
+        script: crate::script::Driver::new(script),
+        shown: usize::MAX,
+        last: std::time::Instant::now(),
+        draws: 0,
     };
     event_loop.run_app(&mut app)?;
     Ok(())

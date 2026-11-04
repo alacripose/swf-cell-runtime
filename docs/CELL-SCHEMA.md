@@ -180,6 +180,46 @@ rather than taken from this document, because the owner asked for that first.
 - **Q-6 — cells in the first surface** (owner). It is consistent with the resynthesis answer Q9: the
   windows' XML is converted into declared cells inside the package, never carried as a payload.
 
+### The artifact table and the audio references
+
+**This shape is family B's, not one invented here.** `shploingus-clean/crates/voxel-package/src/recipe.rs`
+carries a package's own files as an artifact table — a count, then `path` and `bytes` for each, with
+`ARTIFACT_PATH_MAX = 256`, `ARTIFACT_BYTES_MAX = 4 MiB`, `ARTIFACT_COUNT_MAX = 1024`, and a path that
+must be package-relative (no leading `/`, no `\`, no `.`/`..`, no empty part), checked on compile
+**and** on load. `cellframe.rs` in that tree never splices media into a drawing row: a frame is a
+sibling artifact the package names by id, and `voxel-client/src/shell/mount.rs` holds the mounted
+package's files in `frame_artifacts`, keyed by package-relative path.
+
+So a declaration opens with the package's files and the frame names them:
+
+```text
+[artifact]
+audio/sound-7.mp3<TAB>54d7de0b6d4b1c42<TAB>7d06ffe3...
+
+audio
+sound<TAB>7<TAB>audio/sound-7.mp3<TAB>mp3<TAB>11025<TAB>1784
+stream<TAB>-<TAB>audio/stream.mp3<TAB>mp3<TAB>0<TAB>0
+
+shploingus.cellframe/1
+frame<TAB>MAP-0001
+```
+
+`[artifact]` is `path<TAB>digest<TAB>hex`, terminated by one blank line. The path is family B's
+package-relative name and the ceilings are its ceilings, restated rather than widened; the payload is
+its bytes verbatim, lower-case hex, even length, never empty. `digest` is the payload's
+`payload_digest` (FNV-1a 64, the same function the shell frame uses for its payloads), stated by the
+row and **checked against the bytes on read**, so `artifact-digest` refuses a table whose bytes are
+not the bytes it describes. A path outside the family's rules is `cellframe-row`; a duplicate path is
+refused by name; the count and byte ceilings are refusals (`cellframe-bound`), never truncations.
+
+`[audio]`, which follows, holds one row per sound and **names an artifact rather than carrying one**:
+`sound` is a definition character and carries its id, `stream` is a stream block and states `-`,
+`format` and `rate` are the source's declared encoding, `samples` its declared sample count. A row
+naming a path the table does not carry is refused `cellframe-row` with `artifact-reference`; a
+duplicate id of the same kind is refused by name. The bytes a consumer receives are the artifact's,
+resolved at parse, so a count of audio can still never stand in for audio. A declaration with no
+`[artifact]` and no `[audio]` carries no sound, which is the state a silent frame is in.
+
 ### The XML reader this repository has, and the one it does not
 
 The Qt reader belongs to secure-shell v2; nothing here implements or lowers it. `testport1` has one
@@ -231,3 +271,68 @@ not wired into `crates/planet-client/src/xml.rs`, which has named refusals but n
 format id reader upgrades a legacy numeric id to the computed one; CGA-21 refuses a *silent* version
 conversion, so that upgrade has to stay visible in the record it produces, not only in the value it
 returns.
+
+## The visual payload: what a cell draws, and what it says it does not draw
+
+The import carries a cell's visual payload in the same shape the owning trees use, and the parts
+that were this port's own habit were corrected against them:
+
+- **A frame names a role, never a colour.** `shploingus-clean/crates/voxel-package/src/cellframe.rs`
+  (`//! **A frame names a role, never a colour.**`) and `voxel-client/src/shell/cells.rs`
+  ("**A role is not a colour here.**") state the rule; `recipe.rs`'s `theme_role` field is where a
+  package says what a role *is*. This port keeps it exactly that way: a `fill` row names a paper
+  role, and the `[vocabulary]` `colour` rows are the package's own role→RGB declarations — the same
+  role-not-colour indirection, with the package, not the client, saying what the role means.
+- **The painter's order is the placement path.** A stage placement carries a depth; a sprite's
+  children carry their own depths *inside* the sprite's slot. Cells are drawn back to front by that
+  whole path (`emit::Cell::order`), because flattening a sprite's children onto the sprite's depth
+  let a sprite's own background paint over its art — a flat picture where the file's art was.
+- **A mask is not a colour, and an invisible record paints nothing.** A placement that declares a
+  clip depth states the depths it clips, not a picture; a placement whose colour transform sets the
+  alpha multiplier to zero is invisible. Neither is drawn, and both are counted in
+  `Lowering::masked` / `Lowering::transparent`. Clipping and partial alpha are named gaps, not
+  guessed colours.
+- **A sprite is never its bounding box.** A sprite whose first frame places nothing draws nothing;
+  a measured rectangle around a scene is a grid where the picture should be. The frame states the
+  absence instead (below).
+- **A timeline is frames, not one composited display list.** `cellframe.rs` refuses a frame with no
+  `fill` and no `run` ("an empty frame is a window's content erased, and an absence has to be stated
+  as one"), and its frames are *sibling artifacts the package names by id*, which
+  `voxel-client/src/shell/mount.rs` holds in `frame_artifacts`. This port therefore reads the movie
+  frame by frame, applying `RemoveObject`/`RemoveObject2` so a character the file takes away is not
+  composited into a later frame, and it states which frame it ships. Each later frame is carried as a
+  sibling artifact the `[timeline]` section names by `order`, and the sounds the movie **starts** are
+  a `[event]` row each — `sound<TAB>frame<TAB>audio-id`, naming a payload the `[audio]` table already
+  carries. An event is not a payload: a package that carried sounds and not the frames that start
+  them would hold audio nothing can place in time.
+- **What the package does not carry is stated, not drawn.** The streamed `[absence]` section is one
+  row per character with no art: `sprite<TAB>id<TAB>reason<TAB>rule`, where `reason` is
+  `no-display-list`, `no-drawn-record` or `undecoded-display-record`, and `rule` is the owning rule
+  as a law token — `cellframe::malformed-record`, the `RefusalKind` the owning reader uses when it
+  refuses a frame that draws nothing. A client reads these and prints them; it draws nothing for
+  them. The section exists because the alternative the format forbids is an empty frame standing in
+  for erased content.
+
+**The 512 KiB / 16 384 pair is an implemented floor, and the ruled ceiling is owed.** The format
+owner ruled on it directly (`secure-shell-audit/cell-schema-ruling.md`, Q-4, 2026-11-02):
+
+> **Not the 512 KiB / 16 384 pair.** The surface is stateful and real-time, the addressing is
+> **64-bit**, and the geometry reaches **subvoxel** scale. The ceiling must admit that class of
+> surface. Exact numbers still to be given.
+
+Both readers carried the old numbers — `MAX_FRAME_BYTES = 512 * 1024` and `MAX_CELLS = 16_384` in
+`shploingus-clean/crates/voxel-package/src/cellframe.rs` and, restated, in this port's
+`crates/planet-package/src/cellframe.rs`. Both now carry the **interim floor**
+`MAX_FRAME_BYTES = 8 MiB` and `MAX_CELLS = 65_536`, which admits the ruled class — a stateful,
+real-time, 64-bit addressed surface whose frames carry a timeline — while the owner's exact numbers
+are owed. It is a **floor, never the ruling**: a refusal that quotes it says "the interim floor", and
+the number moves when the owner gives the real one. The package frame's payload length is a 64-bit
+little-endian field bounded here by `PAYLOAD_LIMIT = 4 MiB` in `crates/planet-package/src/frame.rs`,
+so "64-bit" is the encoding of the length while the budget is a number still owed. A timeline of
+whole frame documents hex-encoded into one declaration was refused by the current constant (measured:
+1 679 826 bytes for 12 frames); that refusal is evidence about the constant, not a verdict on the
+shape, so the timeline travels as **sibling frame documents**, one per frame — the shape the owning
+trees already use — and `TICKET-0075` carries the client tick over them. The port's own client is
+**ingest evidence, not the runtime**: `secure-shell-audit/testport1_plan_resynthesis.md` §1 records
+`testport1` as the ingest module of secure-shell v2, whose client is the Qt 6 shell, and
+`docs/OWNERSHIP-AUDIT-2026-11-04-family-branches-and-v2.md` records what that changes here.

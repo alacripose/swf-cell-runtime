@@ -1,0 +1,408 @@
+{
+  "version": 1,
+  "runs": [
+    {
+      "run": "2026-11-04-LEDGER-0088",
+      "unit": "LEDGER-0088",
+      "at": "2026-11-04T06:40:41+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "selftest_record"
+      ],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0088 held; 1 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0088",
+      "unit": "LEDGER-0088",
+      "at": "2026-11-04T06:47:04+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0088 held; 1 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0088",
+      "unit": "LEDGER-0088",
+      "at": "2026-11-04T06:53:19+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0088 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0088",
+      "unit": "LEDGER-0088",
+      "at": "2026-11-04T07:00:48+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "selftest_record"
+      ],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0088 held; 1 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0089",
+      "unit": "LEDGER-0089",
+      "at": "2026-11-04T07:07:12+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0089 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:20:46+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0090 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:28:55+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "selftest_record"
+      ],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0090 held; 1 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:31:13+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "ledger_binding"
+      ],
+      "regressions": [
+        "ledger_binding"
+      ],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: FAIL (ratchet: 1 held check(s) regressed: ledger_binding)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:31:49+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "ledger_binding"
+      ],
+      "regressions": [
+        "ledger_binding"
+      ],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: FAIL (ratchet: 1 held check(s) regressed: ledger_binding)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:32:33+00:00",
+      "gate": "RESULT: FAIL (1 of 22 checks)",
+      "failing": [
+        "ledger_binding"
+      ],
+      "regressions": [
+        "ledger_binding"
+      ],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: FAIL (ratchet: 1 held check(s) regressed: ledger_binding)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:33:38+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0090 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:37:45+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0090 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0090",
+      "unit": "LEDGER-0090",
+      "at": "2026-11-04T07:41:22+00:00",
+      "gate": "RESULT: PASS (22 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0090 held; 0 debt(s) open, 5 not enforceable)"
+    }
+  ],
+  "ever_held": [
+    "addon_parity",
+    "baseline_blocks",
+    "baselines_present",
+    "cell_media",
+    "cell_program",
+    "cell_schema",
+    "cell_stream",
+    "commit_refs",
+    "debug_console",
+    "duplicate_reader",
+    "format_magics",
+    "governance_files",
+    "ledger_binding",
+    "ledger_valid",
+    "legacy_formats",
+    "mcp_surface",
+    "output_roots",
+    "plan_errata",
+    "ruling_index",
+    "scope_accounting",
+    "selftest_record",
+    "source_exclusion"
+  ],
+  "debts": {},
+  "ledger_rows": 90,
+  "metrics": [
+    {
+      "project": "C:\\Users\\ala\\Documents\\testport1",
+      "changed": 0,
+      "insertions": 0,
+      "deletions": 0,
+      "work_span_seconds": 0.0,
+      "tests_touched": 0
+    }
+  ],
+  "proposals": [
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0088",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 56 files with 4049 insertions"
+    },
+    {
+      "id": "evidence-debt",
+      "unit": "LEDGER-0088",
+      "rule": "A stale selftest record is an open evidence debt: one complete selftest on the current tree repairs it, and a rewritten digest does not.",
+      "evidence": "the record does not certify this tree's fixture digest"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0088",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 58 files with 4049 insertions"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0088",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0088"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0088",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 58 files with 4049 insertions"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0088",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0088"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0088",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 62 files with 4049 insertions"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0088",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0088"
+    },
+    {
+      "id": "evidence-debt",
+      "unit": "LEDGER-0088",
+      "rule": "A stale selftest record is an open evidence debt: one complete selftest on the current tree repairs it, and a rewritten digest does not.",
+      "evidence": "the record does not certify this tree's fixture digest"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0089",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 62 files with 4050 insertions"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0090",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 69 files with 6502 insertions"
+    },
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0090",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 58 files with 6484 insertions"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "evidence-debt",
+      "unit": "LEDGER-0090",
+      "rule": "A stale selftest record is an open evidence debt: one complete selftest on the current tree repairs it, and a rewritten digest does not.",
+      "evidence": "the record does not certify this tree's fixture digest"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0090",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "3 files changed and no test function moved with them"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0090",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0090"
+    }
+  ]
+}

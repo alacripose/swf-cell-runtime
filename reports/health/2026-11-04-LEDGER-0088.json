@@ -1,0 +1,55 @@
+{
+  "unit": "LEDGER-0088",
+  "at": "2026-11-04T07:00:48+00:00",
+  "gate": "RESULT: FAIL (1 of 22 checks)",
+  "failing": [
+    "selftest_record"
+  ],
+  "regressions": [],
+  "new_debts": [],
+  "not_enforced": [
+    "source_access_isolation",
+    "alternate_surface_or_runtime",
+    "branch_and_pr_review",
+    "client_witness",
+    "client_run_h9"
+  ],
+  "metrics": [
+    {
+      "project": "C:\\Users\\ala\\Documents\\testport1",
+      "changed": 62,
+      "insertions": 4049,
+      "deletions": 306,
+      "work_span_seconds": 19875.7,
+      "tests_touched": 108
+    }
+  ],
+  "proposals": [
+    {
+      "id": "commit-budget",
+      "unit": "LEDGER-0088",
+      "rule": "Split a unit whose diff exceeds 40 files or 4,000 insertions into two units, not one larger commit (AGENTS.md \u00a711).",
+      "evidence": "this turn changed 62 files with 4049 insertions"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0088",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0088"
+    },
+    {
+      "id": "evidence-debt",
+      "unit": "LEDGER-0088",
+      "rule": "A stale selftest record is an open evidence debt: one complete selftest on the current tree repairs it, and a rewritten digest does not.",
+      "evidence": "the record does not certify this tree's fixture digest"
+    }
+  ],
+  "debts": {
+    "selftest_record": {
+      "owner": "agent",
+      "opened": "2026-11-04-LEDGER-0088",
+      "policy": "evidence-debt"
+    }
+  },
+  "result": "RESULT: PASS (LEDGER-0088 held; 1 debt(s) open, 5 not enforceable)"
+}

@@ -11,27 +11,34 @@
 //! Both client binaries consume the package crate's own receipt and parsed surface; neither
 //! re-implements a frame reader, a surface parser or a second transport (AGENTS.md §2).
 
+pub mod audio;
+pub mod axis;
 pub mod batch;
 pub mod cell_mount;
+pub mod console;
 pub mod draw;
-pub mod font;
+pub mod font;
 pub mod input;
 pub mod package_owner;
-pub mod palette;
+pub mod palette;
 pub mod present;
 pub mod picture;
 pub mod render;
 pub mod scene;
+pub mod script;
+pub mod timeline;
 pub mod xml;
 
 pub use batch::{plan as batch_plan, Batch, Quad};
 pub use cell_mount::{Adopted, CellMount};
-pub use draw::{rasters, Cell, Raster, WindowRaster};
+pub use draw::{rasters, Cell, Raster, WindowRaster};
 pub use input::Router;
-pub use palette::{Palette, Rgba};
+pub use palette::{Palette, Rgba};
 pub use present::Instance;
 pub use picture::Picture;
 pub use package_owner::{decode, digest, encode};
 pub use render::Scene;
 pub use scene::{from_adopted, opened};
+pub use script::{Driver, Step};
+pub use timeline::Timeline;
 pub use xml::Window;

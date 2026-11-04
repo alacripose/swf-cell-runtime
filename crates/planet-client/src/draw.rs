@@ -67,23 +67,48 @@ pub struct WindowRaster {
 pub fn rasters(adopted: &Adopted, palette: &Palette) -> Result<Vec<WindowRaster>, Refusals> {
     let mut problems = Refusals::new();
     let mut drawn: Vec<WindowRaster> = Vec::new();
-    let transparent = palette
-        .resolve("transparent")
-        .unwrap_or(Rgba::TRANSPARENT);
-
     for window in &adopted.surface.windows {
         let Some(frame) = adopted.frame_of(&window.id) else {
             continue;
         };
-        let Some(bound) = adopted
+        let line = adopted
             .mount
             .windows
             .iter()
             .find(|entry| entry.window == window.id)
-        else {
-            continue;
-        };
+            .map(|entry| entry.line)
+            .unwrap_or(1);
+        match raster_of(&window.id, frame, line, palette) {
+            Ok(raster) => drawn.push(raster),
+            Err(refusals) => {
+                for refusal in refusals.problems() {
+                    problems.refuse(refusal.clone());
+                }
+            }
+        }
+    }
+    if problems.is_empty() {
+        Ok(drawn)
+    } else {
+        Err(problems)
+    }
+}
 
+/// **Draw one frame of a window.** The timeline asks this per tick: the frame is a document the mount
+/// already resolved, so nothing here re-resolves, re-checks or re-measures it — the cells are the
+/// file's own rows, in the colour the package declared for each role.
+pub fn raster_of(
+    window: &str,
+    frame: &planet_package::cellframe::CellFrame,
+    line: usize,
+    palette: &Palette,
+) -> Result<WindowRaster, Refusals> {
+    let mut problems = Refusals::new();
+    let window = window.to_string();
+    let transparent = palette
+        .resolve("transparent")
+        .unwrap_or(Rgba::TRANSPARENT);
+    {
         let mut cells: Vec<Cell> = Vec::with_capacity((frame.cols * frame.rows) as usize);
         for y in 0..frame.rows {
             for x in 0..frame.cols {
@@ -99,10 +124,19 @@ pub fn rasters(adopted: &Adopted, palette: &Palette) -> Result<Vec<WindowRaster>
 
         let mut refused = false;
         for fill in &frame.fills {
-            let Some(paper) = palette.resolve(&fill.paper) else {
+            // A role the package declared with its own colour is drawn in **that** colour; the
+            // client palette answers only the format's declared roles. This is the one place a
+            // package's palette reaches the raster, and it stays roles-not-colours: the row named a
+            // role, and the package said what that role is.
+            let declared = frame
+                .colours
+                .iter()
+                .find(|(name, _)| *name == fill.paper)
+                .map(|(_, (r, g, b))| Rgba::rgba(*r, *g, *b, 255));
+            let Some(paper) = declared.or_else(|| palette.resolve(&fill.paper)) else {
                 problems.refuse(Refusal::CellframeRole {
-                    line: bound.line,
-                    window: window.id.clone(),
+                    line,
+                    window: window.clone(),
                     frame: frame.id.clone(),
                     role: fill.paper.clone(),
                 });
@@ -121,8 +155,8 @@ pub fn rasters(adopted: &Adopted, palette: &Palette) -> Result<Vec<WindowRaster>
         for run in &frame.runs {
             let Some(ink) = palette.resolve(&run.ink) else {
                 problems.refuse(Refusal::CellframeRole {
-                    line: bound.line,
-                    window: window.id.clone(),
+                    line,
+                    window: window.clone(),
                     frame: frame.id.clone(),
                     role: run.ink.clone(),
                 });
@@ -138,23 +172,17 @@ pub fn rasters(adopted: &Adopted, palette: &Palette) -> Result<Vec<WindowRaster>
             }
         }
         if refused {
-            continue;
+            return Err(problems);
         }
-        drawn.push(WindowRaster {
-            window: window.id.clone(),
+        Ok(WindowRaster {
+            window,
             frame: frame.id.clone(),
-            line: bound.line,
+            line,
             raster: Raster {
                 cols: frame.cols,
                 rows: frame.rows,
                 cells,
             },
-        });
-    }
-
-    if problems.is_empty() {
-        Ok(drawn)
-    } else {
-        Err(problems)
+        })
     }
 }

@@ -9,3 +9,6 @@ winit = "0.30"
 wgpu = "22"
 glyphon = "0.6"
 pollster = "0.3"
+# The one codec this client decodes: MPEG audio, which is what the imported package's
+# DefineSound characters declare. Pure Rust, no C toolchain, and no second package format.
+symphonia = { version = "0.5", default-features = false, features = ["mp3"] }

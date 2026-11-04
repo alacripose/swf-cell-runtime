@@ -30,6 +30,14 @@ impl Adopted {
     pub fn frame_of(&self, window: &str) -> Option<&planet_package::CellFrame> {
         self.mount.frame_of(window)
     }
+
+    /// **Every frame the package carries for `window`, in the order it advances them.**
+    ///
+    /// The mount resolved these — the bound frame first, then each `[timeline]` artifact the package
+    /// names, in order — so the client has a cadence to advance without reading a document itself.
+    pub fn frames_of(&self, window: &str) -> Vec<&planet_package::CellFrame> {
+        self.mount.frames_of(window)
+    }
 }
 
 /// What the client has adopted, in adoption order.
