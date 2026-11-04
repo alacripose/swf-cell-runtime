@@ -326,6 +326,23 @@
         "client_run_h9"
       ],
       "result": "RESULT: PASS (LEDGER-0093 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0093",
+      "unit": "LEDGER-0093",
+      "at": "2026-11-04T08:22:44+00:00",
+      "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0093 held; 0 debt(s) open, 5 not enforceable)"
     }
   ],
   "ever_held": [
@@ -504,6 +521,18 @@
       "unit": "LEDGER-0093",
       "rule": "A stale selftest record is an open evidence debt: one complete selftest on the current tree repairs it, and a rewritten digest does not.",
       "evidence": "the record does not certify this tree's fixture digest"
+    },
+    {
+      "id": "unit-without-ledger-row",
+      "unit": "LEDGER-0093",
+      "rule": "A unit with no ledger row did not happen: write the row and the ticket with the change (AGENTS.md \u00a79).",
+      "evidence": "no ledger row was added since the previous health run for LEDGER-0093"
+    },
+    {
+      "id": "untested-change",
+      "unit": "LEDGER-0093",
+      "rule": "A unit that changes behaviour states the test that proves it, or states that it has none and why.",
+      "evidence": "1 files changed and no test function moved with them"
     },
     {
       "id": "unit-without-ledger-row",

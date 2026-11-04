@@ -1,6 +1,6 @@
 {
   "unit": "LEDGER-0093",
-  "at": "2026-11-04T08:22:07+00:00",
+  "at": "2026-11-04T08:22:44+00:00",
   "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
   "failing": [],
   "regressions": [],
