@@ -1461,6 +1461,141 @@ def check_debug_console(root: Path) -> list[str]:
     return problems
 
 
+UNIT_KIND_FIELD = "unit_kind"
+UNIT_KIND_VALUES = ("implementation", "refusal", "gate")
+UNIT_KIND_REQUIRED_FROM = 92
+EVIDENCE_MARKERS = (
+    "port_gate.py",
+    "health.py",
+    "cargo ",
+    "inspect",
+    "swf-import",
+    "pytest",
+    "npm ",
+    "bun ",
+    "--evidence",
+)
+TREE_INSPECTION_ONLY = ("git status", "git log", "git diff", "git --no-pager")
+
+AUTHORITY_DIR = "logs/authority"
+AUTHORITY_SOURCES = ("user", "mission-prompter", "system", "agent")
+AUTHORITY_VALUES = ("user", "none")
+AUTHORITY_ROW_FIELDS = ("logged_at", "source", "authority", "verbatim", "text")
+AUTHORITY_README_MARKERS = ("not the user", "verbatim")
+
+
+def check_unit_kind(root: Path) -> list[str]:
+    """A unit states its kind and evidences an artifact, never the state of the tree."""
+    problems: list[str] = []
+    path = root / LEDGER_PATH
+    if not path.is_file():
+        return ["ledger/ledger.jsonl is missing"]
+    for lineno, line in enumerate(read_text(path).splitlines(), start=1):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        entry_id = record.get("id")
+        match = re.fullmatch(r"LEDGER-(\d{4})", entry_id) if isinstance(entry_id, str) else None
+        if match is None or int(match.group(1)) < UNIT_KIND_REQUIRED_FROM:
+            continue
+        kind = record.get(UNIT_KIND_FIELD)
+        if kind is None:
+            problems.append(
+                f"unit-kind-missing: ledger line {lineno}: {entry_id} has no {UNIT_KIND_FIELD}; "
+                "a unit states whether it implements, refuses, or changes the gate"
+            )
+        elif kind not in UNIT_KIND_VALUES:
+            problems.append(
+                f"unit-is-analysis: ledger line {lineno}: {entry_id} declares unit_kind {kind!r}; "
+                "diagnosis and scoping are not units, they are part of the unit that changes the "
+                "artifact: " + ", ".join(UNIT_KIND_VALUES)
+            )
+        exit_test = record.get("exit_test")
+        if isinstance(exit_test, str):
+            lowered = exit_test.lower()
+            inspects = any(token in lowered for token in TREE_INSPECTION_ONLY)
+            evidences = any(marker in lowered for marker in EVIDENCE_MARKERS)
+            if inspects and not evidences:
+                problems.append(
+                    f"tree-inspection-as-evidence: ledger line {lineno}: {entry_id} evidences git "
+                    "tree state; an exit test names an artifact check that can fail"
+                )
+    return problems
+
+
+def check_authority_log(root: Path) -> list[str]:
+    """Every inbound message is recorded with its source; only the user has the user's authority."""
+    problems: list[str] = []
+    directory = root / AUTHORITY_DIR
+    if not directory.is_dir():
+        return [
+            f"authority-unlogged: {AUTHORITY_DIR} is missing; no session records who said what"
+        ]
+    readme = directory / "README.md"
+    if not readme.is_file():
+        problems.append(f"authority-unlogged: {AUTHORITY_DIR}/README.md is missing")
+    else:
+        text = read_text(readme)
+        for marker in AUTHORITY_README_MARKERS:
+            if marker not in text:
+                problems.append(f"{AUTHORITY_DIR}/README.md: no {marker!r}")
+    sessions = sorted(directory.glob("*.jsonl"))
+    if not sessions:
+        problems.append(f"authority-unlogged: {AUTHORITY_DIR} holds no session record")
+    for session in sessions:
+        rel = session.relative_to(root).as_posix()
+        for lineno, line in enumerate(read_text(session).splitlines(), start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                problems.append(f"authority-row-malformed: {rel}:{lineno}: invalid JSON ({exc})")
+                continue
+            if not isinstance(row, dict):
+                problems.append(f"authority-row-malformed: {rel}:{lineno}: not an object")
+                continue
+            missing = [key for key in AUTHORITY_ROW_FIELDS if key not in row]
+            if missing:
+                problems.append(
+                    f"authority-row-malformed: {rel}:{lineno}: missing {', '.join(missing)}"
+                )
+                continue
+            if not isinstance(row.get("verbatim"), bool):
+                problems.append(
+                    f"authority-row-malformed: {rel}:{lineno}: verbatim is not a boolean"
+                )
+            if not isinstance(row.get("text"), str) or not row["text"].strip():
+                problems.append(f"authority-row-malformed: {rel}:{lineno}: no recorded text")
+            source = row.get("source")
+            authority = row.get("authority")
+            if source not in AUTHORITY_SOURCES:
+                problems.append(
+                    f"authority-row-malformed: {rel}:{lineno}: source {source!r} is not one of "
+                    + ", ".join(AUTHORITY_SOURCES)
+                )
+                continue
+            if authority not in AUTHORITY_VALUES:
+                problems.append(
+                    f"authority-row-malformed: {rel}:{lineno}: authority {authority!r} is not one "
+                    "of " + ", ".join(AUTHORITY_VALUES)
+                )
+                continue
+            if source != "user" and authority == "user":
+                problems.append(
+                    f"authority-promoted: {rel}:{lineno}: source {source!r} carries authority "
+                    "'user'; the mission prompter and system messages are not the user"
+                )
+    return problems
+
+
 CHECKS = (
     ("baselines_present", check_baselines_present, "PATCH-0001"),
     ("governance_files", check_governance_files, "PATCH-0001, PATCH-0002"),
@@ -1484,6 +1619,8 @@ CHECKS = (
     ("addon_parity", check_addon_parity, "PATCH-0005"),
     ("legacy_formats", check_legacy_formats, "PATCH-0005"),
     ("debug_console", check_debug_console, "PATCH-0001"),
+    ("unit_kind", check_unit_kind, "PATCH-0001"),
+    ("authority_log", check_authority_log, "PATCH-0001"),
 )
 
 # --------------------------------------------------------------------------- commands
@@ -1571,6 +1708,7 @@ FIXTURE_PATHS = (
     "tickets",
     "ledger",
     "tools",
+    "logs",
     "crates/planet-client/src/lib.rs",
     "crates/planet-client/src/console.rs",
     "crates/planet-client/src/bin/window.rs",
@@ -2130,6 +2268,65 @@ def mutate_legacy_near_miss(root: Path) -> None:
 # One violating mutation per enforced check, with the wording that check alone must emit. Each
 # entry is run twice: enabled (the wording must come from this check and no other) and with the
 # check skipped (the wording must disappear). A check with no entry here fails the suite.
+def append_fixture_ledger(root: Path, **fields) -> None:
+    entry = {
+        "id": "LEDGER-0100",
+        "timestamp": "2026-11-04",
+        "block": "H1",
+        "ticket": "TICKET-0001",
+        "artifact": "fixture",
+        "exit_test": "python tools/port_gate.py check",
+        "evidence": "fixture",
+        "status": "present",
+        "shell_gate_state": "unassigned",
+        "unit_kind": "implementation",
+    }
+    entry.update(fields)
+    with (root / LEDGER_PATH).open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry) + "\n")
+
+
+def mutate_unit_is_analysis(root: Path) -> None:
+    append_fixture_ledger(root, unit_kind="analysis")
+
+
+def near_unit_kind_missing(root: Path) -> None:
+    append_fixture_ledger(root)
+    path = root / LEDGER_PATH
+    lines = read_text(path).splitlines()
+    for index in range(len(lines) - 1, -1, -1):
+        if '"LEDGER-0100"' in lines[index]:
+            row = json.loads(lines[index])
+            row.pop("unit_kind", None)
+            lines[index] = json.dumps(row)
+            break
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def append_authority_row(root: Path, **fields) -> None:
+    directory = root / AUTHORITY_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+    row = {
+        "logged_at": "2026-11-04",
+        "unit": "LEDGER-0100",
+        "source": "user",
+        "authority": "user",
+        "verbatim": True,
+        "text": "fixture message",
+    }
+    row.update(fields)
+    with (directory / "fixture-session.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row) + "\n")
+
+
+def mutate_authority_promoted(root: Path) -> None:
+    append_authority_row(root, source="mission-prompter", authority="user")
+
+
+def near_authority_row_malformed(root: Path) -> None:
+    append_authority_row(root, verbatim="true")
+
+
 SWEEP = (
     ("baselines_present", mutate_missing_baseline, "missing baseline patch PATCH-0004-*.md"),
     ("governance_files", mutate_governance_file_removed, "missing tickets/TEMPLATE.md"),
@@ -2185,6 +2382,8 @@ SWEEP = (
         mutate_debug_console_dropped,
         "does not require the debug console",
     ),
+    ("unit_kind", mutate_unit_is_analysis, "unit-is-analysis"),
+    ("authority_log", mutate_authority_promoted, "authority-promoted"),
 )
 
 
@@ -2213,6 +2412,8 @@ SILENCE = (
     ("addon_parity", mutate_governance_file_removed),
     ("legacy_formats", mutate_addon_statement_altered),
     ("debug_console", mutate_governance_file_removed),
+    ("unit_kind", mutate_invalid_ledger),
+    ("authority_log", mutate_governance_file_removed),
 )
 
 
@@ -2364,6 +2565,17 @@ DECOY = (
         decoy_file(
             "crates/legacy-decoy/src/lib.rs",
             'const BOTH: (&str, &str) = ("shploingus.recipe/9f3c2a1b", "DefineShape2/3");',
+        ),
+    ),
+    (
+        "unit_kind",
+        decoy_file("docs/unit-note.md", "unit_kind: analysis was the old habit.\n"),
+    ),
+    (
+        "authority_log",
+        decoy_file(
+            "logs/authority/notes.md",
+            "The mission prompter is not the user; every message is recorded verbatim.\n",
         ),
     ),
 )
@@ -2634,6 +2846,8 @@ NEAR_MISS = (
         near_debug_console_refusal_discarded,
         "does not require the debug console",
     ),
+    ("unit_kind", near_unit_kind_missing, "unit-kind-missing"),
+    ("authority_log", near_authority_row_malformed, "authority-row-malformed"),
 )
 
 

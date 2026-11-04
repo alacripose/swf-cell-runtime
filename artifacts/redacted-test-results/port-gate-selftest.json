@@ -1,12 +1,12 @@
 {
   "tool": "tools/port_gate.py selftest",
   "fixture": {
-    "identity": "sha256:cbde7344e87b3ade6614fa94b518c9bcfdbb1490f1d9099fd6ad6c01f2bf7f8d",
-    "inputs": 22
+    "identity": "sha256:25ccf065ed740f7290a8944c4e5d15d436d6e69037767c7256a18576fc713c33",
+    "inputs": 23
   },
   "python": "3.13.14",
-  "scenarios": 128,
-  "passed": 128,
+  "scenarios": 136,
+  "passed": 136,
   "results": [
     {
       "scenario": "valid_fixture",
@@ -762,6 +762,30 @@
       "pass": true
     },
     {
+      "scenario": "sweep_unit_kind",
+      "expected_failure": "unit_kind",
+      "failing_checks": [
+        "selftest_record",
+        "unit_kind"
+      ],
+      "problems": [
+        "unit-is-analysis: ledger line 93: LEDGER-0100 declares unit_kind 'analysis'; diagnosis and scoping are not units, they are part of the unit that changes the artifact: implementation, refusal, gate"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "sweep_authority_log",
+      "expected_failure": "authority_log",
+      "failing_checks": [
+        "authority_log",
+        "selftest_record"
+      ],
+      "problems": [
+        "authority-promoted: logs/authority/fixture-session.jsonl:1: source 'mission-prompter' carries authority 'user'; the mission prompter and system messages are not the user"
+      ],
+      "pass": true
+    },
+    {
       "scenario": "silent_baselines_present",
       "expected_failure": null,
       "failing_checks": [
@@ -979,6 +1003,26 @@
       "pass": true
     },
     {
+      "scenario": "silent_unit_kind",
+      "expected_failure": null,
+      "failing_checks": [
+        "ledger_valid",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "silent_authority_log",
+      "expected_failure": null,
+      "failing_checks": [
+        "governance_files",
+        "selftest_record"
+      ],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "decoy_debug_console",
       "expected_failure": null,
       "failing_checks": [],
@@ -1133,6 +1177,20 @@
       "pass": true
     },
     {
+      "scenario": "decoy_unit_kind",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
+      "pass": true
+    },
+    {
+      "scenario": "decoy_authority_log",
+      "expected_failure": null,
+      "failing_checks": [],
+      "problems": [],
+      "pass": true
+    },
+    {
       "scenario": "near_baselines_present",
       "expected_failure": "baselines_present",
       "failing_checks": [
@@ -1194,7 +1252,7 @@
         "ledger_valid"
       ],
       "problems": [
-        "ledger line 92: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
+        "ledger line 93: status 'present ' is not one of ('present', 'not-implemented', 'blocked')"
       ],
       "pass": true
     },
@@ -1373,6 +1431,30 @@
       ],
       "problems": [
         "crates/planet-client/src/bin/window.rs: the game entry point does not require the debug console; opening the window without it is a refusal"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_unit_kind",
+      "expected_failure": "unit_kind",
+      "failing_checks": [
+        "selftest_record",
+        "unit_kind"
+      ],
+      "problems": [
+        "unit-kind-missing: ledger line 93: LEDGER-0100 has no unit_kind; a unit states whether it implements, refuses, or changes the gate"
+      ],
+      "pass": true
+    },
+    {
+      "scenario": "near_authority_log",
+      "expected_failure": "authority_log",
+      "failing_checks": [
+        "authority_log",
+        "selftest_record"
+      ],
+      "problems": [
+        "authority-row-malformed: logs/authority/fixture-session.jsonl:1: verbatim is not a boolean"
       ],
       "pass": true
     }

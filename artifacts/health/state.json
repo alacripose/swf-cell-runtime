@@ -256,10 +256,28 @@
         "client_run_h9"
       ],
       "result": "RESULT: PASS (LEDGER-0091 held; 0 debt(s) open, 5 not enforceable)"
+    },
+    {
+      "run": "2026-11-04-LEDGER-0092",
+      "unit": "LEDGER-0092",
+      "at": "2026-11-04T08:08:45+00:00",
+      "gate": "RESULT: PASS (24 checks, 5 not enforceable)",
+      "failing": [],
+      "regressions": [],
+      "new_debts": [],
+      "not_enforced": [
+        "source_access_isolation",
+        "alternate_surface_or_runtime",
+        "branch_and_pr_review",
+        "client_witness",
+        "client_run_h9"
+      ],
+      "result": "RESULT: PASS (LEDGER-0092 held; 0 debt(s) open, 5 not enforceable)"
     }
   ],
   "ever_held": [
     "addon_parity",
+    "authority_log",
     "baseline_blocks",
     "baselines_present",
     "cell_media",
@@ -280,18 +298,19 @@
     "ruling_index",
     "scope_accounting",
     "selftest_record",
-    "source_exclusion"
+    "source_exclusion",
+    "unit_kind"
   ],
   "debts": {},
-  "ledger_rows": 91,
+  "ledger_rows": 92,
   "metrics": [
     {
       "project": "C:\\Users\\ala\\Documents\\testport1",
-      "changed": 7,
-      "insertions": 44,
-      "deletions": 3,
-      "work_span_seconds": 366.5,
-      "tests_touched": 0
+      "changed": 11,
+      "insertions": 380,
+      "deletions": 10,
+      "work_span_seconds": 782.4,
+      "tests_touched": 27
     }
   ],
   "proposals": [
