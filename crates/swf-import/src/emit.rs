@@ -777,6 +777,13 @@ pub fn frame_document(
     for (index, (code, bytes)) in actions.iter().enumerate() {
         let path = format!("script/action-{}-tag{code}.bin", index + 1);
         artifact_rows.push_str(&artifact_row(&path, bytes));
+        // The same record, lowered: a canonical program the lane can execute. A record the
+        // decoder refuses still travels raw above, so the loss is never silent.
+        if let Ok(instructions) = crate::avm1::lower(*code, bytes) {
+            let program = crate::avm1::canonical(&instructions);
+            let program_path = format!("script/program-{}-tag{code}.txt", index + 1);
+            artifact_rows.push_str(&artifact_row(&program_path, program.as_bytes()));
+        }
     }
     let artifact_section = if artifact_rows.is_empty() {
         String::new()

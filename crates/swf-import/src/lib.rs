@@ -6,6 +6,7 @@
 //! are measured — shape bounds, sprite structure, media kinds — and never lowered into geometry,
 //! timeline or behaviour, because those representations are not declared.
 
+pub mod avm1;
 pub mod content;
 pub mod emit;
 pub mod header;

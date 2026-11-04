@@ -308,6 +308,44 @@ fn main() -> ExitCode {
             println!("audio_events {}", events.len());
             let script_bytes: usize = inventory.actions.iter().map(|(_, bytes)| bytes.len()).sum();
             println!("script_records {} bytes {}", inventory.actions.len(), script_bytes);
+            let mut op_counts: std::collections::BTreeMap<u8, usize> = Default::default();
+            let mut refused_records = 0usize;
+            let mut records = 0usize;
+            for (index, (tag_code, bytes)) in inventory.actions.iter().enumerate() {
+                records += 1;
+                match swf_import::avm1::lower(*tag_code, bytes) {
+                    Ok(instructions) => {
+                        for instruction in instructions {
+                            *op_counts.entry(instruction.code).or_default() += 1;
+                        }
+                    }
+                    Err(refusal) => {
+                        refused_records += 1;
+                        println!(
+                            "script_refused record {} tag {} {} {}",
+                            index + 1,
+                            tag_code,
+                            refusal.code,
+                            refusal.message
+                        );
+                    }
+                }
+            }
+            for (code, count) in &op_counts {
+                println!(
+                    "script_opcode 0x{:02x} {} {}",
+                    code,
+                    swf_import::avm1::name_of(*code).unwrap_or("unknown"),
+                    count
+                );
+            }
+            println!(
+                "script_lower records {} decoded {} refused {} opcodes {}",
+                records,
+                records - refused_records,
+                refused_records,
+                op_counts.len()
+            );
             println!("placements {}", lowering.summary());
             // Which frame the package ships, and what the rest of the timeline holds that it does
             // not: a named gap, so "the client draws frame 1" is a statement about the package.
