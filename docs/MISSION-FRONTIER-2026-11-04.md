@@ -19,7 +19,8 @@ Status words are the implementation facts `AGENTS.md` §3 allows: `present`, `no
 | axis | state | blocker |
 | --- | --- | --- |
 | Bitmap fills as content | `not-implemented` | `shape.rs` returns a grey for `Fill::Bitmap`; decoding needs a decision on the media lane |
-| Sound playback | `not-implemented` | driver announces characters; nothing hands them to `audio.rs`'s channel |
+| Frame sounds start on their tick | `planet_client::playback::Score` | 7 tests; a frame's carried clips are queued on the tick that shows it; no audio device is opened |
+| Sound device output | `not-implemented` | the channel renders and counts samples; handing them to hardware needs a device dependency and a shell-declared run |
 | Code frame admission | `blocked` | `AGENTS.md` §12 refuses `frame-kind-reserved`; admission is the shell's ruling |
 | Client axis | `not-implemented` | no address space for tick/cell/sprite a reviewer or bot can point at (questions 101–130) |
 | Civilians and wishes format | `not-implemented` | ownership undecided: this repo, the shell, or the civilian system (questions 131–155) |

@@ -16,6 +16,7 @@ use std::time::SystemTime;
 
 use planet_client::input::Router;
 use planet_client::palette::{Palette, Rgba};
+use planet_client::playback::Score;
 use planet_client::render::{self, FrameBatch, FramePlan, Scene};
 use planet_client::{batch, draw, picture, scene, CellMount, Timeline};
 
@@ -78,6 +79,8 @@ struct Opened {
     plan: FramePlan,
     fps: f32,
     router: Option<Router>,
+    /// **The carried frames' sounds, decoded once and started on the tick that shows the frame.**
+    score: Option<Score>,
 }
 
 fn opened() -> Opened {
@@ -89,6 +92,7 @@ fn opened() -> Opened {
         }),
         fps: 0.0,
         router: None,
+        score: None,
     };
     let Some(path) = newest(Path::new("generated"), "pkg") else {
         return none(
@@ -129,6 +133,18 @@ fn opened() -> Opened {
         .iter()
         .map(|frame| (*frame).clone())
         .collect();
+
+    // **The frame's carried sounds are decoded once and attached to the tick.** A frame starts its
+    // own clips the tick it is shown; no device is opened, and the run says which of the two facts
+    // it is reporting.
+    let score = Score::prepare(carried.iter());
+    eprintln!(
+        "score {} clips across {} frames, {} unreadable; a frame starts its sounds on the tick that shows it; device {}",
+        score.clip_total(),
+        carried.len(),
+        score.unreadable_total(),
+        Score::DEVICE
+    );
 
     // The first frame is drawn once for the report, so a run states the cells, the picture and the
     // batch it will hand the device; the rest are planned lazily, when the tick first lands on them.
@@ -215,6 +231,7 @@ fn opened() -> Opened {
         plan,
         fps,
         router: Some(router),
+        score: Some(score),
     }
 }
 
@@ -229,6 +246,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         plan,
         fps,
         router,
+        score,
     } = opened();
-    render::run_with_timeline(scene, carried, plan, fps, router, None)
+    render::run_with_timeline(scene, carried, plan, fps, router, None, score)
 }

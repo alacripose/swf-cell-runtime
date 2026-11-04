@@ -305,6 +305,10 @@ fn evidence(args: &[String]) -> std::process::ExitCode {
         script.code
     );
     let frame_nanos = timeline.frame_nanos().unwrap_or(0);
+    // **The score, over the frames the package carries.** Every frame's clips are decoded once; the
+    // per-tick advance below starts a frame's sounds on the tick that shows it.
+    let mut score = planet_client::playback::Score::prepare(timeline.frames().iter().copied());
+    let mut sound_starts = 0usize;
     let mut ticks: Vec<String> = Vec::new();
     let mut changed_total = 0usize;
     let mut sound_total = 0usize;
@@ -372,6 +376,25 @@ fn evidence(args: &[String]) -> std::process::ExitCode {
                 sound.id, sound.tick, sound.rate, sound.channels, sound.frames, sound.samples, sound.peak, sound.sample_offset
             );
         }
+        // **A frame's own sounds start on the tick that shows it**, and the samples are rendered
+        // before the tick is left, so "the start produced audio" is a count and a peak rather than
+        // an assertion. No device is opened: `Score::DEVICE` states that in the line itself.
+        if let Some(started) = score.advance(tick, index).started {
+            if !started.sounds.is_empty() {
+                let played = score.render(started.samples);
+                sound_starts += 1;
+                println!(
+                    "sound_start tick {} frame {} sounds {:?} samples {} rendered {} peak {:.4} device {}",
+                    started.tick,
+                    started.frame,
+                    started.sounds,
+                    started.samples,
+                    played.samples,
+                    played.peak,
+                    planet_client::playback::Score::DEVICE
+                );
+            }
+        }
         let ppm = format!("{outdir}/frame-{index:02}.ppm");
         if let Err(error) = write_ppm(&picture, &ppm) {
             eprintln!("inspect: write {ppm}: {error}");
@@ -397,6 +420,12 @@ fn evidence(args: &[String]) -> std::process::ExitCode {
         eprintln!("inspect: write {path}: {error}");
         return std::process::ExitCode::FAILURE;
     }
+    println!(
+        "sound_score clips {} unreadable {} starts {sound_starts} device {}",
+        score.clip_total(),
+        score.unreadable_total(),
+        planet_client::playback::Score::DEVICE
+    );
     println!(
         "evidence {path} frames {} changed_pixels_total {changed_total} sounds {sound_total} script {}",
         ticks.len(),

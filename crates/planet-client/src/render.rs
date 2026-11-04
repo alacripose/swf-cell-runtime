@@ -33,6 +33,7 @@ use planet_package::cadence::TickStream;
 use planet_package::CellFrame;
 
 use crate::batch::Quad;
+use crate::playback::{Advance, Score};
 use crate::present::{self, Instance};
 
 /// The quad pass: one instance is a clip-space rectangle and its colour, six vertices each.
@@ -407,6 +408,9 @@ struct App {
     /// picture is chosen. With no admitted program it hands back the clock's own tick and states that
     /// the tick was not scripted, rather than inventing a goto, a stop or a sound to fill the gap.
     script: crate::script::Driver,
+    /// **The score: a carried frame's sounds, started on the tick that shows it.** `None` for a run
+    /// with no carried frames, which is a picture and not a movie.
+    score: Option<Score>,
     /// The carried frame currently uploaded, so a tick that lands on the same frame costs no upload
     /// and no plan.
     shown: usize,
@@ -493,6 +497,26 @@ impl ApplicationHandler for App {
                     let index = (tick % self.carried.len() as u64) as usize;
                     if index != self.shown {
                         self.shown = index;
+                        // **The frame's own sounds start on the tick that shows it.** The start is
+                        // reported with the frame that caused it and with the samples it put into
+                        // the channel; no device is opened, so the samples are counted and said so.
+                        if let Some(Advance {
+                            started: Some(started),
+                            played,
+                        }) = self.score.as_mut().map(|score| score.advance(tick, index))
+                        {
+                            if !started.sounds.is_empty() {
+                                eprintln!(
+                                    "sound_start tick {} frame {} sounds {:?} samples {} device {} played_samples {}",
+                                    started.tick,
+                                    started.frame,
+                                    started.sounds,
+                                    started.samples,
+                                    Score::DEVICE,
+                                    played.samples
+                                );
+                            }
+                        }
                         let plan = self.plan.as_mut();
                         let frame = self.carried.get(index);
                         if let (Some(plan), Some(frame)) = (plan, frame) {
@@ -632,7 +656,7 @@ pub fn run(scene: Scene) -> Result<(), Box<dyn Error>> {
 /// The batch is projected for the surface's own size by [`crate::present`] — twice, once here and
 /// again on every resize — so a resize never draws a stale projection.
 pub fn run_with_batch(scene: Scene, quads: Vec<Quad>) -> Result<(), Box<dyn Error>> {
-    run_app(scene, quads, None, Vec::new(), None, 0.0, None)
+    run_app(scene, quads, None, Vec::new(), None, 0.0, None, None)
 }
 
 /// **Run the window on the movie's cadence.** `frames` are the carried frames in package order and
@@ -645,8 +669,9 @@ pub fn run_with_timeline(
     fps: f32,
     router: Option<Router>,
     script: Option<planet_package::Program>,
+    score: Option<Score>,
 ) -> Result<(), Box<dyn Error>> {
-    run_app(scene, Vec::new(), router, carried, Some(plan), fps, script)
+    run_app(scene, Vec::new(), router, carried, Some(plan), fps, script, score)
 }
 
 /// Open one window over `scene`, the frame's draw batch and an input router, and run until it closes.
@@ -658,7 +683,7 @@ pub fn run_with_input(
     quads: Vec<Quad>,
     router: Router,
 ) -> Result<(), Box<dyn Error>> {
-    run_app(scene, quads, Some(router), Vec::new(), None, 0.0, None)
+    run_app(scene, quads, Some(router), Vec::new(), None, 0.0, None, None)
 }
 
 fn run_app(
@@ -669,6 +694,7 @@ fn run_app(
     plan: Option<FramePlan>,
     fps: f32,
     script: Option<planet_package::Program>,
+    score: Option<Score>,
 ) -> Result<(), Box<dyn Error>> {
     let event_loop = EventLoop::new()?;
     // **Poll, not Wait.** The loop's rate is the process's share of the CPU, not a frame clock: a
@@ -684,6 +710,7 @@ fn run_app(
         plan,
         stream: TickStream::at_rate(f64::from(fps)),
         script: crate::script::Driver::new(script),
+        score,
         shown: usize::MAX,
         last: std::time::Instant::now(),
         draws: 0,
